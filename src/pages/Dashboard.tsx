@@ -1,26 +1,46 @@
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, DollarSign, Calendar, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useApp } from "@/contexts/AppContext";
+import { Users, DollarSign, Calendar, AlertCircle, ExternalLink } from "lucide-react";
 
 export default function Dashboard() {
-  // Mock data - later will come from actual data
+  const { alunos, pagamentos, aulas } = useApp();
+
+  // Calcular estatísticas dinâmicas
   const stats = {
-    totalAlunos: 12,
-    pagamentosRecebidos: 2400,
-    aulasMes: 48,
-    pagamentosPendentes: 3
+    totalAlunos: alunos.filter(a => a.status === "ativo").length,
+    pagamentosRecebidos: pagamentos
+      .filter(p => p.status === "pago")
+      .reduce((sum, p) => sum + p.valor, 0),
+    aulasMes: aulas.filter(a => {
+      const hoje = new Date();
+      const dataAula = new Date(a.data);
+      return dataAula.getMonth() === hoje.getMonth() && 
+             dataAula.getFullYear() === hoje.getFullYear();
+    }).length,
+    pagamentosPendentes: pagamentos.filter(p => p.status !== "pago").length
   };
 
-  const proximasAulas = [
-    { aluno: "João Silva", data: "2024-02-01", horario: "14:00", status: "confirmada" },
-    { aluno: "Maria Santos", data: "2024-02-01", horario: "15:30", status: "confirmada" },
-    { aluno: "Pedro Costa", data: "2024-02-02", horario: "09:00", status: "pendente" },
-  ];
+  const proximasAulas = aulas
+    .filter(aula => {
+      const hoje = new Date();
+      const dataAula = new Date(aula.data);
+      return dataAula >= hoje && aula.status === "agendada";
+    })
+    .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+    .slice(0, 3);
 
-  const pagamentosPendentes = [
-    { aluno: "Ana Oliveira", valor: 200, diasAtraso: 5 },
-    { aluno: "Carlos Lima", valor: 180, diasAtraso: 2 },
-  ];
+  const pagamentosPendentes = pagamentos
+    .filter(p => p.status === "atrasado")
+    .slice(0, 3);
+
+  const formatarData = (data: string) => {
+    return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit'
+    });
+  };
 
   return (
     <Layout>
@@ -95,23 +115,33 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {proximasAulas.map((aula, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                {proximasAulas.map((aula) => (
+                  <div key={aula.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">{aula.aluno}</p>
                       <p className="text-sm text-muted-foreground">
-                        {aula.data} às {aula.horario}
+                        {formatarData(aula.data)} às {aula.horario}
                       </p>
                     </div>
-                    <div className={`px-2 py-1 rounded-full text-xs ${
-                      aula.status === 'confirmada' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {aula.status}
+                    <div className="flex gap-2">
+                      <div className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                        agendada
+                      </div>
+                      {aula.linkMeet && (
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={aula.linkMeet} target="_blank" rel="noopener noreferrer">
+                            Meet <ExternalLink className="h-3 w-3 ml-1" />
+                          </a>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
+                {proximasAulas.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">
+                    Nenhuma aula agendada
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -123,12 +153,12 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {pagamentosPendentes.map((pagamento, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                {pagamentosPendentes.map((pagamento) => (
+                  <div key={pagamento.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">{pagamento.aluno}</p>
                       <p className="text-sm text-muted-foreground">
-                        {pagamento.diasAtraso} dias de atraso
+                        Vence em {formatarData(pagamento.vencimento)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -136,6 +166,11 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+                {pagamentosPendentes.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">
+                    Todos os pagamentos em dia! 🎉
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

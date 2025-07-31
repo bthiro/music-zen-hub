@@ -2,57 +2,41 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AulaDialog } from "@/components/dialogs/AulaDialog";
+import { useApp } from "@/contexts/AppContext";
+import { useToast } from "@/hooks/use-toast";
 import { Calendar, DollarSign, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useState } from "react";
 
-// Mock data
-const pagamentosData = [
-  {
-    id: 1,
-    aluno: "João Silva",
-    valor: 200,
-    vencimento: "2024-02-01",
-    pagamento: "2024-01-30",
-    status: "pago",
-    mes: "Fevereiro 2024"
-  },
-  {
-    id: 2,
-    aluno: "Maria Santos",
-    valor: 180,
-    vencimento: "2024-02-01",
-    pagamento: null,
-    status: "pendente",
-    mes: "Fevereiro 2024"
-  },
-  {
-    id: 3,
-    aluno: "Pedro Costa",
-    valor: 220,
-    vencimento: "2024-01-01",
-    pagamento: null,
-    status: "atrasado",
-    mes: "Janeiro 2024"
-  },
-  {
-    id: 4,
-    aluno: "Ana Oliveira",
-    valor: 200,
-    vencimento: "2024-02-01",
-    pagamento: "2024-02-01",
-    status: "pago",
-    mes: "Fevereiro 2024"
-  }
-];
-
 export default function Pagamentos() {
-  const [pagamentos] = useState(pagamentosData);
+  const { pagamentos, marcarPagamento } = useApp();
+  const { toast } = useToast();
   const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [aulaDialogOpen, setAulaDialogOpen] = useState(false);
+  const [alunoSelecionado, setAlunoSelecionado] = useState<{id: string, nome: string} | null>(null);
 
   const pagamentosFiltrados = pagamentos.filter(pagamento => {
     if (filtroStatus === "todos") return true;
     return pagamento.status === filtroStatus;
   });
+
+  const handleMarcarPago = (pagamentoId: string, alunoId: string, alunoNome: string) => {
+    const hoje = new Date().toISOString().split('T')[0];
+    marcarPagamento(pagamentoId, hoje);
+    
+    toast({
+      title: "Pagamento confirmado!",
+      description: `Pagamento de ${alunoNome} marcado como pago.`
+    });
+
+    // Perguntar se quer agendar aulas
+    setTimeout(() => {
+      if (confirm(`Pagamento confirmado! Deseja agendar as aulas do mês para ${alunoNome}?`)) {
+        setAlunoSelecionado({ id: alunoId, nome: alunoNome });
+        setAulaDialogOpen(true);
+      }
+    }, 1000);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -202,12 +186,22 @@ export default function Pagamentos() {
                   </div>
                   <div className="flex gap-2 ml-4">
                     {pagamento.status !== "pago" && (
-                      <Button size="sm">
+                      <Button 
+                        size="sm"
+                        onClick={() => handleMarcarPago(pagamento.id, pagamento.alunoId, pagamento.aluno)}
+                      >
                         Marcar como Pago
                       </Button>
                     )}
                     {pagamento.status === "pago" && (
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setAlunoSelecionado({ id: pagamento.alunoId, nome: pagamento.aluno });
+                          setAulaDialogOpen(true);
+                        }}
+                      >
                         Agendar Aulas
                       </Button>
                     )}
@@ -218,6 +212,13 @@ export default function Pagamentos() {
           ))}
         </div>
       </div>
+
+      <AulaDialog 
+        open={aulaDialogOpen} 
+        onOpenChange={setAulaDialogOpen}
+        alunoId={alunoSelecionado?.id}
+        alunoNome={alunoSelecionado?.nome}
+      />
     </Layout>
   );
 }

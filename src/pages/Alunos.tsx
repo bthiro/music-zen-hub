@@ -3,48 +3,48 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { AlunoForm } from "@/components/forms/AlunoForm";
+import { useApp } from "@/contexts/AppContext";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
-
-// Mock data
-const alunosData = [
-  {
-    id: 1,
-    nome: "João Silva",
-    email: "joao@email.com",
-    mensalidade: 200,
-    status: "ativo",
-    ultimoPagamento: "2024-01-15",
-    observacoes: "Prefere aulas de manhã"
-  },
-  {
-    id: 2,
-    nome: "Maria Santos",
-    email: "maria@email.com",
-    mensalidade: 180,
-    status: "ativo",
-    ultimoPagamento: "2024-01-10",
-    observacoes: "Iniciante, muito dedicada"
-  },
-  {
-    id: 3,
-    nome: "Pedro Costa",
-    email: "pedro@email.com",
-    mensalidade: 220,
-    status: "pendente",
-    ultimoPagamento: "2023-12-20",
-    observacoes: "Falta há 2 semanas"
-  }
-];
+import { useToast } from "@/hooks/use-toast";
 
 export default function Alunos() {
+  const { alunos, deleteAluno } = useApp();
+  const { toast } = useToast();
   const [busca, setBusca] = useState("");
-  const [alunos] = useState(alunosData);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [alunoEditando, setAlunoEditando] = useState(null);
 
   const alunosFiltrados = alunos.filter(aluno =>
     aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
     aluno.email.toLowerCase().includes(busca.toLowerCase())
   );
+
+  const handleDelete = (id: string, nome: string) => {
+    if (confirm(`Tem certeza que deseja excluir o aluno ${nome}? Esta ação não pode ser desfeita.`)) {
+      deleteAluno(id);
+      toast({
+        title: "Aluno excluído",
+        description: `${nome} foi removido com sucesso.`
+      });
+    }
+  };
+
+  const handleEdit = (aluno: any) => {
+    setAlunoEditando(aluno);
+    setMostrarFormulario(true);
+  };
+
+  const handleFormSuccess = () => {
+    setMostrarFormulario(false);
+    setAlunoEditando(null);
+  };
+
+  const handleFormCancel = () => {
+    setMostrarFormulario(false);
+    setAlunoEditando(null);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -59,6 +59,18 @@ export default function Alunos() {
     }
   };
 
+  if (mostrarFormulario) {
+    return (
+      <Layout>
+        <AlunoForm 
+          aluno={alunoEditando}
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormCancel}
+        />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -69,7 +81,7 @@ export default function Alunos() {
               Gerencie seus alunos e informações
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setMostrarFormulario(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Aluno
           </Button>
@@ -113,8 +125,8 @@ export default function Alunos() {
                         <p>R$ {aluno.mensalidade}</p>
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">Último Pagamento:</p>
-                        <p>{aluno.ultimoPagamento}</p>
+                        <p className="font-medium text-foreground">Telefone:</p>
+                        <p>{aluno.telefone || "Não informado"}</p>
                       </div>
                     </div>
                     {aluno.observacoes && (
@@ -125,10 +137,14 @@ export default function Alunos() {
                     )}
                   </div>
                   <div className="flex gap-2 ml-4">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(aluno)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDelete(aluno.id, aluno.nome)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
