@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +21,30 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
-    alunoId: alunoId || "",
+    alunoId: "",
     data: "",
     horario: "",
     observacoes: ""
   });
+
+  // Atualiza o aluno quando props mudam
+  useEffect(() => {
+    if (alunoId) {
+      setFormData(prev => ({ ...prev, alunoId }));
+    }
+  }, [alunoId]);
+
+  // Reset form quando dialog fecha
+  useEffect(() => {
+    if (!open) {
+      setFormData({
+        alunoId: "",
+        data: "",
+        horario: "",
+        observacoes: ""
+      });
+    }
+  }, [open]);
 
   const gerarLinkMeet = () => {
     // Simula geração de link do Google Meet
