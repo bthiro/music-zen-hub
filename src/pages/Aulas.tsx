@@ -458,18 +458,51 @@ Professor`;
                                 </div>
                               )}
                               
-                              {(aula.observacoesAula || (aula.materiaisPdf && aula.materiaisPdf.length > 0)) && (
-                                <div className="flex gap-2">
-                                  <Button size="sm" variant="outline" onClick={() => enviarViaWhatsApp(aula)}>
-                                    <MessageCircle className="h-4 w-4 mr-2" />
-                                    WhatsApp
-                                  </Button>
-                                  <Button size="sm" variant="outline" onClick={() => enviarViaEmail(aula)}>
-                                    <Mail className="h-4 w-4 mr-2" />
-                                    E-mail
-                                  </Button>
-                                </div>
-                              )}
+                              <div className="flex gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => {
+                                    const aluno = getAlunoById(aula.alunoId);
+                                    if (!aluno || !aluno.telefone) {
+                                      toast({
+                                        title: "Erro",
+                                        description: "Telefone do aluno não encontrado",
+                                        variant: "destructive"
+                                      });
+                                      return;
+                                    }
+                                    
+                                    const mensagem = `Olá ${aula.aluno}!
+
+Aqui está o link da sua aula de ${formatarData(aula.data)} às ${aula.horario}:
+
+🎥 Link da aula: ${aula.linkMeet}
+
+Te espero lá!`;
+                                    
+                                    const telefone = aluno.telefone.replace(/\D/g, '');
+                                    const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+                                    window.open(url, '_blank');
+                                  }}
+                                >
+                                  <MessageCircle className="h-4 w-4 mr-2" />
+                                  Enviar Link
+                                </Button>
+                                
+                                {(aula.observacoesAula || (aula.materiaisPdf && aula.materiaisPdf.length > 0)) && (
+                                  <>
+                                    <Button size="sm" variant="outline" onClick={() => enviarViaWhatsApp(aula)}>
+                                      <MessageCircle className="h-4 w-4 mr-2" />
+                                      WhatsApp
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={() => enviarViaEmail(aula)}>
+                                      <Mail className="h-4 w-4 mr-2" />
+                                      E-mail
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                             </>
                           ) : (
                             <p className="text-sm text-muted-foreground italic">
