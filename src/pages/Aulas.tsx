@@ -4,15 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { AulaDialog } from "@/components/dialogs/AulaDialog";
 import { useApp } from "@/contexts/AppContext";
-import { Calendar, Clock, Video, Plus, Search, ExternalLink } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Calendar, Clock, Video, Plus, Search, ExternalLink, FileText, MessageCircle, Mail, Upload, Edit, Save, X } from "lucide-react";
 
 export default function Aulas() {
-  const { aulas, updateAula } = useApp();
+  const { aulas, updateAula, getAlunoById } = useApp();
+  const { toast } = useToast();
   const [busca, setBusca] = useState("");
   const [aulaDialogOpen, setAulaDialogOpen] = useState(false);
   const [filtroStatus, setFiltroStatus] = useState("todas");
+  const [editandoAula, setEditandoAula] = useState<string | null>(null);
+  const [formEdicao, setFormEdicao] = useState({
+    observacoesAula: "",
+    materiaisPdf: [] as string[]
+  });
 
   const aulasFiltradas = aulas.filter(aula => {
     const matchBusca = aula.aluno.toLowerCase().includes(busca.toLowerCase());
@@ -47,6 +55,113 @@ export default function Aulas() {
 
   const cancelarAula = (aulaId: string) => {
     updateAula(aulaId, { status: "cancelada" });
+  };
+
+  const iniciarEdicao = (aula: any) => {
+    setEditandoAula(aula.id);
+    setFormEdicao({
+      observacoesAula: aula.observacoesAula || "",
+      materiaisPdf: aula.materiaisPdf || []
+    });
+  };
+
+  const cancelarEdicao = () => {
+    setEditandoAula(null);
+    setFormEdicao({ observacoesAula: "", materiaisPdf: [] });
+  };
+
+  const salvarEdicao = (aulaId: string) => {
+    updateAula(aulaId, {
+      observacoesAula: formEdicao.observacoesAula,
+      materiaisPdf: formEdicao.materiaisPdf
+    });
+    setEditandoAula(null);
+    toast({
+      title: "Sucesso",
+      description: "Informações da aula atualizadas!"
+    });
+  };
+
+  const adicionarPdf = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf';
+    input.multiple = true;
+    input.onchange = (e: any) => {
+      const files = Array.from(e.target.files);
+      const fileNames = files.map((file: any) => file.name);
+      setFormEdicao(prev => ({
+        ...prev,
+        materiaisPdf: [...prev.materiaisPdf, ...fileNames]
+      }));
+    };
+    input.click();
+  };
+
+  const removerPdf = (index: number) => {
+    setFormEdicao(prev => ({
+      ...prev,
+      materiaisPdf: prev.materiaisPdf.filter((_, i) => i !== index)
+    }));
+  };
+
+  const enviarViaWhatsApp = (aula: any) => {
+    const aluno = getAlunoById(aula.alunoId);
+    if (!aluno || !aluno.telefone) {
+      toast({
+        title: "Erro",
+        description: "Telefone do aluno não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const mensagem = `Olá ${aula.aluno}! 
+
+Aqui estão as informações da sua aula de ${formatarData(aula.data)}:
+
+${aula.observacoesAula ? `📝 Observações: ${aula.observacoesAula}` : ''}
+
+${aula.materiaisPdf && aula.materiaisPdf.length > 0 ? 
+  `📚 Materiais: ${aula.materiaisPdf.join(', ')}` : ''}
+
+Qualquer dúvida, estou à disposição!`;
+
+    const telefone = aluno.telefone.replace(/\D/g, '');
+    const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+  };
+
+  const enviarViaEmail = (aula: any) => {
+    const aluno = getAlunoById(aula.alunoId);
+    if (!aluno) {
+      toast({
+        title: "Erro",
+        description: "Dados do aluno não encontrados",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const assunto = `Informações da Aula - ${formatarData(aula.data)}`;
+    const corpo = `Olá ${aula.aluno}!
+
+Aqui estão as informações da sua aula de ${formatarData(aula.data)}:
+
+${aula.observacoesAula ? `Observações da aula:
+${aula.observacoesAula}
+
+` : ''}${aula.materiaisPdf && aula.materiaisPdf.length > 0 ? 
+  `Materiais compartilhados:
+${aula.materiaisPdf.map((pdf: string) => `- ${pdf}`).join('\n')}
+
+` : ''}Qualquer dúvida, estou à disposição!
+
+Atenciosamente,
+Professor`;
+
+    const url = `mailto:${aluno.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+    window.location.href = url;
   };
 
   const proximasAulas = aulasFiltradas
@@ -207,15 +322,16 @@ export default function Aulas() {
           {aulasFiltradas.map((aula) => (
             <Card key={aula.id}>
               <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-4">
                       <h3 className="text-lg font-semibold">{aula.aluno}</h3>
                       <Badge className={getStatusColor(aula.status)}>
                         {aula.status}
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground mb-4">
                       <div>
                         <p className="font-medium text-foreground">Data:</p>
                         <p>{formatarData(aula.data)}</p>
@@ -240,14 +356,132 @@ export default function Aulas() {
                         )}
                       </div>
                     </div>
+
+                    {/* Observações originais da aula */}
                     {aula.observacoes && (
-                      <div className="mt-3">
-                        <p className="font-medium text-foreground text-sm">Observações:</p>
+                      <div className="mb-4">
+                        <p className="font-medium text-foreground text-sm">Observações do agendamento:</p>
                         <p className="text-sm text-muted-foreground">{aula.observacoes}</p>
                       </div>
                     )}
+
+                    {/* Seção de observações da aula e materiais */}
+                    <div className="border-t pt-4 space-y-4">
+                      {editandoAula === aula.id ? (
+                        // Modo de edição
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-foreground block mb-2">
+                              Observações da Aula:
+                            </label>
+                            <Textarea
+                              value={formEdicao.observacoesAula}
+                              onChange={(e) => setFormEdicao(prev => ({
+                                ...prev,
+                                observacoesAula: e.target.value
+                              }))}
+                              placeholder="Como foi a aula? O que foi ensinado? Pontos de atenção..."
+                              rows={3}
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium text-foreground block mb-2">
+                              Materiais em PDF:
+                            </label>
+                            <div className="space-y-2">
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm"
+                                onClick={adicionarPdf}
+                              >
+                                <Upload className="h-4 w-4 mr-2" />
+                                Adicionar PDFs
+                              </Button>
+                              {formEdicao.materiaisPdf.length > 0 && (
+                                <div className="space-y-1">
+                                  {formEdicao.materiaisPdf.map((pdf, index) => (
+                                    <div key={index} className="flex items-center justify-between bg-muted p-2 rounded text-sm">
+                                      <span className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4" />
+                                        {pdf}
+                                      </span>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => removerPdf(index)}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => salvarEdicao(aula.id)}>
+                              <Save className="h-4 w-4 mr-2" />
+                              Salvar
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={cancelarEdicao}>
+                              <X className="h-4 w-4 mr-2" />
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        // Modo de visualização
+                        <div className="space-y-3">
+                          {(aula.observacoesAula || aula.materiaisPdf?.length > 0) ? (
+                            <>
+                              {aula.observacoesAula && (
+                                <div>
+                                  <p className="font-medium text-foreground text-sm">Observações da Aula:</p>
+                                  <p className="text-sm text-muted-foreground">{aula.observacoesAula}</p>
+                                </div>
+                              )}
+                              
+                              {aula.materiaisPdf && aula.materiaisPdf.length > 0 && (
+                                <div>
+                                  <p className="font-medium text-foreground text-sm">Materiais:</p>
+                                  <div className="space-y-1">
+                                    {aula.materiaisPdf.map((pdf: string, index: number) => (
+                                      <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <FileText className="h-4 w-4" />
+                                        {pdf}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {(aula.observacoesAula || (aula.materiaisPdf && aula.materiaisPdf.length > 0)) && (
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline" onClick={() => enviarViaWhatsApp(aula)}>
+                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                    WhatsApp
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => enviarViaEmail(aula)}>
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    E-mail
+                                  </Button>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">
+                              Nenhuma observação ou material adicionado ainda.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-2 ml-4">
+                  
+                  <div className="flex flex-col gap-2 ml-4">
                     {aula.status === "agendada" && (
                       <>
                         <Button size="sm" onClick={() => marcarComoRealizada(aula.id)}>
@@ -261,6 +495,13 @@ export default function Aulas() {
                           Cancelar
                         </Button>
                       </>
+                    )}
+                    
+                    {(aula.status === "realizada" || aula.status === "agendada") && editandoAula !== aula.id && (
+                      <Button size="sm" variant="outline" onClick={() => iniciarEdicao(aula)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
                     )}
                   </div>
                 </div>

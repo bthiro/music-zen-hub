@@ -32,6 +32,8 @@ export interface Aula {
   status: "agendada" | "realizada" | "cancelada";
   linkMeet?: string;
   observacoes?: string;
+  observacoesAula?: string;
+  materiaisPdf?: string[];
 }
 
 interface AppContextType {
@@ -130,8 +132,10 @@ const aulasIniciais: Aula[] = [
     aluno: "João Silva",
     data: "2024-02-05",
     horario: "14:00",
-    status: "agendada",
-    linkMeet: "https://meet.google.com/abc-defg-hij"
+    status: "realizada",
+    linkMeet: "https://meet.google.com/abc-defg-hij",
+    observacoesAula: "Aula muito produtiva! João está progredindo bem nos acordes básicos. Revisamos Dó maior e Sol maior, e começamos a praticar as transições entre eles.",
+    materiaisPdf: ["Exercícios de Acordes Básicos.pdf", "Partitura - Imagine - John Lennon.pdf"]
   },
   {
     id: "2",
