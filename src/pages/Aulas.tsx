@@ -6,17 +6,24 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AulaDialog } from "@/components/dialogs/AulaDialog";
+import { EditarAulaDialog } from "@/components/dialogs/EditarAulaDialog";
+import { ReagendarLoteDialog } from "@/components/dialogs/ReagendarLoteDialog";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, Video, Plus, Search, ExternalLink, FileText, MessageCircle, Mail, Upload, Edit, Save, X } from "lucide-react";
+import { Calendar, Clock, Video, Plus, Search, ExternalLink, FileText, MessageCircle, Mail, Upload, Edit, Save, X, Filter, RefreshCw } from "lucide-react";
 
 export default function Aulas() {
   const { aulas, updateAula, getAlunoById } = useApp();
   const { toast } = useToast();
   const [busca, setBusca] = useState("");
   const [aulaDialogOpen, setAulaDialogOpen] = useState(false);
-  const [filtroStatus, setFiltroStatus] = useState("todas");
+  const [editarAulaDialogOpen, setEditarAulaDialogOpen] = useState(false);
+  const [reagendarLoteDialogOpen, setReagendarLoteDialogOpen] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState("ativas"); // Padrão: não canceladas
+  const [filtroDiaSemana, setFiltroDiaSemana] = useState("todos");
   const [editandoAula, setEditandoAula] = useState<string | null>(null);
+  const [aulaParaEditar, setAulaParaEditar] = useState<any>(null);
+  const [alunoParaReagendar, setAlunoParaReagendar] = useState<{id: string, nome: string} | null>(null);
   const [formEdicao, setFormEdicao] = useState({
     observacoesAula: "",
     materiaisPdf: [] as string[]
@@ -24,8 +31,24 @@ export default function Aulas() {
 
   const aulasFiltradas = aulas.filter(aula => {
     const matchBusca = aula.aluno.toLowerCase().includes(busca.toLowerCase());
-    const matchStatus = filtroStatus === "todas" || aula.status === filtroStatus;
-    return matchBusca && matchStatus;
+    
+    // Filtro de status
+    let matchStatus = true;
+    if (filtroStatus === "ativas") {
+      matchStatus = aula.status !== "cancelada";
+    } else if (filtroStatus !== "todas") {
+      matchStatus = aula.status === filtroStatus;
+    }
+    
+    // Filtro de dia da semana
+    let matchDiaSemana = true;
+    if (filtroDiaSemana !== "todos") {
+      const dataAula = new Date(aula.data);
+      const diaAula = dataAula.getDay();
+      matchDiaSemana = diaAula.toString() === filtroDiaSemana;
+    }
+    
+    return matchBusca && matchStatus && matchDiaSemana;
   });
 
   const getStatusColor = (status: string) => {
@@ -103,6 +126,87 @@ export default function Aulas() {
       ...prev,
       materiaisPdf: prev.materiaisPdf.filter((_, i) => i !== index)
     }));
+  };
+
+  const enviarArquivoWhatsApp = (aula: any, nomeArquivo: string) => {
+    const aluno = getAlunoById(aula.alunoId);
+    if (!aluno || !aluno.telefone) {
+      toast({
+        title: "Erro",
+        description: "Telefone do aluno não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const mensagem = `📎 *Material da Aula* 📎
+
+👨‍🎓 *Aluno:* ${aula.aluno}
+📅 *Data da Aula:* ${formatarData(aula.data)}
+📄 *Material:* ${nomeArquivo}
+
+🎵 Continue praticando! 🎵`;
+
+    const telefone = aluno.telefone.replace(/\D/g, '');
+    const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+    
+    toast({
+      title: "WhatsApp aberto!",
+      description: `Material "${nomeArquivo}" preparado para envio.`
+    });
+  };
+
+  const enviarTodosArquivosEmail = (aula: any) => {
+    const aluno = getAlunoById(aula.alunoId);
+    if (!aluno) {
+      toast({
+        title: "Erro",
+        description: "Email do aluno não cadastrado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const assunto = encodeURIComponent(`Materiais da Aula - ${formatarData(aula.data)}`);
+    let corpo = `Olá ${aula.aluno}!
+
+Segue anexo os materiais da aula do dia ${formatarData(aula.data)}.
+
+`;
+    
+    if (aula.observacoesAula) {
+      corpo += `Observações da aula:
+${aula.observacoesAula}
+
+`;
+    }
+    
+    if (aula.materiaisPdf && aula.materiaisPdf.length > 0) {
+      corpo += `Materiais enviados:
+`;
+      aula.materiaisPdf.forEach((material: string, index: number) => {
+        corpo += `${index + 1}. ${material}
+`;
+      });
+      corpo += `
+`;
+    }
+    
+    corpo += `Continue praticando!
+
+Abraços,
+Professor`;
+    
+    const corpoUrl = encodeURIComponent(corpo);
+    const url = `mailto:${aluno.email}?subject=${assunto}&body=${corpoUrl}`;
+    
+    window.open(url);
+    
+    toast({
+      title: "Email aberto!",
+      description: "Email preparado com todos os materiais da aula."
+    });
   };
 
   const enviarViaWhatsApp = (aula: any) => {
@@ -283,35 +387,61 @@ Professor`;
                   className="pl-10"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={filtroStatus === "todas" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFiltroStatus("todas")}
-                >
-                  Todas
-                </Button>
-                <Button
-                  variant={filtroStatus === "agendada" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFiltroStatus("agendada")}
-                >
-                  Agendadas
-                </Button>
-                <Button
-                  variant={filtroStatus === "realizada" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFiltroStatus("realizada")}
-                >
-                  Realizadas
-                </Button>
-                <Button
-                  variant={filtroStatus === "cancelada" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFiltroStatus("cancelada")}
-                >
-                  Canceladas
-                </Button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex gap-2">
+                  <Button
+                    variant={filtroStatus === "ativas" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFiltroStatus("ativas")}
+                  >
+                    Ativas
+                  </Button>
+                  <Button
+                    variant={filtroStatus === "todas" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFiltroStatus("todas")}
+                  >
+                    Todas
+                  </Button>
+                  <Button
+                    variant={filtroStatus === "agendada" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFiltroStatus("agendada")}
+                  >
+                    Agendadas
+                  </Button>
+                  <Button
+                    variant={filtroStatus === "realizada" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFiltroStatus("realizada")}
+                  >
+                    Realizadas
+                  </Button>
+                  <Button
+                    variant={filtroStatus === "cancelada" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFiltroStatus("cancelada")}
+                  >
+                    Canceladas
+                  </Button>
+                </div>
+                
+                <div className="flex gap-2">
+                  <select 
+                    value={filtroDiaSemana} 
+                    onChange={(e) => setFiltroDiaSemana(e.target.value)}
+                    className="px-3 py-1 border rounded text-sm"
+                  >
+                    <option value="todos">Todos os dias</option>
+                    <option value="1">Segunda</option>
+                    <option value="2">Terça</option>
+                    <option value="3">Quarta</option>
+                    <option value="4">Quinta</option>
+                    <option value="5">Sexta</option>
+                    <option value="6">Sábado</option>
+                    <option value="0">Domingo</option>
+                  </select>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -447,14 +577,37 @@ Professor`;
                               {aula.materiaisPdf && aula.materiaisPdf.length > 0 && (
                                 <div>
                                   <p className="font-medium text-foreground text-sm">Materiais:</p>
-                                  <div className="space-y-1">
+                                  <div className="space-y-2">
                                     {aula.materiaisPdf.map((pdf: string, index: number) => (
-                                      <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <FileText className="h-4 w-4" />
-                                        {pdf}
+                                      <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                          <FileText className="h-4 w-4" />
+                                          <span className="text-sm">{pdf}</span>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => enviarArquivoWhatsApp(aula, pdf)}
+                                        >
+                                          <MessageCircle className="h-4 w-4" />
+                                        </Button>
                                       </div>
                                     ))}
                                   </div>
+                                  
+                                  {aula.materiaisPdf.length > 1 && (
+                                    <div className="mt-3">
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline" 
+                                        onClick={() => enviarTodosArquivosEmail(aula)}
+                                        className="w-full"
+                                      >
+                                        <Mail className="h-4 w-4 mr-2" />
+                                        Enviar Todos por E-mail
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                               
@@ -531,10 +684,34 @@ Te espero lá!`;
                     )}
                     
                     {(aula.status === "realizada" || aula.status === "agendada") && editandoAula !== aula.id && (
-                      <Button size="sm" variant="outline" onClick={() => iniciarEdicao(aula)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Editar
-                      </Button>
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => iniciarEdicao(aula)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            setAulaParaEditar(aula);
+                            setEditarAulaDialogOpen(true);
+                          }}
+                        >
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Reagendar
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            setAlunoParaReagendar({ id: aula.alunoId, nome: aula.aluno });
+                            setReagendarLoteDialogOpen(true);
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Lote
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -559,6 +736,23 @@ Te espero lá!`;
         open={aulaDialogOpen} 
         onOpenChange={setAulaDialogOpen}
       />
+      
+      {aulaParaEditar && (
+        <EditarAulaDialog
+          open={editarAulaDialogOpen}
+          onOpenChange={setEditarAulaDialogOpen}
+          aula={aulaParaEditar}
+        />
+      )}
+
+      {alunoParaReagendar && (
+        <ReagendarLoteDialog
+          open={reagendarLoteDialogOpen}
+          onOpenChange={setReagendarLoteDialogOpen}
+          alunoId={alunoParaReagendar.id}
+          alunoNome={alunoParaReagendar.nome}
+        />
+      )}
     </Layout>
   );
 }

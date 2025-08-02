@@ -2,10 +2,13 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
-import { Users, DollarSign, Calendar, AlertCircle, ExternalLink } from "lucide-react";
+import { Users, DollarSign, Calendar, AlertCircle, ExternalLink, CalendarDays } from "lucide-react";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { useState } from "react";
 
 export default function Dashboard() {
   const { alunos, pagamentos, aulas } = useApp();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Calcular estatísticas dinâmicas
   const stats = {
@@ -22,14 +25,35 @@ export default function Dashboard() {
     pagamentosPendentes: pagamentos.filter(p => p.status !== "pago").length
   };
 
+  // Aulas do dia atual
+  const hoje = new Date();
+  const aulasDoDia = aulas
+    .filter(aula => {
+      const dataAula = new Date(aula.data);
+      return dataAula.toDateString() === hoje.toDateString() && aula.status === "agendada";
+    })
+    .sort((a, b) => a.horario.localeCompare(b.horario));
+
   const proximasAulas = aulas
     .filter(aula => {
-      const hoje = new Date();
       const dataAula = new Date(aula.data);
       return dataAula >= hoje && aula.status === "agendada";
     })
     .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
     .slice(0, 3);
+
+  // Datas com aulas para destacar no calendário
+  const datasComAulas = aulas
+    .filter(aula => aula.status === "agendada")
+    .map(aula => new Date(aula.data));
+
+  const formatarDataCompleta = (data: string) => {
+    return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
 
   const pagamentosPendentes = pagamentos
     .filter(p => p.status === "atrasado")
@@ -107,11 +131,75 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Calendário e Aulas do Dia */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="md:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5" />
+                Calendário
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CalendarComponent
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                modifiers={{
+                  hasClass: datasComAulas
+                }}
+                modifiersStyles={{
+                  hasClass: { backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }
+                }}
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Aulas de Hoje</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {aulasDoDia.map((aula) => (
+                  <div key={aula.id} className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+                    <div>
+                      <p className="font-medium text-lg">{aula.aluno}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {aula.horario} - {formatarDataCompleta(aula.data)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                        Hoje
+                      </div>
+                      {aula.linkMeet && (
+                        <Button size="sm" variant="default" asChild>
+                          <a href={aula.linkMeet} target="_blank" rel="noopener noreferrer">
+                            Entrar <ExternalLink className="h-3 w-3 ml-1" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {aulasDoDia.length === 0 && (
+                  <div className="text-center py-8">
+                    <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhuma aula agendada para hoje</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           {/* Próximas Aulas */}
           <Card>
             <CardHeader>
-              <CardTitle>Próximas Aulas</CardTitle>
+              <CardTitle>Próximas Aulas (3 dias)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

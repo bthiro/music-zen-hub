@@ -21,6 +21,8 @@ export interface Pagamento {
   pagamento: string | null;
   status: "pago" | "pendente" | "atrasado";
   mes: string;
+  formaPagamento?: "pix" | "cartao" | "dinheiro";
+  metodoPagamento?: string;
 }
 
 export interface Aula {
@@ -45,7 +47,8 @@ interface AppContextType {
   
   // Pagamentos
   pagamentos: Pagamento[];
-  marcarPagamento: (id: string, dataPagamento: string) => void;
+  marcarPagamento: (id: string, dataPagamento: string, formaPagamento?: string, metodoPagamento?: string) => void;
+  addPagamento: (pagamento: Omit<Pagamento, "id">) => void;
   
   // Aulas
   aulas: Aula[];
@@ -193,12 +196,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Funções para pagamentos
-  const marcarPagamento = (id: string, dataPagamento: string) => {
+  const marcarPagamento = (id: string, dataPagamento: string, formaPagamento?: string, metodoPagamento?: string) => {
     setPagamentos(prev => prev.map(pagamento => 
       pagamento.id === id 
-        ? { ...pagamento, pagamento: dataPagamento, status: "pago" as const }
+        ? { 
+            ...pagamento, 
+            pagamento: dataPagamento, 
+            status: "pago" as const,
+            formaPagamento: formaPagamento as "pix" | "cartao" | "dinheiro" | undefined,
+            metodoPagamento 
+          }
         : pagamento
     ));
+  };
+
+  const addPagamento = (novoPagamento: Omit<Pagamento, "id">) => {
+    const pagamento: Pagamento = {
+      ...novoPagamento,
+      id: Date.now().toString()
+    };
+    setPagamentos(prev => [...prev, pagamento]);
   };
 
   // Funções para aulas
@@ -229,6 +246,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deleteAluno,
       pagamentos,
       marcarPagamento,
+      addPagamento,
       aulas,
       addAula,
       updateAula,

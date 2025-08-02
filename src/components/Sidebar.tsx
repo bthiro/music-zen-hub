@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: Home, label: "Dashboard", href: "/" },
+  { icon: Calendar, label: "Aulas", href: "/aulas" },
   { icon: Users, label: "Alunos", href: "/alunos" },
   { icon: CreditCard, label: "Pagamentos", href: "/pagamentos" },
-  { icon: Calendar, label: "Aulas", href: "/aulas" },
   { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
   { icon: Settings, label: "Configurações", href: "/configuracoes" },
 ];

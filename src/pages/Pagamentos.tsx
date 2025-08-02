@@ -3,39 +3,57 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AulaDialog } from "@/components/dialogs/AulaDialog";
+import { PagamentoDialog } from "@/components/dialogs/PagamentoDialog";
+import { CobrancaDialog } from "@/components/dialogs/CobrancaDialog";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, DollarSign, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Calendar, DollarSign, CheckCircle, XCircle, Clock, MessageCircle, CreditCard } from "lucide-react";
 import { useState } from "react";
 
 export default function Pagamentos() {
-  const { pagamentos, marcarPagamento } = useApp();
+  const { pagamentos, alunos } = useApp();
   const { toast } = useToast();
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [aulaDialogOpen, setAulaDialogOpen] = useState(false);
+  const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
+  const [cobrancaDialogOpen, setCobrancaDialogOpen] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<{id: string, nome: string} | null>(null);
+  const [pagamentoSelecionado, setPagamentoSelecionado] = useState<any>(null);
 
   const pagamentosFiltrados = pagamentos.filter(pagamento => {
     if (filtroStatus === "todos") return true;
     return pagamento.status === filtroStatus;
   });
 
-  const handleMarcarPago = (pagamentoId: string, alunoId: string, alunoNome: string) => {
-    const hoje = new Date().toISOString().split('T')[0];
-    marcarPagamento(pagamentoId, hoje);
-    
-    toast({
-      title: "Pagamento confirmado!",
-      description: `Pagamento de ${alunoNome} marcado como pago.`
-    });
+  const handleMarcarPago = (pagamento: any) => {
+    setPagamentoSelecionado(pagamento);
+    setPagamentoDialogOpen(true);
+  };
 
-    // Perguntar se quer agendar aulas
-    setTimeout(() => {
-      if (confirm(`Pagamento confirmado! Deseja agendar as aulas do mês para ${alunoNome}?`)) {
-        setAlunoSelecionado({ id: alunoId, nome: alunoNome });
-        setAulaDialogOpen(true);
+  const handleCobrarAluno = (pagamento: any) => {
+    const aluno = alunos.find(a => a.id === pagamento.alunoId);
+    if (!aluno) {
+      toast({
+        title: "Erro",
+        description: "Aluno não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setPagamentoSelecionado({
+      aluno: {
+        nome: aluno.nome,
+        telefone: aluno.telefone,
+        email: aluno.email
+      },
+      pagamento: {
+        valor: pagamento.valor,
+        vencimento: pagamento.vencimento,
+        mes: pagamento.mes
       }
-    }, 1000);
+    });
+    setCobrancaDialogOpen(true);
   };
 
   const getStatusIcon = (status: string) => {
@@ -181,17 +199,34 @@ export default function Pagamentos() {
                       <div>
                         <p className="font-medium text-foreground">Pagamento:</p>
                         <p>{pagamento.pagamento || "Não realizado"}</p>
+                        {pagamento.formaPagamento && (
+                          <p className="text-xs text-muted-foreground">
+                            via {pagamento.formaPagamento.toUpperCase()}
+                            {pagamento.metodoPagamento && ` (${pagamento.metodoPagamento})`}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
                   <div className="flex gap-2 ml-4">
                     {pagamento.status !== "pago" && (
-                      <Button 
-                        size="sm"
-                        onClick={() => handleMarcarPago(pagamento.id, pagamento.alunoId, pagamento.aluno)}
-                      >
-                        Marcar como Pago
-                      </Button>
+                      <>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCobrarAluno(pagamento)}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" />
+                          Cobrar
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleMarcarPago(pagamento)}
+                        >
+                          <CreditCard className="h-4 w-4 mr-1" />
+                          Marcar como Pago
+                        </Button>
+                      </>
                     )}
                     {pagamento.status === "pago" && (
                       <Button 
@@ -219,6 +254,25 @@ export default function Pagamentos() {
         alunoId={alunoSelecionado?.id}
         alunoNome={alunoSelecionado?.nome}
       />
+
+      {pagamentoSelecionado && (
+        <PagamentoDialog
+          open={pagamentoDialogOpen}
+          onOpenChange={setPagamentoDialogOpen}
+          pagamentoId={pagamentoSelecionado.id}
+          alunoNome={pagamentoSelecionado.aluno}
+          valor={pagamentoSelecionado.valor}
+        />
+      )}
+
+      {pagamentoSelecionado && (
+        <CobrancaDialog
+          open={cobrancaDialogOpen}
+          onOpenChange={setCobrancaDialogOpen}
+          aluno={pagamentoSelecionado.aluno}
+          pagamento={pagamentoSelecionado.pagamento}
+        />
+      )}
     </Layout>
   );
 }
