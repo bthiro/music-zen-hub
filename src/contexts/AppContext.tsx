@@ -7,6 +7,7 @@ export interface Aluno {
   email: string;
   telefone?: string;
   mensalidade: number;
+  duracaoAula: 30 | 50; // Duração da aula em minutos
   observacoes?: string;
   status: "ativo" | "inativo" | "pendente";
   dataCadastro: string;
@@ -31,6 +32,8 @@ export interface Aula {
   aluno: string;
   data: string;
   horario: string;
+  horarioFim?: string; // Horário de término da aula
+  duracaoMinutos?: number; // Duração da aula em minutos
   status: "agendada" | "realizada" | "cancelada";
   linkMeet?: string;
   observacoes?: string;
@@ -69,6 +72,7 @@ const alunosIniciais: Aluno[] = [
     email: "joao@email.com",
     telefone: "(11) 99999-9999",
     mensalidade: 200,
+    duracaoAula: 50,
     status: "ativo",
     dataCadastro: "2024-01-15",
     observacoes: "Prefere aulas de manhã"
@@ -79,6 +83,7 @@ const alunosIniciais: Aluno[] = [
     email: "maria@email.com",
     telefone: "(11) 88888-8888",
     mensalidade: 180,
+    duracaoAula: 30,
     status: "ativo",
     dataCadastro: "2024-01-10",
     observacoes: "Iniciante, muito dedicada"
@@ -89,6 +94,7 @@ const alunosIniciais: Aluno[] = [
     email: "pedro@email.com",
     telefone: "(11) 77777-7777",
     mensalidade: 220,
+    duracaoAula: 50,
     status: "pendente",
     dataCadastro: "2024-01-05",
     observacoes: "Falta há 2 semanas"

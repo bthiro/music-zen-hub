@@ -24,6 +24,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     alunoId: "",
     data: "",
     horario: "",
+    horarioFim: "",
     observacoes: ""
   });
 
@@ -41,6 +42,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         alunoId: "",
         data: "",
         horario: "",
+        horarioFim: "",
         observacoes: ""
       });
     }
@@ -53,9 +55,21 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     return `https://meet.google.com/${gerarCodigo()}-${gerarCodigo()}-${gerarCodigo()}`;
   };
 
+  const calcularHorarioFim = (horarioInicio: string, duracaoMinutos: number) => {
+    const [horas, minutos] = horarioInicio.split(':').map(Number);
+    const dataInicio = new Date();
+    dataInicio.setHours(horas, minutos, 0);
+    dataInicio.setMinutes(dataInicio.getMinutes() + duracaoMinutos);
+    
+    return dataInicio.toTimeString().slice(0, 5);
+  };
+
   const gerarAulasMensais = (primeiraData: string, horario: string, alunoId: string, alunoNome: string) => {
     const aulas = [];
     const dataInicial = new Date(primeiraData);
+    const aluno = alunos.find(a => a.id === alunoId);
+    const duracaoMinutos = aluno?.duracaoAula || 50;
+    const horarioFim = calcularHorarioFim(horario, duracaoMinutos);
     
     for (let i = 0; i < 4; i++) {
       const dataAula = new Date(dataInicial);
@@ -66,9 +80,11 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         aluno: alunoNome,
         data: dataAula.toISOString().split('T')[0],
         horario,
+        horarioFim,
+        duracaoMinutos,
         status: "agendada" as const,
         linkMeet: gerarLinkMeet(),
-        observacoes: formData.observacoes || `Aula ${i + 1}/4 do mês`
+        observacoes: formData.observacoes || `Aula ${i + 1}/4 do mês - ${duracaoMinutos}min`
       });
     }
     
@@ -115,6 +131,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         alunoId: alunoId || "",
         data: "",
         horario: "",
+        horarioFim: "",
         observacoes: ""
       });
       
@@ -129,7 +146,21 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
   };
 
   const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Auto-calcular horário de fim quando aluno ou horário mudam
+      if (field === 'alunoId' || field === 'horario') {
+        if (newData.alunoId && newData.horario) {
+          const aluno = alunos.find(a => a.id === newData.alunoId);
+          if (aluno) {
+            newData.horarioFim = calcularHorarioFim(newData.horario, aluno.duracaoAula);
+          }
+        }
+      }
+      
+      return newData;
+    });
   };
 
   return (
@@ -173,14 +204,28 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
             />
           </div>
           
-          <div>
-            <Label htmlFor="horario">Horário *</Label>
-            <Input
-              id="horario"
-              type="time"
-              value={formData.horario}
-              onChange={(e) => handleChange("horario", e.target.value)}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="horario">Horário de Início *</Label>
+              <Input
+                id="horario"
+                type="time"
+                value={formData.horario}
+                onChange={(e) => handleChange("horario", e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="horarioFim">Horário de Término</Label>
+              <Input
+                id="horarioFim"
+                type="time"
+                value={formData.horarioFim}
+                readOnly
+                className="bg-muted"
+                placeholder="Auto-calculado"
+              />
+            </div>
           </div>
           
           <div>

@@ -23,6 +23,7 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
     email: aluno?.email || "",
     telefone: aluno?.telefone || "",
     mensalidade: aluno?.mensalidade || 0,
+    duracaoAula: aluno?.duracaoAula || 50,
     status: aluno?.status || "ativo",
     observacoes: aluno?.observacoes || ""
   });
@@ -30,7 +31,7 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nome || !formData.email || !formData.mensalidade) {
+    if (!formData.nome || !formData.email || !formData.mensalidade || !formData.duracaoAula) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -115,6 +116,19 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
                 onChange={(e) => handleChange("mensalidade", Number(e.target.value))}
                 placeholder="200"
               />
+            </div>
+            
+            <div>
+              <Label htmlFor="duracaoAula">Duração da Aula *</Label>
+              <Select value={formData.duracaoAula.toString()} onValueChange={(value) => handleChange("duracaoAula", Number(value))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a duração" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 minutos</SelectItem>
+                  <SelectItem value="50">50 minutos</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
