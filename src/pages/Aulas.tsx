@@ -282,15 +282,15 @@ Professor`;
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Aulas</h2>
-            <p className="text-muted-foreground">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Aulas</h2>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Gerencie e acompanhe suas aulas
             </p>
           </div>
-          <Button onClick={() => setAulaDialogOpen(true)}>
+          <Button onClick={() => setAulaDialogOpen(true)} className="w-full sm:w-auto btn-mobile">
             <Plus className="h-4 w-4 mr-2" />
             Agendar Aulas
           </Button>

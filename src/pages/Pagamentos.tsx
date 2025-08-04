@@ -92,10 +92,10 @@ export default function Pagamentos() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Pagamentos</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Pagamentos</h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Controle de mensalidades e pagamentos
           </p>
         </div>

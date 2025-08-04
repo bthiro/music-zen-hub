@@ -73,15 +73,15 @@ export default function Alunos() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Alunos</h2>
-            <p className="text-muted-foreground">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Alunos</h2>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Gerencie seus alunos e informações
             </p>
           </div>
-          <Button onClick={() => setMostrarFormulario(true)}>
+          <Button onClick={() => setMostrarFormulario(true)} className="w-full sm:w-auto btn-mobile">
             <Plus className="h-4 w-4 mr-2" />
             Novo Aluno
           </Button>

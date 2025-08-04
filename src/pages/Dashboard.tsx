@@ -132,11 +132,11 @@ export default function Dashboard() {
         </div>
 
         {/* Calendário e Aulas do Dia */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-1">
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card className="lg:col-span-1 order-2 lg:order-1">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
                 Calendário
               </CardTitle>
             </CardHeader>
@@ -156,28 +156,30 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-2">
+          <Card className="lg:col-span-2 order-1 lg:order-2">
             <CardHeader>
-              <CardTitle>Aulas de Hoje</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Aulas de Hoje</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {aulasDoDia.map((aula) => (
-                  <div key={aula.id} className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
-                    <div>
-                      <p className="font-medium text-lg">{aula.aluno}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div key={aula.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg bg-muted/50 gap-3 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm sm:text-lg">{aula.aluno}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {aula.horario} - {formatarDataCompleta(aula.data)}
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <div className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                    <div className="flex gap-2 self-end sm:self-center">
+                      <div className="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                         Hoje
                       </div>
                       {aula.linkMeet && (
-                        <Button size="sm" variant="default" asChild>
+                        <Button size="sm" variant="default" asChild className="text-xs sm:text-sm">
                           <a href={aula.linkMeet} target="_blank" rel="noopener noreferrer">
-                            Entrar <ExternalLink className="h-3 w-3 ml-1" />
+                            <span className="hidden sm:inline">Entrar</span>
+                            <span className="sm:hidden">Meet</span>
+                            <ExternalLink className="h-3 w-3 ml-1" />
                           </a>
                         </Button>
                       )}
@@ -185,9 +187,9 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {aulasDoDia.length === 0 && (
-                  <div className="text-center py-8">
-                    <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Nenhuma aula agendada para hoje</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <CalendarDays className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground text-sm sm:text-base">Nenhuma aula agendada para hoje</p>
                   </div>
                 )}
               </div>
@@ -195,28 +197,28 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           {/* Próximas Aulas */}
           <Card>
             <CardHeader>
-              <CardTitle>Próximas Aulas (3 dias)</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Próximas Aulas (3 dias)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {proximasAulas.map((aula) => (
-                  <div key={aula.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{aula.aluno}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div key={aula.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-3 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm sm:text-base">{aula.aluno}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {formatarData(aula.data)} às {aula.horario}
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <div className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                    <div className="flex gap-2 self-end sm:self-center">
+                      <div className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                         agendada
                       </div>
                       {aula.linkMeet && (
-                        <Button size="sm" variant="outline" asChild>
+                        <Button size="sm" variant="outline" asChild className="text-xs sm:text-sm">
                           <a href={aula.linkMeet} target="_blank" rel="noopener noreferrer">
                             Meet <ExternalLink className="h-3 w-3 ml-1" />
                           </a>
@@ -226,7 +228,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {proximasAulas.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">
+                  <p className="text-center text-muted-foreground py-4 text-sm sm:text-base">
                     Nenhuma aula agendada
                   </p>
                 )}
@@ -237,25 +239,25 @@ export default function Dashboard() {
           {/* Pagamentos Pendentes */}
           <Card>
             <CardHeader>
-              <CardTitle>Pagamentos Pendentes</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Pagamentos Pendentes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {pagamentosPendentes.map((pagamento) => (
-                  <div key={pagamento.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{pagamento.aluno}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div key={pagamento.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-2 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm sm:text-base">{pagamento.aluno}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Vence em {formatarData(pagamento.vencimento)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-red-600">R$ {pagamento.valor}</p>
+                      <p className="font-medium text-destructive text-sm sm:text-base">R$ {pagamento.valor}</p>
                     </div>
                   </div>
                 ))}
                 {pagamentosPendentes.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">
+                  <p className="text-center text-muted-foreground py-4 text-sm sm:text-base">
                     Todos os pagamentos em dia! 🎉
                   </p>
                 )}

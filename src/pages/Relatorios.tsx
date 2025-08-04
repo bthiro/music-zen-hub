@@ -88,37 +88,42 @@ export default function Relatorios() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Relatórios Gerenciais</h2>
-            <p className="text-muted-foreground">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Relatórios Gerenciais</h2>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Análises financeiras, contábeis e operacionais completas
             </p>
           </div>
-          <Button onClick={exportarCSV}>
+          <Button onClick={exportarCSV} className="w-full sm:w-auto btn-mobile">
             <Download className="h-4 w-4 mr-2" />
-            Exportar CSV Geral
+            <span className="hidden sm:inline">Exportar CSV Geral</span>
+            <span className="sm:hidden">Exportar CSV</span>
           </Button>
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Dashboard
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+            <TabsTrigger value="dashboard" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="contabil" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Contábil
+            <TabsTrigger value="contabil" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Contábil</span>
+              <span className="sm:hidden">Contábil</span>
             </TabsTrigger>
-            <TabsTrigger value="operacional" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Operacional
+            <TabsTrigger value="operacional" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Operacional</span>
+              <span className="sm:hidden">Operacional</span>
             </TabsTrigger>
-            <TabsTrigger value="resumo" className="flex items-center gap-2">
-              <PieChart className="h-4 w-4" />
-              Resumo
+            <TabsTrigger value="resumo" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <PieChart className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Resumo</span>
+              <span className="sm:hidden">Resumo</span>
             </TabsTrigger>
           </TabsList>
 
@@ -133,8 +138,8 @@ export default function Relatorios() {
           <TabsContent value="operacional" className="space-y-6">
             {/* Métricas de Aulas */}
             <div>
-              <h3 className="text-xl font-semibold mb-4">🎵 Métricas Operacionais</h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <h3 className="text-lg sm:text-xl font-semibold mb-4">🎵 Métricas Operacionais</h3>
+              <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Aulas do Mês</CardTitle>
@@ -227,7 +232,7 @@ export default function Relatorios() {
 
           <TabsContent value="resumo" className="space-y-6">
             {/* Resumo Executivo */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Receita do Mês</CardTitle>
