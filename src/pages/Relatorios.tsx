@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FinancialDashboard } from "@/components/reports/FinancialDashboard";
 import { AccountingReport } from "@/components/reports/AccountingReport";
+import { StatsCard } from "@/components/ui/stats-card";
 import { useApp } from "@/contexts/AppContext";
 import { 
   Users, 
@@ -245,54 +246,40 @@ export default function Relatorios() {
 
           <TabsContent value="old-resumo" className="space-y-6">
             {/* Resumo Executivo */}
-            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Receita do Mês</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    R$ {dadosFinanceiros.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatsCard
+                title="Receita do Mês"
+                value={`R$ ${dadosFinanceiros.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                subtitle="Pagamentos recebidos"
+                icon={DollarSign}
+                color="green"
+                trend={{ value: 15, direction: 'up', label: 'vs mês anterior' }}
+              />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    R$ {dadosFinanceiros.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </CardContent>
-              </Card>
+              <StatsCard
+                title="Receita Total"
+                value={`R$ ${dadosFinanceiros.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                subtitle="Histórico completo"
+                icon={TrendingUp}
+                color="blue"
+              />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pendências</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
-                    R$ {dadosFinanceiros.pendencias.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </CardContent>
-              </Card>
+              <StatsCard
+                title="Pendências"
+                value={`R$ ${dadosFinanceiros.pendencias.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                subtitle="Valores em aberto"
+                icon={DollarSign}
+                color="red"
+                badge={{ text: "Atenção", variant: "destructive" }}
+              />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    R$ {dadosFinanceiros.ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </div>
-                </CardContent>
-              </Card>
+              <StatsCard
+                title="Ticket Médio"
+                value={`R$ ${dadosFinanceiros.ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                subtitle="Valor médio por aluno"
+                icon={BarChart3}
+                color="purple"
+              />
             </div>
 
             <Card>
