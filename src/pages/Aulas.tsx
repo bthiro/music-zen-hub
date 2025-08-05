@@ -10,8 +10,7 @@ import { EditarAulaDialog } from "@/components/dialogs/EditarAulaDialog";
 import { ReagendarLoteDialog } from "@/components/dialogs/ReagendarLoteDialog";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, Video, Plus, Search, ExternalLink, FileText, MessageCircle, Mail, Upload, Edit, Save, X, Filter, RefreshCw, Music } from "lucide-react";
-import { MetronomeAfinador } from "@/components/MetronomeAfinador";
+import { Calendar, Clock, Video, Plus, Search, ExternalLink, FileText, MessageCircle, Mail, Upload, Edit, Save, X, Filter, RefreshCw } from "lucide-react";
 
 export default function Aulas() {
   const { aulas, updateAula, getAlunoById } = useApp();
@@ -376,19 +375,6 @@ Professor`;
             </CardContent>
           </Card>
         )}
-
-        {/* Ferramentas Musicais */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-5 w-5" />
-              Ferramentas para Aula
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MetronomeAfinador />
-          </CardContent>
-        </Card>
 
         {/* Filtros e busca */}
         <Card>

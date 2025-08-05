@@ -7,7 +7,8 @@ import {
   BarChart3,
   Settings,
   Brain,
-  Paintbrush
+  Paintbrush,
+  Wrench
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -29,6 +30,7 @@ const menuItems = [
   { icon: CreditCard, label: "Pagamentos", href: "/pagamentos" },
   { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
   { icon: Paintbrush, label: "Lousa Digital", href: "/lousa" },
+  { icon: Wrench, label: "Ferramentas", href: "/ferramentas" },
   { icon: Brain, label: "IA Musical", href: "/ia-musical" },
   { icon: Settings, label: "Configurações", href: "/configuracoes" },
 ];

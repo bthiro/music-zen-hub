@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AlunoForm } from "@/components/forms/AlunoForm";
 import { useApp } from "@/contexts/AppContext";
-import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Clock } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { StudentEvolution } from "@/components/StudentEvolution";
 
 export default function Alunos() {
   const { alunos, deleteAluno } = useApp();
@@ -15,6 +16,7 @@ export default function Alunos() {
   const [busca, setBusca] = useState("");
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [alunoEditando, setAlunoEditando] = useState(null);
+  const [alunoEvolucao, setAlunoEvolucao] = useState<{id: string, nome: string} | null>(null);
 
   const alunosFiltrados = alunos.filter(aluno =>
     aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
@@ -58,6 +60,25 @@ export default function Alunos() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (alunoEvolucao) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Evolução do Aluno</h2>
+              <p className="text-muted-foreground">{alunoEvolucao.nome}</p>
+            </div>
+            <Button variant="outline" onClick={() => setAlunoEvolucao(null)}>
+              Voltar
+            </Button>
+          </div>
+          <StudentEvolution alunoId={alunoEvolucao.id} alunoNome={alunoEvolucao.nome} />
+        </div>
+      </Layout>
+    );
+  }
 
   if (mostrarFormulario) {
     return (
@@ -139,6 +160,13 @@ export default function Alunos() {
                   <div className="flex gap-2 ml-4">
                     <Button variant="outline" size="sm" onClick={() => handleEdit(aluno)}>
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setAlunoEvolucao({id: aluno.id, nome: aluno.nome})}
+                    >
+                      <Clock className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="outline" 
