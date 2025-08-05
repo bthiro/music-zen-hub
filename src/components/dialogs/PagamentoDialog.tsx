@@ -33,17 +33,25 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
       return;
     }
 
-    const hoje = new Date().toISOString().split('T')[0];
-    marcarPagamento(pagamentoId, hoje, formaPagamento, metodoPagamento);
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      marcarPagamento(pagamentoId, hoje, formaPagamento, metodoPagamento);
     
-    toast({
-      title: "Pagamento confirmado!",
-      description: `Pagamento de ${alunoNome} marcado como pago via ${formaPagamento.toUpperCase()}.`
-    });
+      toast({
+        title: "Pagamento confirmado!",
+        description: `Pagamento de ${alunoNome} marcado como pago via ${formaPagamento.toUpperCase()}.`
+      });
 
-    onOpenChange(false);
-    setFormaPagamento("");
-    setMetodoPagamento("");
+      onOpenChange(false);
+      setFormaPagamento("");
+      setMetodoPagamento("");
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao processar pagamento. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
