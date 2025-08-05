@@ -70,9 +70,122 @@ npm run dev
 ### ✅ Verificação se está funcionando:
 - [ ] Página inicial carrega
 - [ ] Lousa digital desenha
+- [ ] **NOVO:** Upload de imagens funciona
+- [ ] **NOVO:** Pode desenhar sobre imagens
 - [ ] Metrônomo toca
 - [ ] Pode cadastrar alunos
 - [ ] IA Musical responde
+
+### 🎨 Novos recursos da Lousa:
+- ✅ **Upload de imagens:** JPG, PNG, GIF até 5MB
+- ✅ **Imagens de exemplo:** Piano, violão, partituras, notas musicais
+- ✅ **Desenhar sobre imagens:** Anotações, correções, explicações
+- ✅ **Redimensionar imagens:** Arrastar cantos para ajustar tamanho
+- ✅ **Múltiplas imagens:** Carregue várias e organize na lousa
+
+---
+
+## 🔗 COMO FAZER INTEGRAÇÕES GOOGLE FUNCIONAREM 100%
+
+### 📋 Pré-requisitos:
+1. **Conta Google** (Gmail)
+2. **Domínio próprio** com SSL (obrigatório para produção)
+3. **Google Cloud Console** configurado
+
+### 🚀 Passo-a-passo COMPLETO:
+
+**1. Criar Projeto no Google Cloud:**
+- Acesse: https://console.cloud.google.com
+- Clique em "Criar Projeto"
+- Nome: "Sistema Musical - [SeuNome]"
+- Anote o ID do projeto
+
+**2. Ativar APIs necessárias:**
+```bash
+# No Google Cloud Console → APIs & Services → Library
+- Google Calendar API
+- Google Meet API  
+- Google Drive API (se quiser salvar arquivos)
+- Gmail API (se quiser enviar emails)
+```
+
+**3. Criar Credenciais OAuth 2.0:**
+- Vá em "APIs & Services" → "Credentials"
+- Clique "Create Credentials" → "OAuth 2.0 Client ID"
+- Tipo: "Web application"
+- Nome: "Sistema Musical Web"
+
+**4. Configurar URLs autorizadas:**
+```bash
+# Para desenvolvimento LOCAL:
+http://localhost:5173
+http://localhost:5173/api/auth/callback/google
+
+# Para produção (HostGator):
+https://seudominio.com
+https://seudominio.com/api/auth/callback/google
+```
+
+**5. Baixar credenciais:**
+- Baixe o arquivo JSON das credenciais
+- Anote `client_id` e `client_secret`
+
+**6. Configurar no projeto:**
+```javascript
+// Criar arquivo .env.local (desenvolvimento)
+GOOGLE_CLIENT_ID=seu_client_id_aqui
+GOOGLE_CLIENT_SECRET=seu_client_secret_aqui
+NEXTAUTH_SECRET=uma_chave_secreta_qualquer
+NEXTAUTH_URL=http://localhost:5173
+
+// Para produção no HostGator
+NEXTAUTH_URL=https://seudominio.com
+```
+
+**7. Instalar dependências Google:**
+```bash
+npm install googleapis google-auth-library
+# OU
+bun add googleapis google-auth-library
+```
+
+**8. Testar integração:**
+- Reinicie o servidor: `bun dev`
+- Vá em "Configurações" no sistema
+- Clique "Conectar Google"
+- Autorize as permissões
+- ✅ Deve aparecer "Conectado"
+
+### 🔧 Configuração Avançada:
+
+**Para Google Calendar:**
+```javascript
+// No hook useGoogleCalendar.ts - substituir simulação por código real:
+import { google } from 'googleapis';
+
+const calendar = google.calendar('v3');
+const auth = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  'http://localhost:5173/api/auth/callback/google'
+);
+```
+
+**Para Google Meet automático:**
+```javascript
+// Criar evento com Meet automático:
+const event = {
+  summary: 'Aula de Música',
+  start: { dateTime: '2024-02-10T14:00:00-03:00' },
+  end: { dateTime: '2024-02-10T15:00:00-03:00' },
+  conferenceData: {
+    createRequest: {
+      requestId: 'meet-' + Date.now(),
+      conferenceSolutionKey: { type: 'hangoutsMeet' }
+    }
+  }
+};
+```
 
 ---
 
@@ -106,9 +219,12 @@ bun build
 
 | Funcionalidade | Local | HostGator | Observações |
 |----------------|-------|-----------|-------------|
-| Lousa Digital | ✅ | ⚠️ | Sem upload de imagens no HostGator |
+| **Lousa Digital** | ✅ | ✅ | ✅ **AGORA com upload de imagens!** |
+| **Upload Imagens** | ✅ | ✅ | **NOVO:** Funciona em ambos ambientes |
+| **Desenhar sobre imagens** | ✅ | ✅ | **NOVO:** Anotações em partituras, etc. |
 | Metrônomo | ✅ | ✅ | Funciona perfeitamente |
 | Gestão Alunos | ✅ | ⚠️ | Dados não persistem no HostGator |
+| Google Calendar Real | ⚠️ | ⚠️ | **Configuração adicional necessária** |
 | IA Musical | ✅ | ✅ | Interface funciona, mas sem IA real |
 | Hot Reload | ✅ | ❌ | Apenas local |
 
@@ -193,6 +309,12 @@ bun install
 - Análise de áudio em tempo real
 - Correção automática de afinação
 
+**5. Upload de Imagens Avançado:**
+- Suporte para mais formatos
+- Edição básica de imagens
+- Biblioteca de imagens musicais
+- Sincronização com Google Drive
+
 ---
 
 ## 📞 SUPORTE
@@ -210,6 +332,28 @@ bun install
 2. Tentar os "Problemas Comuns" acima
 3. Reinstalar dependências do zero
 4. Verificar versões do Node.js/Bun
+5. **Para Google:** Verificar URLs no Google Cloud Console
+6. **Para uploads:** Verificar se o navegador suporta FileReader API
+
+### 🔍 Problemas Google específicos:
+
+**"Redirect URI mismatch":**
+```bash
+# Verificar no Google Cloud Console → Credentials
+# URLs devem ser EXATAMENTE:
+http://localhost:5173  (local)
+https://seudominio.com  (produção)
+```
+
+**"Access blocked":**
+- Publicar app no Google Cloud Console
+- Adicionar usuários de teste
+- Verificar escopos de permissão
+
+**"Calendar not syncing":**
+- Verificar se Calendar API está ativada
+- Conferir token de acesso válido
+- Testar com conta Google pessoal primeiro
 
 ---
 
@@ -220,6 +364,8 @@ bun install
 Motivos:
 - ✅ Mais fácil de instalar
 - ✅ Modificações instantâneas  
+- ✅ **NOVO:** Upload e edição de imagens
+- ✅ **NOVO:** Funcionalidades da lousa 100% completas
 - ✅ Todas as funcionalidades
 - ✅ Sem custos de hospedagem
 - ✅ Ideal para aprender
