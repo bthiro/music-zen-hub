@@ -68,20 +68,75 @@ npm run dev
 - O sistema carregará automaticamente
 
 ### ✅ Verificação se está funcionando:
-- [ ] Página inicial carrega
-- [ ] Lousa digital desenha
-- [ ] **NOVO:** Upload de imagens funciona
-- [ ] **NOVO:** Pode desenhar sobre imagens
-- [ ] Metrônomo toca
+
+#### 🎯 **TESTE DA LOUSA MUSICAL INTERATIVA:**
+
+**1. Acesse:** http://localhost:5173/lousa
+
+**2. Teste funcionalidades básicas:**
+- [ ] Upload de imagens (botão no topo)
+- [ ] Desenho livre sobre qualquer elemento
+- [ ] Borracha funciona
+- [ ] Limpar canvas
+- [ ] Salvar/carregar estado
+
+**3. Teste elementos musicais:**
+- [ ] **Pauta Musical:** Clique em "Inserir Pauta" - deve aparecer 5 linhas
+- [ ] **Clave de Sol:** Clique em "Inserir Clave" - símbolo musical
+- [ ] **Braços de instrumentos:** Teste violão, viola caipira, cavaquinho
+- [ ] **Números dos dedos:** Adicione números 1-4 nas cordas
+- [ ] **Arrastar elementos:** Todos devem se mover livremente
+
+**4. Teste cenário real de aula:**
+- [ ] Insira uma pauta com clave
+- [ ] Desenhe uma melodia simples (notas na pauta)
+- [ ] Adicione um braço de violão
+- [ ] Coloque números dos dedos nas casas
+- [ ] Desenhe setas conectando pauta com braço
+- [ ] Faça upload de uma partitura (imagem) e anote em cima
+
+**5. Outras funcionalidades:**
+- [ ] Metrônomo toca (página Ferramentas)
 - [ ] Pode cadastrar alunos
 - [ ] IA Musical responde
 
-### 🎨 Novos recursos da Lousa:
-- ✅ **Upload de imagens:** JPG, PNG, GIF até 5MB
-- ✅ **Imagens de exemplo:** Piano, violão, partituras, notas musicais
-- ✅ **Desenhar sobre imagens:** Anotações, correções, explicações
-- ✅ **Redimensionar imagens:** Arrastar cantos para ajustar tamanho
-- ✅ **Múltiplas imagens:** Carregue várias e organize na lousa
+### 🎵 **NOVA LOUSA MUSICAL - GUIA DE USO:**
+
+#### **Como usar cada ferramenta:**
+
+**🎼 Pauta Musical:**
+- Clique "Inserir Pauta" → Aparece pauta de 5 linhas
+- Arraste para reposicionar
+- Use lápis para desenhar notas em cima
+
+**🎵 Clave de Sol:**
+- Clique "Inserir Clave" → Símbolo da clave aparece
+- Posicione no início da pauta
+- Redimensione se necessário
+
+**🎸 Braços de Instrumentos:**
+- **Violão:** 6 cordas, 5 casas (padrão)
+- **Viola Caipira:** 5 pares de cordas, 5 casas
+- **Cavaquinho:** 4 cordas, 5 casas
+- Clique no botão do instrumento desejado
+
+**🔢 Digitação (números dos dedos):**
+- Clique nos botões 1, 2, 3, 4
+- Arraste os números para as casas corretas
+- Use para mostrar posição dos dedos
+
+**✏️ Desenho Livre:**
+- Funciona sobre TODOS os elementos
+- Desenhe notas, setas, anotações
+- Ajuste cor e espessura
+
+#### **Exemplo de aula típica:**
+1. **Insira pauta + clave de Sol**
+2. **Desenhe 4 notas simples** (Dó, Ré, Mi, Fá)
+3. **Adicione braço de violão**
+4. **Coloque números:** 1ª casa (Mi), 3ª casa (Sol), etc.
+5. **Desenhe setas** conectando notas da pauta com posições
+6. **Upload foto do aluno tocando** e anote correções
 
 ---
 
