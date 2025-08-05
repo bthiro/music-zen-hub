@@ -30,7 +30,7 @@ export function CobrancaDialog({ open, onOpenChange, aluno, pagamento }: Cobranc
   const [linkPagamento, setLinkPagamento] = useState("https://mercadopago.com.br/checkout/v1/redirect?pref_id=123456789");
   const [mensagemPersonalizada, setMensagemPersonalizada] = useState("");
 
-  const mensagemPadrao = `Olá ${aluno.nome}! 😊
+  const mensagemPadrao = pagamento ? `Olá ${aluno?.nome || 'Aluno'}! 😊
 
 Esperamos que você esteja bem! 
 
@@ -44,12 +44,16 @@ Esperamos que você esteja bem!
 🔸 *Cartão:* ${linkPagamento}
 
 Qualquer dúvida, estou à disposição! 
-Obrigado(a) pela confiança! 🎵`;
+Obrigado(a) pela confiança! 🎵` : '';
 
   const mensagemFinal = mensagemPersonalizada || mensagemPadrao;
 
+  if (!pagamento) {
+    return null;
+  }
+
   const enviarWhatsApp = () => {
-    if (!aluno.telefone) {
+    if (!aluno?.telefone) {
       toast({
         title: "Erro",
         description: "Telefone do aluno não cadastrado",
@@ -73,9 +77,9 @@ Obrigado(a) pela confiança! 🎵`;
   };
 
   const enviarEmail = () => {
-    const assunto = encodeURIComponent(`Lembrete de Pagamento - ${pagamento.mes}`);
+    const assunto = encodeURIComponent(`Lembrete de Pagamento - ${pagamento?.mes || ''}`);
     const corpo = encodeURIComponent(mensagemFinal);
-    const url = `mailto:${aluno.email}?subject=${assunto}&body=${corpo}`;
+    const url = `mailto:${aluno?.email}?subject=${assunto}&body=${corpo}`;
     
     window.open(url);
     
