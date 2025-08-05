@@ -41,10 +41,10 @@ export function AutoIntegrationPanel() {
   });
 
   const handleMercadoPagoConnect = () => {
-    // Placeholder for real Mercado Pago OAuth implementation
+    // For real implementation, this would trigger OAuth flow
     toast({
-      title: "Configuração de API necessária",
-      description: "Para conectar automaticamente com o Mercado Pago, configure as credenciais OAuth no painel.",
+      title: "Configuração do Mercado Pago",
+      description: "Para conectar automaticamente, configure as credenciais OAuth nas configurações do projeto.",
       duration: 5000
     });
   };
@@ -52,8 +52,8 @@ export function AutoIntegrationPanel() {
   const handleInfinitePayConnect = () => {
     // Show secret form for InfinitePay
     toast({
-      title: "API Key do InfinitePay",
-      description: "Configure sua chave de API do InfinitePay para continuar.",
+      title: "Configure sua API Key",
+      description: "Use o formulário abaixo para configurar sua chave da InfinitePay.",
       duration: 5000
     });
   };
@@ -61,8 +61,8 @@ export function AutoIntegrationPanel() {
   const handleWhatsAppConnect = () => {
     // Show secret form for Z-API
     toast({
-      title: "Configuração do WhatsApp",
-      description: "Configure suas credenciais da Z-API para conectar o WhatsApp Business.",
+      title: "Configure suas credenciais Z-API",
+      description: "Use o formulário abaixo para configurar seu token e instance ID.",
       duration: 5000
     });
   };

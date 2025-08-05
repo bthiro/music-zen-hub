@@ -118,6 +118,39 @@ export type Database = {
           },
         ]
       }
+      integration_configs: {
+        Row: {
+          config_data: Json | null
+          created_at: string
+          id: string
+          integration_name: string
+          last_test: string | null
+          professor_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          config_data?: Json | null
+          created_at?: string
+          id?: string
+          integration_name: string
+          last_test?: string | null
+          professor_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          config_data?: Json | null
+          created_at?: string
+          id?: string
+          integration_name?: string
+          last_test?: string | null
+          professor_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mensagens_enviadas: {
         Row: {
           aluno_id: string
