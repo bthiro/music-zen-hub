@@ -1,1 +1,7 @@
 project_id = "hnftxautmxviwrfuaosu"
+
+[functions.create-payment-link]
+verify_jwt = true
+
+[functions.send-whatsapp]
+verify_jwt = true

@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppProvider } from "@/contexts/AppContext";
 import Dashboard from "./pages/Dashboard";
+import SupabaseDashboard from "./pages/SupabaseDashboard";
 import Alunos from "./pages/Alunos";
 import SupabaseAlunos from "./pages/SupabaseAlunos";
 import Pagamentos from "./pages/Pagamentos";
+import SupabasePagamentos from "./pages/SupabasePagamentos";
 import Aulas from "./pages/Aulas";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
@@ -54,7 +56,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <SupabaseDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/aulas" element={
@@ -74,7 +76,7 @@ const App = () => (
               } />
               <Route path="/pagamentos" element={
                 <ProtectedRoute>
-                  <Pagamentos />
+                  <SupabasePagamentos />
                 </ProtectedRoute>
               } />
               <Route path="/relatorios" element={
