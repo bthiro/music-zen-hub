@@ -6,10 +6,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
       <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 gap-4">
-        <SidebarTrigger asChild>
-          <Button variant="ghost" size="sm" className="md:hidden">
-            <Menu className="h-4 w-4" />
-          </Button>
+        <SidebarTrigger className="md:hidden">
+          <Menu className="h-4 w-4" />
         </SidebarTrigger>
         
         <div className="flex items-center gap-2 flex-1">

@@ -53,15 +53,7 @@ export function AppSidebar() {
                       isActive={isActive}
                       tooltip={item.label}
                     >
-                      <Link
-                        to={item.href}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:scale-[1.02]",
-                          isActive
-                            ? "bg-gradient-to-r from-primary to-primary-hover text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                        )}
-                      >
+                      <Link to={item.href}>
                         <Icon className={cn("h-4 w-4", isActive && "text-primary-foreground")} />
                         <span className={cn(
                           "transition-opacity",
