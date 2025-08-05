@@ -14,8 +14,8 @@ export function Layout({ children }: LayoutProps) {
         <Header />
         <div className="flex flex-1 w-full">
           <AppSidebar />
-          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
-            <div className="max-w-7xl mx-auto">
+          <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto min-h-0">
+            <div className="max-w-7xl mx-auto w-full">
               {children}
             </div>
           </main>

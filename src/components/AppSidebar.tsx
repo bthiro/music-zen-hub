@@ -6,7 +6,8 @@ import {
   Calendar, 
   BarChart3,
   Settings,
-  Brain
+  Brain,
+  Paintbrush
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +28,7 @@ const menuItems = [
   { icon: Users, label: "Alunos", href: "/alunos" },
   { icon: CreditCard, label: "Pagamentos", href: "/pagamentos" },
   { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
+  { icon: Paintbrush, label: "Lousa Digital", href: "/lousa" },
   { icon: Brain, label: "IA Musical", href: "/ia-musical" },
   { icon: Settings, label: "Configurações", href: "/configuracoes" },
 ];

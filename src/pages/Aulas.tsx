@@ -54,13 +54,15 @@ export default function Aulas() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "agendada":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 border border-blue-200";
       case "realizada":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border border-green-200";
       case "cancelada":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 border border-red-200";
+      case "remarcada":
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
@@ -282,7 +284,7 @@ Professor`;
 
   return (
     <Layout>
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Aulas</h2>

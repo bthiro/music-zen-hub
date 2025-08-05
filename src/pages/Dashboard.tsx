@@ -171,7 +171,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                     <div className="flex gap-2 self-end sm:self-center">
-                      <div className="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                      <div className="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-green-50 text-green-700 border border-green-200">
                         Hoje
                       </div>
                       {aula.linkMeet && (
@@ -214,7 +214,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                     <div className="flex gap-2 self-end sm:self-center">
-                      <div className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                      <div className="px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700 border border-blue-200">
                         agendada
                       </div>
                       {aula.linkMeet && (

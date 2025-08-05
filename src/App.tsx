@@ -11,6 +11,7 @@ import Aulas from "./pages/Aulas";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import IaMusical from "./pages/IaMusical";
+import Lousa from "./pages/Lousa";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,10 +25,11 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/aulas" element={<Aulas />} />
             <Route path="/alunos" element={<Alunos />} />
             <Route path="/pagamentos" element={<Pagamentos />} />
-            <Route path="/aulas" element={<Aulas />} />
             <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/lousa" element={<Lousa />} />
             <Route path="/ia-musical" element={<IaMusical />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
