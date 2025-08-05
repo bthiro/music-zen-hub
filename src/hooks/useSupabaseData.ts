@@ -110,9 +110,24 @@ export function useSupabaseData() {
   const adicionarAula = async (dadosAula: any) => {
     if (!professor?.id) return { error: 'Professor não encontrado' };
 
+    // Validar se todos os campos obrigatórios estão presentes
+    if (!dadosAula.aluno_id || !dadosAula.data_hora) {
+      return { error: 'Campos obrigatórios não preenchidos' };
+    }
+
+    // Se a data da aula for futura, definir status como 'agendada'
+    const aulaData = new Date(dadosAula.data_hora);
+    const hoje = new Date();
+    
+    const aulaComStatus = {
+      ...dadosAula,
+      professor_id: professor.id,
+      status: aulaData > hoje ? 'agendada' : (dadosAula.status || 'agendada')
+    };
+
     const { data, error } = await supabase
       .from('aulas')
-      .insert([{ ...dadosAula, professor_id: professor.id }])
+      .insert([aulaComStatus])
       .select()
       .single();
 
@@ -123,9 +138,21 @@ export function useSupabaseData() {
   };
 
   const atualizarAula = async (id: string, dadosAula: any) => {
+    // Se a data da aula for futura, manter status como 'agendada' ou 'reagendada'
+    const aulaData = new Date(dadosAula.data_hora);
+    const hoje = new Date();
+    
+    let updatedData = { ...dadosAula };
+    
+    if (aulaData > hoje && !updatedData.status) {
+      updatedData.status = 'agendada';
+    } else if (aulaData > hoje && updatedData.status === 'concluida') {
+      updatedData.status = 'agendada';
+    }
+
     const { data, error } = await supabase
       .from('aulas')
-      .update(dadosAula)
+      .update(updatedData)
       .eq('id', id)
       .select()
       .single();

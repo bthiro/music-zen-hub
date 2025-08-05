@@ -827,21 +827,21 @@ nivelDetectado === 'intermediario' ?
         <div className="grid gap-6 lg:grid-cols-4">
           {/* Chat Interface Premium */}
           <div className="lg:col-span-3">
-            <Card className="h-[78vh] flex flex-col border-2 border-primary/10">
-              <CardHeader className="pb-4 bg-gradient-to-r from-primary/5 to-purple-500/5">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <MessageCircle className="h-5 w-5 text-primary" />
-                  Sessão Pedagógica Avançada
-                  <div className="ml-auto flex gap-2 text-xs">
-                    <Badge variant="outline">Nível: {nivel}</Badge>
-                    {instrument && <Badge variant="outline">{instrument}</Badge>}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent className="flex-1 flex flex-col gap-4 p-4">
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+             <Card className="min-h-[78vh] flex flex-col border-2 border-primary/10">
+               <CardHeader className="pb-4 bg-gradient-to-r from-primary/5 to-purple-500/5">
+                 <CardTitle className="flex items-center gap-2 text-lg">
+                   <MessageCircle className="h-5 w-5 text-primary" />
+                   Sessão Pedagógica Avançada
+                   <div className="ml-auto flex gap-2 text-xs">
+                     <Badge variant="outline">Nível: {nivel}</Badge>
+                     {instrument && <Badge variant="outline">{instrument}</Badge>}
+                   </div>
+                 </CardTitle>
+               </CardHeader>
+               
+               <CardContent className="flex-1 flex flex-col gap-4 p-4 min-h-0">
+                 {/* Messages */}
+                 <div className="flex-1 overflow-y-auto space-y-4 pr-2 min-h-[400px]">
                   {messages.map((message) => (
                     <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[90%] min-w-[200px] ${

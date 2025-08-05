@@ -121,6 +121,8 @@ export function SupabaseAlunosForm({ aluno, onClose }: AlunoFormProps) {
                   <SelectItem value="saxofone">Saxofone</SelectItem>
                   <SelectItem value="violino">Violino</SelectItem>
                   <SelectItem value="viola">Viola</SelectItem>
+                  <SelectItem value="viola-caipira">Viola Caipira</SelectItem>
+                  <SelectItem value="violoncelo">Violoncelo</SelectItem>
                   <SelectItem value="outros">Outros</SelectItem>
                 </SelectContent>
               </Select>
