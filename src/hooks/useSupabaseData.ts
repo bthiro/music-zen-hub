@@ -61,7 +61,11 @@ export function useSupabaseData() {
   };
 
   useEffect(() => {
-    fetchData();
+    if (professor?.id) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
   }, [professor?.id]);
 
   // Funções CRUD para alunos

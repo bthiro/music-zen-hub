@@ -22,7 +22,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfessor = async () => {
-    if (!session?.user) return;
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
     
     try {
       const { data, error } = await supabase
@@ -33,12 +36,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Erro ao buscar professor:', error);
-        return;
+        setProfessor(null);
+      } else {
+        setProfessor(data);
       }
-
-      setProfessor(data);
     } catch (error) {
       console.error('Erro ao buscar professor:', error);
+      setProfessor(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,43 +63,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
-        if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
+            // Aguardar um pouco mais para garantir que a sessão está estável
             setTimeout(() => {
               fetchProfessor();
-            }, 0);
+            }, 200);
+          } else {
+            setLoading(false);
           }
+        } else {
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
     // Verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error getting session:', error);
-        // Limpar dados corrompidos
-        supabase.auth.signOut();
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setSession(null);
+          setUser(null);
+          setProfessor(null);
+          setLoading(false);
+          return;
+        }
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Buscar dados do professor apenas se tiver sessão válida
+          setTimeout(() => {
+            fetchProfessor();
+          }, 100);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error);
         setSession(null);
         setUser(null);
         setProfessor(null);
         setLoading(false);
-        return;
       }
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setTimeout(() => {
-          fetchProfessor();
-        }, 0);
-      }
-      setLoading(false);
-    }).catch((error) => {
-      console.error('Session check failed:', error);
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
