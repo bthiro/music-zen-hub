@@ -997,8 +997,9 @@ nivelDetectado === 'intermediario' ?
                       <SelectItem value="baixo">Baixo</SelectItem>
                       <SelectItem value="bateria">Bateria/Percussão</SelectItem>
                       <SelectItem value="violino">Violino</SelectItem>
-                      <SelectItem value="viola">Viola</SelectItem>
-                      <SelectItem value="violoncelo">Violoncelo</SelectItem>
+                       <SelectItem value="viola">Viola</SelectItem>
+                       <SelectItem value="viola-caipira">🎻 Viola Caipira</SelectItem>
+                       <SelectItem value="violoncelo">Violoncelo</SelectItem>
                       <SelectItem value="flauta">Flauta</SelectItem>
                       <SelectItem value="clarinete">Clarinete</SelectItem>
                       <SelectItem value="saxofone">Saxofone</SelectItem>
