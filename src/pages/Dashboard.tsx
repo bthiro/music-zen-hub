@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
 import { Users, DollarSign, Calendar, AlertCircle, ExternalLink, CalendarDays } from "lucide-react";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { GoogleCalendarIntegration } from "@/components/GoogleCalendarIntegration";
 import { useState } from "react";
 
 export default function Dashboard() {
@@ -131,32 +131,21 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Calendário e Aulas do Dia */}
+        {/* Google Calendar Integration */}
         <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="lg:col-span-1 order-2 lg:order-1">
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
-                Calendário
+                Google Calendar
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CalendarComponent
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                modifiers={{
-                  hasClass: datasComAulas
-                }}
-                modifiersStyles={{
-                  hasClass: { backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }
-                }}
-                className="w-full"
-              />
+              <GoogleCalendarIntegration />
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-2 order-1 lg:order-2">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base sm:text-lg">Aulas de Hoje</CardTitle>
             </CardHeader>
