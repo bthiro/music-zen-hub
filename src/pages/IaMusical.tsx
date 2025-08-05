@@ -46,37 +46,27 @@ export default function IaMusical() {
     {
       id: '1',
       role: 'assistant',
-      content: `🎵 **BEM-VINDO À IA MUSICAL LOVART ESPECIALIZADA** 🎵
+      content: `🎵 **BEM-VINDO À IA MUSICAL ESPECIALIZADA** 🎵
 
-📝 **RESUMO RÁPIDO**
-Sou sua assistente musical de elite, baseada em metodologia acadêmica de conservatórios internacionais. Domino teoria completa, harmonia avançada, reharmonização, análise musical e pedagogia especializada.
+📝 **ASSISTENTE MUSICAL DE ELITE**
+Sou sua assistente musical especializada, baseada em metodologia acadêmica de conservatórios internacionais. Domino teoria completa, harmonia avançada, reharmonização, análise musical e pedagogia especializada.
 
 🎯 **COMPETÊNCIAS DE ALTO NÍVEL**
 • **Harmonia Funcional Completa:** Campos harmônicos, substituições, reharmonização
 • **Análise Musical Avançada:** Schenker, análise formal, contraponto
 • **Metodologias Reconhecidas:** Kodály, Suzuki, Orff-Schulwerk, Traditional Academic
-• **Especialização Instrumental:** Piano, violão, cordas, sopros, canto, bateria
-• **Domínio Estilístico:** Clássico, jazz, bossa nova, MPB, rock, blues, world music
+• **Especialização Instrumental:** Piano, violão, viola caipira, cordas, sopros, canto, bateria
+• **Domínio Estilístico:** Clássico, jazz, bossa nova, MPB, sertanejo, rock, blues, world music
 
 🎼 **CONHECIMENTO HARMÔNICO AVANÇADO**
 ✅ **Campos Harmônicos:** Maior, menor natural, harmônico, melódico
 ✅ **Substituições:** Diatônicas, cromáticas, tritonais, empréstimo modal
-✅ **Reharmonização:** Por estilo (jazz, bossa, MPB), técnicas específicas
+✅ **Reharmonização:** Por estilo (jazz, bossa, MPB, sertanejo), técnicas específicas
 ✅ **Dominantes:** Secundárias, estendidas, alteradas, substituições
 ✅ **Análise Funcional:** Riemann, Schenker, análise de repertório real
 
-🎹 **CONFIGURE SUA EXPERIÊNCIA PREMIUM**
-Personalize para máxima eficiência pedagógica:
-• **Instrumento + Nível + Estilo musical**
-• **Objetivos específicos de aprendizagem**
-• **Preferências metodológicas**
-
-💡 **EXEMPLOS DE CONSULTAS AVANÇADAS**
-• "Analise a reharmonização de 'Girl from Ipanema'"
-• "Ensine substituição tritonal para piano intermediário"
-• "Exercícios de contraponto a duas vozes"
-• "Como improvisar sobre Giant Steps"
-• "Técnica de arco para vibrato expressivo"
+🎹 **CONFIGURE SUA EXPERIÊNCIA**
+Configure instrumento, nível e estilo musical para respostas personalizadas.
 
 **🏆 Pronto para elevação musical de excelência acadêmica!**`,
       timestamp: new Date()
@@ -233,6 +223,18 @@ ${instrumentoUser.toLowerCase() === 'piano' ?
 • **Close:** Intervalos de 2ª e 3ª (sonoridade densa)
 • **Open:** Distribuição além de uma oitava (transparência)` :
 
+instrumentoUser.toLowerCase() === 'viola-caipira' ?
+`**Na Viola Caipira - Escala de Dó Maior:**
+• **Afinação padrão:** E-B-G-D-A (5ª corda mais grave para 1ª aguda)
+• **1ª posição:** Cases 0-4
+• **Técnica:** Ponteado (dedilhado) ou rasgueado
+• **Posição das mãos:** Mão esquerda - polegar atrás do braço, dedos curvos
+
+**Exercício básico:**
+1. Pratique a escala na 3ª e 2ª cordas
+2. Use dedos alternados (i-m-i-m) na mão direita
+3. Mantenha ritmo constante e uniforme
+4. Foque na afinação característica da viola` :
 instrumentoUser.toLowerCase() === 'violão' ?
 `**Sistemas de Acordes Avançados:**
 
@@ -813,7 +815,7 @@ nivelDetectado === 'intermediario' ?
             <div className="flex items-center gap-3 mb-2">
               <Brain className="h-8 w-8 text-primary animate-pulse" />
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                IA Musical Lovart Master
+                IA Musical Master
               </h2>
               <div className="flex gap-1">
                 <Badge variant="secondary" className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800">
