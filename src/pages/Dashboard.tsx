@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
 import { Users, DollarSign, Calendar, AlertCircle, ExternalLink, CalendarDays } from "lucide-react";
 import { GoogleCalendarIntegration } from "@/components/GoogleCalendarIntegration";
+import { StatsCard } from "@/components/ui/stats-card";
 import { useState } from "react";
 
 export default function Dashboard() {
@@ -78,57 +79,46 @@ export default function Dashboard() {
 
         {/* Cards de estatísticas */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Alunos</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalAlunos}</div>
-              <p className="text-xs text-muted-foreground">
-                Alunos ativos
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard 
+            title="Total de Alunos"
+            value={stats.totalAlunos}
+            subtitle="Alunos ativos"
+            icon={Users}
+            color="blue"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita do Mês</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">R$ {stats.pagamentosRecebidos}</div>
-              <p className="text-xs text-muted-foreground">
-                Pagamentos recebidos
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard 
+            title="Receita do Mês"
+            value={`R$ ${stats.pagamentosRecebidos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            subtitle="Pagamentos recebidos"
+            icon={DollarSign}
+            color="green"
+            trend={{
+              value: 12,
+              direction: 'up',
+              label: 'vs mês anterior'
+            }}
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Aulas do Mês</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.aulasMes}</div>
-              <p className="text-xs text-muted-foreground">
-                Aulas agendadas
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard 
+            title="Aulas do Mês"
+            value={stats.aulasMes}
+            subtitle="Aulas agendadas"
+            icon={Calendar}
+            color="purple"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pendências</CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pagamentosPendentes}</div>
-              <p className="text-xs text-muted-foreground">
-                Pagamentos em atraso
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard 
+            title="Pendências"
+            value={stats.pagamentosPendentes}
+            subtitle="Pagamentos em atraso"
+            icon={AlertCircle}
+            color="red"
+            badge={stats.pagamentosPendentes > 0 ? {
+              text: "Atenção",
+              variant: "destructive"
+            } : undefined}
+          />
         </div>
 
         {/* Google Calendar Integration */}

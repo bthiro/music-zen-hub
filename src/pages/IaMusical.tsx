@@ -54,6 +54,203 @@ export default function IaMusical() {
     scrollToBottom();
   }, [messages]);
 
+  const simulateAIResponse = async (message: string): Promise<string> => {
+    // Simular delay da IA
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Respostas baseadas em palavras-chave com conhecimento profundo
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('escala') || lowerMessage.includes('escalas')) {
+      return `📚 **Escalas Musicais** *(baseado em Bohumil Med)*
+      
+As escalas são sucessões de sons dispostos gradualmente em ordem ascendente ou descendente:
+
+🎵 **Escala Diatônica Maior:**
+- **Estrutura intervalar:** T-T-st-T-T-T-st
+- **Graus:** I(T) - II(st) - III(md) - IV(sd) - V(D) - VI(sp) - VII(ss)
+- **Em Dó Maior:** C-D-E-F-G-A-B-C
+- **Características:** modo maior, sensação de alegria e luminosidade
+
+🎵 **Escala Menor Natural (Eólica):**
+- **Estrutura:** T-st-T-T-st-T-T  
+- **Relativa de Dó maior:** Lá menor (A-B-C-D-E-F-G-A)
+- **VI grau rebaixado** em relação ao modo maior
+
+🎵 **Escalas Menores Artificiais:**
+- **Harmônica:** VII grau elevado (intervalo de 2ª aumentada entre VI-VII)
+- **Melódica:** VI e VII graus elevados na ascendente, natural na descendente
+
+🎵 **Modos Gregos** *(Osvaldo Lacerda)*:
+- **Dórico:** menor com VI maior (D-E-F-G-A-B-C-D)
+- **Frígio:** menor com II menor (E-F-G-A-B-C-D-E)  
+- **Lídio:** maior com IV aumentado (F-G-A-B-C-D-E-F)
+- **Mixolídio:** maior com VII menor (G-A-B-C-D-E-F-G)
+
+**Pedagogia:** Inicie sempre pela escala de Dó maior para compreender o sistema tonal!`;
+    }
+
+    if (lowerMessage.includes('acorde') || lowerMessage.includes('acordes') || lowerMessage.includes('harmonia')) {
+      return `🎸 **Harmonia e Acordes** *(Teoria Funcional)*
+      
+**TRÍADES FUNDAMENTAIS:**
+
+🎵 **Acorde Perfeito Maior:** 
+- **Estrutura:** 3ª maior + 5ª justa (4 semitons + 3 semitons)
+- **Função Tônica:** I grau - estabilidade, repouso
+- **Exemplo em Dó:** C-E-G
+
+🎵 **Acorde Perfeito Menor:**
+- **Estrutura:** 3ª menor + 5ª justa (3 semitons + 4 semitons)  
+- **Funções:** ii, iii, vi graus
+- **Exemplo:** Dm (D-F-A)
+
+🎵 **CAMPO HARMÔNICO MAIOR** *(Bohumil Med)*:
+- **I** (Maior) - **ii** (menor) - **iii** (menor) - **IV** (Maior) - **V** (Maior) - **vi** (menor) - **vii°** (diminuto)
+- **Em Dó:** C - Dm - Em - F - G - Am - Bº
+
+🎵 **FUNÇÕES HARMÔNICAS:**
+- **TÔNICA** (I, iii, vi): repouso, estabilidade
+- **SUBDOMINANTE** (II, IV): afastamento da tônica  
+- **DOMINANTE** (V, vii°): tensão, movimento obrigatório para tônica
+
+🎵 **CADÊNCIAS CLÁSSICAS:**
+- **Autêntica Perfeita:** V-I (movimento forte de dominante)
+- **Plagal:** IV-I ("Amém" - movimento subdominante)
+- **Semicadência:** x-V (suspensão na dominante)
+- **Deceptiva:** V-vi (resolução inesperada)
+
+**Progressões Pedagógicas:** I-IV-V-I / vi-IV-I-V / ii-V-I (jazz)`;
+    }
+
+    if (lowerMessage.includes('ritmo') || lowerMessage.includes('metrônomo') || lowerMessage.includes('compasso')) {
+      return `🥁 **Teoria Rítmica** *(Osvaldo Lacerda)*
+      
+**FÓRMULAS DE COMPASSO:**
+
+⏱️ **Compassos Simples:**
+- **2/4:** 2 tempos de semínima (marcha militar)
+- **3/4:** 3 tempos de semínima (valsa, minueto)  
+- **4/4:** 4 tempos de semínima (mais comum na música popular)
+
+⏱️ **Compassos Compostos:**
+- **6/8:** 2 tempos de semínima pontuada (6 colcheias)
+- **9/8:** 3 tempos de semínima pontuada 
+- **12/8:** 4 tempos de semínima pontuada
+
+🎵 **ACENTUAÇÃO MÉTRICA:**
+- **2/4:** **FORTE**-fraco
+- **3/4:** **FORTE**-fraco-fraco  
+- **4/4:** **FORTE**-fraco-**meio-forte**-fraco
+- **6/8:** **FORTE**-fraco-fraco-**meio-forte**-fraco-fraco
+
+🎵 **SUBDIVISÕES RÍTMICAS:**
+- **Binária:** divisão por 2 (semínimas→colcheias→semicolcheias)
+- **Ternária:** divisão por 3 (tercinas, sextinas)
+
+🎵 **SÍNCOPE** *(característica brasileira)*:
+- Som que inicia em tempo fraco e prolonga-se ao tempo forte
+- **Exemplo:** "Asa Branca" - síncope característica do nordeste
+
+**Uso Pedagógico do Metrônomo:**
+1. Inicie sempre em andamento lento (♩=60-80)  
+2. Pratique primeiro sem instrumento (solfejo rítmico)
+3. Aumente gradualmente: 60→80→100→120 BPM
+4. Use nossa ferramenta com acentuação automática!`;
+    }
+
+    if (lowerMessage.includes('intervalo') || lowerMessage.includes('intervalos')) {
+      return `🎼 **Intervalos Musicais** *(Bohumil Med)*
+      
+Os intervalos são as distâncias entre dois sons:
+
+🎵 **CLASSIFICAÇÃO QUANTITATIVA:**
+- **Uníssono, 2ª, 3ª, 4ª, 5ª, 6ª, 7ª, 8ª** (oitava)
+
+🎵 **CLASSIFICAÇÃO QUALITATIVA:**
+- **Justos:** 1ª, 4ª, 5ª, 8ª (não admitem maior/menor)
+- **Maiores/Menores:** 2ª, 3ª, 6ª, 7ª
+- **Aumentados/Diminutos:** alterações cromáticas
+
+🎵 **INTERVALOS JUSTOS:**
+- **4ª Justa:** 2,5 tons (C-F)
+- **5ª Justa:** 3,5 tons (C-G)  
+- **8ª Justa:** 6 tons (C-C')
+
+🎵 **INTERVALOS MAIORES:**
+- **2ª Maior:** 1 tom (C-D)
+- **3ª Maior:** 2 tons (C-E)
+- **6ª Maior:** 4,5 tons (C-A)
+- **7ª Maior:** 5,5 tons (C-B)
+
+🎵 **INVERSÃO DE INTERVALOS:**
+- A soma sempre dá 9: 2ª↔7ª, 3ª↔6ª, 4ª↔5ª
+- Maior torna-se menor e vice-versa
+- Justo permanece justo
+
+**Exercício:** Cantar intervalos com nomes (Dó-Mi = 3ª maior)`;
+    }
+
+    if (lowerMessage.includes('modo') || lowerMessage.includes('modos') || lowerMessage.includes('greg')) {
+      return `⛪ **Modos Gregos** *(Sistema Modal)*
+      
+Os modos são escalas que começam em diferentes graus da escala maior:
+
+🎵 **MODOS PRINCIPAIS:**
+- **JÔNICO** (I): escala maior natural (C-D-E-F-G-A-B)
+- **DÓRICO** (II): menor com 6ª maior (D-E-F-G-A-B-C) *caráter: nostálgico*
+- **FRÍGIO** (III): menor com 2ª menor (E-F-G-A-B-C-D) *caráter: espanhol*
+- **LÍDIO** (IV): maior com 4ª aumentada (F-G-A-B-C-D-E) *caráter: etéreo*
+- **MIXOLÍDIO** (V): maior com 7ª menor (G-A-B-C-D-E-F) *caráter: blues*
+- **EÓLICO** (VI): menor natural (A-B-C-D-E-F-G) *caráter: melancólico*
+- **LÓCRIO** (VII): menor com 5ª diminuta (B-C-D-E-F-G-A) *pouco usado*
+
+🎵 **CARACTERÍSTICAS MODAIS:**
+- **Modos Maiores:** Jônico, Lídio, Mixolídio (3ª maior)
+- **Modos Menores:** Dórico, Frígio, Eólico, Lócrio (3ª menor)
+
+🎵 **USO PRÁTICO:**
+- **Jazz:** Dórico (ii-V-I), Mixolídio (dominantes)
+- **Música Brasileira:** Mixolídio (forró, baião)
+- **Rock/Pop:** Dórico, Mixolídio
+- **Música Antiga:** todos os modos
+
+**Dica Pedagógica:** Compare sempre com a escala maior de referência!`;
+    }
+
+    // Resposta genérica aprofundada
+    return `🎵 **Assistente de Teoria Musical Avançada**
+
+Baseado nos métodos clássicos de **Bohumil Med**, **Osvaldo Lacerda** e **Priolli**:
+
+**📚 ÁREAS DE ESPECIALIZAÇÃO:**
+- **Harmonia Funcional:** análise de progressões, cadências, modulações
+- **Teoria Rítmica:** compassos, síncopes, polirritmias  
+- **Morfologia Musical:** formas musicais, análise estrutural
+- **Contraponto:** conduções melódicas, espécies de contraponto
+- **Pedagogia Musical:** métodos de ensino, sequências didáticas
+
+**🎯 PARA SEU INSTRUMENTO** ${instrument ? `(${instrument})` : ''}:
+- Exercícios técnicos específicos
+- Repertório progressivo  
+- Escalas e arpejos aplicados
+- Estudos de interpretação
+
+**🎨 ESTILO MUSICAL** ${musicStyle ? `(${musicStyle})` : ''}:
+- Características harmônicas
+- Padrões rítmicos típicos
+- Progressões idiomáticas
+- Técnicas interpretativas
+
+**❓ PERGUNTAS SUGERIDAS:**
+- "Explique a diferença entre modos dórico e frígio"
+- "Como analisar a harmonia de uma música popular?"
+- "Quais exercícios para síncope no piano?"
+- "Como ensinar intervalos para iniciantes?"
+
+*Pronto para aprofundar seus conhecimentos musicais! 🎼*`;
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -65,29 +262,32 @@ export default function IaMusical() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
-    // Simular resposta da IA (implementar integração real com IA)
-    setTimeout(() => {
-      const responses = [
-        "Excelente pergunta! Para entender melhor a progressão harmônica, vamos começar pelos graus da escala. No campo harmônico maior, temos os acordes formados sobre cada grau...",
-        "Ótima escolha de instrumento! No violão, essa técnica funciona muito bem. Vou te explicar como aplicar isso no braço do instrumento...",
-        "Esse é um conceito fundamental na bossa nova! A harmonia característica desse estilo utiliza extensões e substituições que criam aquela sonoridade única...",
-        "Para esse ritmo, é importante entender a subdivisão. Vamos quebrar isso em partes menores para que você possa absorver melhor a informação...",
-        "No jazz, essa progressão é muito comum. Vou te mostrar algumas variações e voicings que vão enriquecer sua interpretação..."
-      ];
-
+    try {
+      const aiResponse = await simulateAIResponse(currentMessage);
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: responses[Math.floor(Math.random() * responses.length)],
+        content: aiResponse,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Erro na resposta da IA:', error);
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Desculpe, ocorreu um erro ao processar sua pergunta. Tente novamente.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleFeedback = (messageId: string, feedback: 'positive' | 'negative') => {
