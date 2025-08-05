@@ -21,7 +21,7 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
   const [formaPagamento, setFormaPagamento] = useState<string>("");
   const [metodoPagamento, setMetodoPagamento] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formaPagamento) {
@@ -35,8 +35,8 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
 
     try {
       const hoje = new Date().toISOString().split('T')[0];
-      marcarPagamento(pagamentoId, hoje, formaPagamento, metodoPagamento);
-    
+      await marcarPagamento(pagamentoId, hoje, formaPagamento, metodoPagamento);
+      
       toast({
         title: "Pagamento confirmado!",
         description: `Pagamento de ${alunoNome} marcado como pago via ${formaPagamento.toUpperCase()}.`
@@ -46,6 +46,7 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
       setFormaPagamento("");
       setMetodoPagamento("");
     } catch (error) {
+      console.error('Erro ao confirmar pagamento:', error);
       toast({
         title: "Erro",
         description: "Falha ao processar pagamento. Tente novamente.",

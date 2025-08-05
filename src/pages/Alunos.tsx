@@ -97,8 +97,8 @@ export default function Alunos() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Alunos</h2>
-            <p className="text-muted-foreground text-sm sm:text-base">
+            <h2 className="text-3xl font-bold tracking-tight font-display">Alunos</h2>
+            <p className="text-muted-foreground">
               Gerencie seus alunos e informações
             </p>
           </div>

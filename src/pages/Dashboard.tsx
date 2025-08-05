@@ -70,7 +70,7 @@ export default function Dashboard() {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight font-display">Dashboard</h2>
           <p className="text-muted-foreground">
             Visão geral das suas aulas particulares
           </p>

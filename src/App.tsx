@@ -13,6 +13,7 @@ import Configuracoes from "./pages/Configuracoes";
 import IaMusical from "./pages/IaMusical";
 import Lousa from "./pages/Lousa";
 import Ferramentas from "./pages/Ferramentas";
+import SessaoAoVivo from "./pages/SessaoAoVivo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/aulas" element={<Aulas />} />
+            <Route path="/sessao-ao-vivo" element={<SessaoAoVivo />} />
             <Route path="/alunos" element={<Alunos />} />
             <Route path="/pagamentos" element={<Pagamentos />} />
             <Route path="/relatorios" element={<Relatorios />} />

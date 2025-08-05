@@ -8,7 +8,8 @@ import {
   Settings,
   Brain,
   Paintbrush,
-  Wrench
+  Wrench,
+  Video
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -26,6 +27,7 @@ import {
 const menuItems = [
   { icon: Home, label: "Dashboard", href: "/" },
   { icon: Calendar, label: "Aulas", href: "/aulas" },
+  { icon: Video, label: "Sessão ao Vivo", href: "/sessao-ao-vivo" },
   { icon: Users, label: "Alunos", href: "/alunos" },
   { icon: CreditCard, label: "Pagamentos", href: "/pagamentos" },
   { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
