@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Canvas as FabricCanvas, Circle, Rect, PencilBrush, FabricImage } from "fabric";
+import { Canvas as FabricCanvas, Circle, Rect, PencilBrush, FabricImage, Line, Group, Text } from "fabric";
 import { 
   Palette, 
   Eraser, 
@@ -237,49 +237,182 @@ export default function Lousa() {
     }
   };
 
-  // Função para carregar imagens de exemplo
-  const loadSampleImage = (imageType: string) => {
-    if (!fabricCanvas) return;
-
-    const sampleImages = {
-      'music-notes': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&h=400&fit=crop',
-      'piano': 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=500&h=400&fit=crop',
-      'guitar': 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=500&h=400&fit=crop',
-      'sheet-music': 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=500&h=400&fit=crop'
-    };
-
-    const imageUrl = sampleImages[imageType as keyof typeof sampleImages];
+  // Função para criar pauta musical
+  const createMusicalStaff = () => {
+    const lines = [];
+    const staffWidth = 300;
+    const lineSpacing = 12;
     
-    FabricImage.fromURL(imageUrl, {
-      crossOrigin: 'anonymous'
-    }).then((img) => {
-      img.set({
-        left: 50,
-        top: 50,
-        scaleX: 0.4,
-        scaleY: 0.4,
-        cornerStyle: 'circle',
-        cornerColor: '#3b82f6',
-        cornerSize: 8,
-        transparentCorners: false,
-        borderColor: '#3b82f6',
-        borderScaleFactor: 2
+    for (let i = 0; i < 5; i++) {
+      const line = new Line([0, i * lineSpacing, staffWidth, i * lineSpacing], {
+        stroke: '#000000',
+        strokeWidth: 1,
+        selectable: false,
+        evented: false
       });
+      lines.push(line);
+    }
+    
+    const staff = new Group(lines, {
+      left: 100,
+      top: 100,
+      selectable: true,
+      hasControls: true,
+      hasBorders: true,
+      cornerStyle: 'circle',
+      cornerColor: '#3b82f6',
+      borderColor: '#3b82f6'
+    });
+    
+    return staff;
+  };
 
-      fabricCanvas.add(img);
-      fabricCanvas.setActiveObject(img);
-      fabricCanvas.renderAll();
+  // Função para criar clave de sol
+  const createTrebleClef = () => {
+    const clef = new Text('𝄞', {
+      left: 100,
+      top: 80,
+      fontSize: 60,
+      fontFamily: 'serif',
+      fill: '#000000',
+      selectable: true,
+      hasControls: true,
+      hasBorders: true,
+      cornerStyle: 'circle',
+      cornerColor: '#3b82f6',
+      borderColor: '#3b82f6'
+    });
+    
+    return clef;
+  };
 
-      toast({
-        title: "Imagem de exemplo carregada!",
-        description: `Imagem de ${imageType.replace('-', ' ')} adicionada à lousa`
+  // Função para criar braço de instrumento
+  const createInstrumentNeck = (type: string) => {
+    const elements = [];
+    const neckWidth = 200;
+    const neckHeight = type === 'violao' ? 120 : type === 'viola' ? 100 : 80; // cavaquinho
+    const strings = type === 'violao' ? 6 : type === 'viola' ? 5 : 4;
+    const frets = 5;
+    
+    // Cordas horizontais
+    for (let i = 0; i < strings; i++) {
+      const stringY = (i * (neckHeight / (strings - 1)));
+      const string = new Line([0, stringY, neckWidth, stringY], {
+        stroke: '#666666',
+        strokeWidth: type === 'viola' ? 2 : 1,
+        selectable: false,
+        evented: false
       });
-    }).catch(() => {
-      toast({
-        title: "Erro ao carregar imagem",
-        description: "Não foi possível carregar a imagem de exemplo",
-        variant: "destructive"
+      elements.push(string);
+    }
+    
+    // Trastes verticais
+    for (let i = 1; i <= frets; i++) {
+      const fretX = (i * (neckWidth / frets));
+      const fret = new Line([fretX, 0, fretX, neckHeight], {
+        stroke: '#333333',
+        strokeWidth: 2,
+        selectable: false,
+        evented: false
       });
+      elements.push(fret);
+    }
+    
+    const neck = new Group(elements, {
+      left: 100,
+      top: 200,
+      selectable: true,
+      hasControls: true,
+      hasBorders: true,
+      cornerStyle: 'circle',
+      cornerColor: '#3b82f6',
+      borderColor: '#3b82f6'
+    });
+    
+    return neck;
+  };
+
+  // Função para lidar com elementos musicais
+  const handleMusicElementClick = (elementType: string) => {
+    if (!fabricCanvas) return;
+    
+    let element;
+    
+    switch (elementType) {
+      case 'pauta':
+        element = createMusicalStaff();
+        break;
+      case 'clave-sol':
+        element = createTrebleClef();
+        break;
+      case 'violao':
+      case 'viola':
+      case 'cavaquinho':
+        element = createInstrumentNeck(elementType);
+        break;
+      default:
+        return;
+    }
+    
+    fabricCanvas.add(element);
+    fabricCanvas.setActiveObject(element);
+    fabricCanvas.renderAll();
+    
+    toast({
+      title: "Elemento adicionado!",
+      description: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} adicionado à lousa`
+    });
+  };
+
+  // Função para adicionar números de dedos
+  const handleFingerNumber = (number: number) => {
+    if (!fabricCanvas) return;
+    
+    const fingerNumber = new Circle({
+      left: 150,
+      top: 150,
+      radius: 12,
+      fill: '#ffffff',
+      stroke: '#000000',
+      strokeWidth: 2,
+      selectable: true,
+      hasControls: true,
+      hasBorders: true,
+      cornerStyle: 'circle',
+      cornerColor: '#3b82f6',
+      borderColor: '#3b82f6'
+    });
+    
+    const text = new Text(number.toString(), {
+      left: 150,
+      top: 150,
+      fontSize: 16,
+      fontFamily: 'Arial',
+      fill: '#000000',
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      evented: false
+    });
+    
+    const group = new Group([fingerNumber, text], {
+      left: 150,
+      top: 150,
+      selectable: true,
+      hasControls: true,
+      hasBorders: true,
+      cornerStyle: 'circle',
+      cornerColor: '#3b82f6',
+      borderColor: '#3b82f6'
+    });
+    
+    fabricCanvas.add(group);
+    fabricCanvas.setActiveObject(group);
+    fabricCanvas.renderAll();
+    
+    toast({
+      title: "Número do dedo adicionado!",
+      description: `Dedo ${number} adicionado à lousa`
     });
   };
 
@@ -354,29 +487,29 @@ export default function Lousa() {
                 />
               </div>
 
-              {/* Imagens de Exemplo */}
+              {/* Elementos Musicais */}
               <div className="flex gap-2 flex-wrap">
-                <span className="text-sm text-muted-foreground">Exemplos:</span>
+                <span className="text-sm text-muted-foreground">Elementos:</span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => loadSampleImage('music-notes')}
+                  onClick={() => handleMusicElementClick('pauta')}
                   className="text-xs"
                 >
-                  🎵 Notas
+                  🎼 Pauta
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => loadSampleImage('piano')}
+                  onClick={() => handleMusicElementClick('clave-sol')}
                   className="text-xs"
                 >
-                  🎹 Piano
+                  𝄞 Clave de Sol
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => loadSampleImage('guitar')}
+                  onClick={() => handleMusicElementClick('violao')}
                   className="text-xs"
                 >
                   🎸 Violão
@@ -384,11 +517,35 @@ export default function Lousa() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => loadSampleImage('sheet-music')}
+                  onClick={() => handleMusicElementClick('viola')}
                   className="text-xs"
                 >
-                  🎼 Partitura
+                  🎻 Viola
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleMusicElementClick('cavaquinho')}
+                  className="text-xs"
+                >
+                  🪕 Cavaquinho
+                </Button>
+              </div>
+
+              {/* Números dos Dedos */}
+              <div className="flex gap-2 flex-wrap">
+                <span className="text-sm text-muted-foreground">Dedos:</span>
+                {[1, 2, 3, 4].map((num) => (
+                  <Button
+                    key={num}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleFingerNumber(num)}
+                    className="text-xs w-8 h-8 p-0 rounded-full"
+                  >
+                    {num}
+                  </Button>
+                ))}
               </div>
 
               {/* Color Palette */}
@@ -475,16 +632,26 @@ export default function Lousa() {
             <CardTitle>Como usar a Lousa Digital</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <h4 className="font-semibold mb-2">Ferramentas:</h4>
+                <h4 className="font-semibold mb-2">Ferramentas Básicas:</h4>
                 <ul className="space-y-1 text-muted-foreground">
                   <li>• <strong>Selecionar:</strong> Mova e edite objetos</li>
                   <li>• <strong>Desenhar:</strong> Desenhe à mão livre</li>
                   <li>• <strong>Borracha:</strong> Apague partes do desenho</li>
                   <li>• <strong>Formas:</strong> Adicione retângulos e círculos</li>
                   <li>• <strong>Upload:</strong> Carregue suas próprias imagens</li>
-                  <li>• <strong>Exemplos:</strong> Use imagens pré-definidas</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Elementos Musicais:</h4>
+                <ul className="space-y-1 text-muted-foreground">
+                  <li>• <strong>Pauta:</strong> Linhas musicais para escrever notas</li>
+                  <li>• <strong>Clave de Sol:</strong> Símbolo musical posicionável</li>
+                  <li>• <strong>Violão:</strong> Braço com 6 cordas e 5 casas</li>
+                  <li>• <strong>Viola:</strong> Braço com 5 pares e 5 casas</li>
+                  <li>• <strong>Cavaquinho:</strong> Braço com 4 cordas e 5 casas</li>
+                  <li>• <strong>Dedos 1-4:</strong> Números para digitação</li>
                 </ul>
               </div>
               <div>
@@ -494,20 +661,44 @@ export default function Lousa() {
                   <li>• <strong>Limpar:</strong> Apaga toda a lousa</li>
                   <li>• <strong>Salvar:</strong> Download em PNG</li>
                   <li>• <strong>Compartilhar:</strong> Envie para outros apps</li>
-                  <li>• <strong>Desenhar em imagens:</strong> Selecione a imagem e desenhe por cima</li>
-                  <li>• <strong>Redimensionar:</strong> Arraste os cantos das imagens</li>
+                  <li>• <strong>Mover elementos:</strong> Arraste qualquer elemento</li>
+                  <li>• <strong>Redimensionar:</strong> Arraste os cantos</li>
                 </ul>
               </div>
             </div>
             
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2">🎵 Guia de Uso Musical:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-blue-700">
+                <div>
+                  <p><strong>Leitura Musical:</strong></p>
+                  <ul className="space-y-1 ml-2">
+                    <li>1. Adicione uma pauta</li>
+                    <li>2. Posicione a clave de sol</li>
+                    <li>3. Desenhe notas com o lápis</li>
+                    <li>4. Faça anotações explicativas</li>
+                  </ul>
+                </div>
+                <div>
+                  <p><strong>Digitação de Instrumentos:</strong></p>
+                  <ul className="space-y-1 ml-2">
+                    <li>1. Adicione o braço do instrumento</li>
+                    <li>2. Clique nos números de dedos (1-4)</li>
+                    <li>3. Posicione nas casas corretas</li>
+                    <li>4. Desenhe conexões e setas</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <h4 className="font-semibold text-green-800 mb-2">💡 Dicas para uso com imagens:</h4>
+              <h4 className="font-semibold text-green-800 mb-2">💡 Dicas para Professores:</h4>
               <ul className="text-sm text-green-700 space-y-1">
-                <li>• Carregue partituras e faça anotações</li>
-                <li>• Use imagens de instrumentos para explicar técnicas</li>
-                <li>• Desenhe sobre acordes para mostrar posições</li>
-                <li>• Limite de 5MB por imagem (JPG, PNG, GIF)</li>
-                <li>• Use a ferramenta "Selecionar" para mover e redimensionar imagens</li>
+                <li>• <strong>Preparação rápida:</strong> Monte exemplos em menos de 30 segundos</li>
+                <li>• <strong>Elementos interativos:</strong> Todos os elementos podem ser movidos e redimensionados</li>
+                <li>• <strong>Desenho livre:</strong> Funciona sobre todos os elementos para anotações</li>
+                <li>• <strong>Aulas ao vivo:</strong> Interface otimizada para uso em tempo real</li>
+                <li>• <strong>Múltiplos instrumentos:</strong> Combine diferentes braços na mesma lousa</li>
               </ul>
             </div>
           </CardContent>
