@@ -332,90 +332,77 @@ Reharmonização é a arte avançada de substituir acordes mantendo a melodia, c
 • **V7/IV:** C7 → F (dominante do quarto grau)
 
 **Análise de "All The Things You Are":**
-```
 Original: C-F-Bb-Eb-Am-D-G-C
 Com dominantes: C-C7-F-F7-Bb-Bb7-Eb-E7-Am-A7-D-D7-G-G7-C
-```
 
 **3. ACORDES DIMINUTOS DE PASSAGEM:**
-• **Entre graus consecutivos:** C-C#°-Dm (I-#i°-ii)
-• **Entre I-ii:** C-C#°-Dm-D#°-Em
-• **Entre V-vi:** G-G#°-Am
+• **Entre graus consecutivos:** C-C#dim-Dm (I-#i°-ii)
+• **Entre I-ii:** C-C#dim-Dm-D#dim-Em
+• **Entre V-vi:** G-G#dim-Am
 • **Função:** Movimento cromático + tensão passageira
 
 🎨 **TÉCNICAS ESPECÍFICAS DE REHARMONIZAÇÃO**
 
 **1. CLICHÉ HARMÔNICO (Linha Cromática no Baixo):**
-```
 Progressão original: C-Am-F-G
 Cliché descendente:  C-C/B-C/Bb-C/A-F-G
 Cliché ascendente:   C-C/D-C/E-C/F-F-G
-```
+
 • **Conceito:** Baixo cromático, harmonia superior estática
 • **Uso:** Bossa nova, MPB, jazz ballad
 • **Exemplo:** "The Girl from Ipanema" (Jobim)
 
 **2. PEDAL HARMÔNICO:**
-```
 Original: C-F-G-C
 Pedal C:  C-F/C-G/C-C
 Pedal G:  C/G-F/G-G-C/G
-```
+
 • **Efeito:** Suspensão tonal, modernidade harmônica
 • **Aplicação:** Música impressionista, jazz moderno
 
 **3. MOVIMENTO POR SEGUNDAS:**
-```
 Original: C-Am-F-G
-Por 2ªs:  C-B♭-Am-A♭-F-G
-```
+Por 2as:  C-Bb-Am-Ab-F-G
+
 • **Conceito:** Substituição por acordes meio tom abaixo
 • **Estilo:** Jazz fusion, música contemporânea
 
 🎹 **REHARMONIZAÇÃO POR ESTILO ESPECÍFICO**
 
 **BOSSA NOVA (Escola Tom Jobim):**
-• **Characteristics:** Tensões obrigatórias (9ª, #11ª, 13ª)
+• **Características:** Tensões obrigatórias (9a, #11a, 13a)
 • **Acordes típicos:** Maj7(#11), m7(9), 7(13), m7b5
 • **Movimento:** Preferência por segundas e terças
 • **Exemplo prático - "Corcovado":**
-```
 Original simplificado: C-G-Am-F-G-C
 Jobim style:          C Maj7(#11)-G7(13)-Am7(9)-F Maj7(#11)-G7(13)-C6/9
-```
 
 **JAZZ BEBOP (Charlie Parker/Dizzy Gillespie):**
-• **ii-V-I Extended:** IIm7-♭II7-I Maj7
+• **ii-V-I Extended:** IIm7-bII7-I Maj7
 • **Chromatic approach:** Acordes de aproximação cromática
 • **Exemplo - "Cherokee" reharmonization:**
-```
 Original: Bb-G7-Cm-F7-Bb
 Bebop:   Bb Maj7-B7-Bb7-A7-Ab7-G7-Gb7-F7-E7-Eb7-D7-Db7-Cm7-F7-Bb
-```
 
 **MPB SOFISTICADA (Djavan/Ivan Lins Style):**
-• **Empréstimo modal:** ♭VII, ♭VI, iv em maior
-• **Harmonia quartal:** Acordes construídos por 4ªs
+• **Empréstimo modal:** bVII, bVI, iv em maior
+• **Harmonia quartal:** Acordes construídos por 4as
 • **Exemplo - Progressão típica MPB:**
-```
 Modal borrowing: C-Bb-F/A-Fm/Ab-C
 Quartal harmony: Am11-Dm11-G11-C Maj7(add9)
-```
 
 💡 **EXERCÍCIO SISTEMÁTICO DE REHARMONIZAÇÃO**
 ☑ **Passo 1:** Analise "Happy Birthday" harmonicamente
 ☑ **Passo 2:** Aplique substituição tritonal em dominantes
 ☑ **Passo 3:** Adicione dominantes secundárias
-☑ **Passo 4:** Use empréstimo modal (♭VII, ♭VI)
+☑ **Passo 4:** Use empréstimo modal (bVII, bVI)
 ☑ **Passo 5:** Crie versão bossa nova com tensions
 
 **"Happy Birthday" - Evolução Harmônica:**
-```
-Original:    C-C-F-C-G7-C
+Original:     C-C-F-C-G7-C
 Intermediário: C-A7-Dm-C-G7-C
-Avançado:    C Maj7-A7(b13)-Dm7(9)-C6/9-G7(13)-C Maj7(#11)
-Master:      C Maj7(#11)-A7alt-Dm7(9)/G-C6/9/E-Db7-C Maj7(#11)
-```
+Avançado:     C Maj7-A7(b13)-Dm7(9)-C6/9-G7(13)-C Maj7(#11)
+Master:       C Maj7(#11)-A7alt-Dm7(9)/G-C6/9/E-Db7-C Maj7(#11)
 
 🎼 **ANÁLISE DE MESTRES DA REHARMONIZAÇÃO**
 
