@@ -14,9 +14,11 @@ import {
   Cell,
   LineChart,
   Line,
-  Legend
+  Legend,
+  Area,
+  AreaChart
 } from "recharts";
-import { DollarSign, TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, ArrowUpRight, Calendar, Eye } from "lucide-react";
 
 export function FinancialDashboard() {
   const { pagamentos, aulas, alunos } = useApp();
@@ -48,170 +50,213 @@ export function FinancialDashboard() {
       mes: mesString,
       receita: receitaMes,
       aulas: aulasMes,
-      receitaFormatada: `R$ ${receitaMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+      receitaPotencial: aulasMes * 200 // Assumindo valor médio de R$200 por aula
     });
   }
 
-  // Dados para o gráfico de pizza - Status dos pagamentos
+  // Calcular métricas atuais
+  const mesAtual = hoje.getMonth();
+  const receitaMesAtual = dadosMensais[dadosMensais.length - 1]?.receita || 0;
+  const receitaMesAnterior = dadosMensais[dadosMensais.length - 2]?.receita || 0;
+  const aulasMesAtual = dadosMensais[dadosMensais.length - 1]?.aulas || 0;
+  const aulasMesAnterior = dadosMensais[dadosMensais.length - 2]?.aulas || 0;
+
+  const crescimentoReceita = receitaMesAnterior > 0 ? 
+    ((receitaMesAtual - receitaMesAnterior) / receitaMesAnterior) * 100 : 0;
+  const crescimentoAulas = aulasMesAnterior > 0 ? 
+    ((aulasMesAtual - aulasMesAnterior) / aulasMesAnterior) * 100 : 0;
+
+  // Encontrar melhor mês
+  const melhorMesReceita = dadosMensais.reduce((max, atual) => 
+    atual.receita > max.receita ? atual : max, dadosMensais[0] || { mes: 'N/A', receita: 0 });
+  const melhorMesAulas = dadosMensais.reduce((max, atual) => 
+    atual.aulas > max.aulas ? atual : max, dadosMensais[0] || { mes: 'N/A', aulas: 0 });
+
+  // Dados dos pagamentos por status
   const statusPagamentos = [
     {
       name: 'Pagos',
       value: pagamentos.filter(p => p.status === 'pago').length,
-      valor: pagamentos.filter(p => p.status === 'pago').reduce((sum, p) => sum + p.valor, 0),
-      color: '#22c55e'
+      total: pagamentos.filter(p => p.status === 'pago').reduce((sum, p) => sum + p.valor, 0),
+      fill: '#22c55e'
     },
     {
       name: 'Pendentes',
       value: pagamentos.filter(p => p.status === 'pendente').length,
-      valor: pagamentos.filter(p => p.status === 'pendente').reduce((sum, p) => sum + p.valor, 0),
-      color: '#f59e0b'
+      total: pagamentos.filter(p => p.status === 'pendente').reduce((sum, p) => sum + p.valor, 0),
+      fill: '#f59e0b'
     },
     {
       name: 'Atrasados',
       value: pagamentos.filter(p => p.status === 'atrasado').length,
-      valor: pagamentos.filter(p => p.status === 'atrasado').reduce((sum, p) => sum + p.valor, 0),
-      color: '#ef4444'
+      total: pagamentos.filter(p => p.status === 'atrasado').reduce((sum, p) => sum + p.valor, 0),
+      fill: '#ef4444'
     }
   ];
 
-  // Calcular métricas principais
-  const mesAtual = new Date().getMonth();
-  const anoAtual = new Date().getFullYear();
-  const mesAnterior = mesAtual === 0 ? 11 : mesAtual - 1;
-  const anoAnterior = mesAtual === 0 ? anoAtual - 1 : anoAtual;
-
-  const receitaMesAtual = dadosMensais[5]?.receita || 0;
-  const receitaMesAnterior = dadosMensais[4]?.receita || 0;
-  const crescimentoReceita = receitaMesAnterior > 0 ? 
-    ((receitaMesAtual - receitaMesAnterior) / receitaMesAnterior * 100) : 0;
-
-  const aulasMesAtual = dadosMensais[5]?.aulas || 0;
-  const aulasMesAnterior = dadosMensais[4]?.aulas || 0;
-  const crescimentoAulas = aulasMesAnterior > 0 ? 
-    ((aulasMesAtual - aulasMesAnterior) / aulasMesAnterior * 100) : 0;
-
-  // Identificar melhor mês
-  const melhorMesReceita = dadosMensais.reduce((max, mes) => 
-    mes.receita > max.receita ? mes : max, dadosMensais[0] || { mes: '', receita: 0 });
-  
-  const melhorMesAulas = dadosMensais.reduce((max, mes) => 
-    mes.aulas > max.aulas ? mes : max, dadosMensais[0] || { mes: '', aulas: 0 });
+  // Paleta de cores moderna
+  const COLORS = ['#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'];
 
   return (
-    <div className="space-y-6">
-      {/* Highlights Comparativos */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+    <div className="space-y-8">
+      {/* Hero Metrics */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="card-modern border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receita do Mês</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Receita do Mês</CardTitle>
+            <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-full">
+              <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold text-green-800 dark:text-green-200">
               R$ {receitaMesAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            <div className={`text-xs flex items-center ${crescimentoReceita >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-xs flex items-center mt-2 ${crescimentoReceita >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {crescimentoReceita >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
               {Math.abs(crescimentoReceita).toFixed(1)}% vs mês anterior
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-modern border-none shadow-lg bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aulas do Mês</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Aulas do Mês</CardTitle>
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-full">
+              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{aulasMesAtual}</div>
-            <div className={`text-xs flex items-center ${crescimentoAulas >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="text-3xl font-bold text-blue-800 dark:text-blue-200">{aulasMesAtual}</div>
+            <div className={`text-xs flex items-center mt-2 ${crescimentoAulas >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {crescimentoAulas >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
               {Math.abs(crescimentoAulas).toFixed(1)}% vs mês anterior
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-modern border-none shadow-lg bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Melhor Mês (Receita)</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Melhor Mês (Receita)</CardTitle>
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-full">
+              <DollarSign className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{melhorMesReceita.mes}</div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold text-purple-800 dark:text-purple-200">{melhorMesReceita.mes}</div>
+            <div className="text-xs text-purple-600 dark:text-purple-400 mt-2">
               R$ {melhorMesReceita.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-modern border-none shadow-lg bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Melhor Mês (Aulas)</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">Melhor Mês (Aulas)</CardTitle>
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-full">
+              <ArrowUpRight className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{melhorMesAulas.mes}</div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold text-orange-800 dark:text-orange-200">{melhorMesAulas.mes}</div>
+            <div className="text-xs text-orange-600 dark:text-orange-400 mt-2">
               {melhorMesAulas.aulas} aulas realizadas
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Gráficos */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Receita vs Aulas */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Evolução Mensal - Receita vs Aulas</CardTitle>
+      {/* Charts Section */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Revenue Area Chart */}
+        <Card className="card-modern border-none shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <Eye className="h-5 w-5 text-primary" />
+              Evolução da Receita
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dadosMensais}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="mes" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip 
-                  formatter={(value, name) => [
-                    name === 'receita' ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : value,
-                    name === 'receita' ? 'Receita' : 'Aulas'
-                  ]}
+            <ResponsiveContainer width="100%" height={320}>
+              <AreaChart data={dadosMensais}>
+                <defs>
+                  <linearGradient id="receitaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0.0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="mes" 
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
                 />
-                <Legend />
-                <Bar yAxisId="left" dataKey="receita" fill="#22c55e" name="Receita" />
-                <Line yAxisId="right" type="monotone" dataKey="aulas" stroke="#3b82f6" strokeWidth={3} name="Aulas" />
-              </LineChart>
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                  formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="receita" 
+                  stroke="#22c55e" 
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#receitaGradient)"
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Status dos Pagamentos */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição de Pagamentos</CardTitle>
+        {/* Status dos Pagamentos - Modern Pie Chart */}
+        <Card className="card-modern border-none shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <DollarSign className="h-5 w-5 text-primary" />
+              Status dos Pagamentos
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={320}>
               <PieChart>
                 <Pie
                   data={statusPagamentos}
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
+                  innerRadius={60}
+                  outerRadius={120}
+                  paddingAngle={4}
                   dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
                 >
                   {statusPagamentos.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
                 </Pie>
                 <Tooltip 
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
                   formatter={(value, name, props) => [
                     `${value} pagamentos`,
-                    `R$ ${props.payload.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                    `R$ ${props.payload.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                   ]}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  iconType="circle"
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -219,21 +264,52 @@ export function FinancialDashboard() {
         </Card>
       </div>
 
-      {/* Evolução Receita por Mês - Gráfico de Barras */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Receita Mensal - Últimos 6 Meses</CardTitle>
+      {/* Performance Bar Chart */}
+      <Card className="card-modern border-none shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <BarChart className="h-5 w-5 text-primary" />
+            Performance Mensal Comparativa
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={dadosMensais}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip 
-                formatter={(value) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
+            <BarChart data={dadosMensais} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis 
+                dataKey="mes" 
+                tick={{ fontSize: 12 }}
+                stroke="#6b7280"
               />
-              <Bar dataKey="receita" fill="#22c55e" />
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                stroke="#6b7280"
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+                formatter={(value, name) => [
+                  name === 'receita' ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : value,
+                  name === 'receita' ? 'Receita Realizada' : 'Quantidade de Aulas'
+                ]}
+              />
+              <Legend />
+              <Bar 
+                dataKey="receita" 
+                fill="#22c55e" 
+                name="Receita Realizada"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar 
+                dataKey="aulas" 
+                fill="#3b82f6" 
+                name="Quantidade de Aulas"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

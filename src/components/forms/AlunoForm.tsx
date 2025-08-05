@@ -22,6 +22,9 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
     nome: aluno?.nome || "",
     email: aluno?.email || "",
     telefone: aluno?.telefone || "",
+    cidade: aluno?.cidade || "",
+    estado: aluno?.estado || "",
+    pais: aluno?.pais || "Brasil",
     mensalidade: aluno?.mensalidade || 0,
     duracaoAula: aluno?.duracaoAula || 50,
     status: aluno?.status || "ativo",
@@ -31,7 +34,7 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nome || !formData.email || !formData.mensalidade || !formData.duracaoAula) {
+    if (!formData.nome || !formData.email || !formData.mensalidade || !formData.duracaoAula || !formData.cidade || !formData.estado) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
@@ -104,6 +107,36 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
                 value={formData.telefone}
                 onChange={(e) => handleChange("telefone", e.target.value)}
                 placeholder="(11) 99999-9999"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="cidade">Cidade *</Label>
+              <Input
+                id="cidade"
+                value={formData.cidade}
+                onChange={(e) => handleChange("cidade", e.target.value)}
+                placeholder="São Paulo"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="estado">Estado *</Label>
+              <Input
+                id="estado"
+                value={formData.estado}
+                onChange={(e) => handleChange("estado", e.target.value)}
+                placeholder="SP"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="pais">País</Label>
+              <Input
+                id="pais"
+                value={formData.pais}
+                onChange={(e) => handleChange("pais", e.target.value)}
+                placeholder="Brasil"
               />
             </div>
             

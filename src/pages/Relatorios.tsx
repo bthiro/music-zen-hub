@@ -62,10 +62,19 @@ export default function Relatorios() {
   };
 
   const exportarCSV = () => {
-    // Dados dos alunos
+    // Dados dos alunos com codificação UTF-8 BOM para Excel
     const csvAlunos = [
-      ['Nome', 'Email', 'Telefone', 'Mensalidade', 'Status'],
-      ...alunos.map(a => [a.nome, a.email, a.telefone || '', a.mensalidade, a.status])
+      ['Nome', 'Email', 'Telefone', 'Cidade', 'Estado', 'País', 'Mensalidade', 'Status'],
+      ...alunos.map(a => [
+        a.nome, 
+        a.email, 
+        a.telefone || '', 
+        a.cidade || '', 
+        a.estado || '', 
+        a.pais || 'Brasil', 
+        a.mensalidade, 
+        a.status
+      ])
     ].map(row => row.join(';')).join('\n');
 
     // Dados dos pagamentos
@@ -74,10 +83,10 @@ export default function Relatorios() {
       ...pagamentos.map(p => [p.aluno, p.valor, p.vencimento, p.pagamento || '', p.status])
     ].map(row => row.join(';')).join('\n');
 
-    // Criar arquivo combinado
-    const csvCompleto = `ALUNOS\n${csvAlunos}\n\nPAGAMENTOS\n${csvPagamentos}`;
+    // Criar arquivo combinado com BOM para UTF-8
+    const csvCompleto = `\uFEFFALUNOS\n${csvAlunos}\n\nPAGAMENTOS\n${csvPagamentos}`;
     
-    const blob = new Blob([csvCompleto], { type: 'text/csv' });
+    const blob = new Blob([csvCompleto], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -110,11 +119,6 @@ export default function Relatorios() {
               <span className="hidden sm:inline">Dashboard</span>
               <span className="sm:hidden">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="contabil" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Contábil</span>
-              <span className="sm:hidden">Contábil</span>
-            </TabsTrigger>
             <TabsTrigger value="operacional" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Operacional</span>
@@ -122,17 +126,18 @@ export default function Relatorios() {
             </TabsTrigger>
             <TabsTrigger value="resumo" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
               <PieChart className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Resumo</span>
-              <span className="sm:hidden">Resumo</span>
+              <span className="hidden sm:inline">Relatórios</span>
+              <span className="sm:hidden">Relatórios</span>
+            </TabsTrigger>
+            <TabsTrigger value="contabil" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Contábil</span>
+              <span className="sm:hidden">Contábil</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
             <FinancialDashboard />
-          </TabsContent>
-
-          <TabsContent value="contabil">
-            <AccountingReport />
           </TabsContent>
 
           <TabsContent value="operacional" className="space-y-6">
@@ -231,6 +236,14 @@ export default function Relatorios() {
           </TabsContent>
 
           <TabsContent value="resumo" className="space-y-6">
+            <FinancialDashboard />
+          </TabsContent>
+
+          <TabsContent value="contabil">
+            <AccountingReport />
+          </TabsContent>
+
+          <TabsContent value="old-resumo" className="space-y-6">
             {/* Resumo Executivo */}
             <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
               <Card>

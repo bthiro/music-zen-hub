@@ -1,4 +1,15 @@
-# 📋 Tutorial de Instalação - Sistema de Gestão de Aulas
+# 📋 Tutorial de Instalação - ClassPro (Sistema de Gestão de Aulas)
+
+## 📋 Funcionalidades Principais
+
+- ✅ **Gestão de Alunos**: Cadastro completo com informações pessoais, localização e contratos
+- ✅ **Agendamento Inteligente**: Sistema com duração automática baseada no plano do aluno (30 ou 50 min)
+- ✅ **Controle de Fuso Horário**: Detecção automática e ajuste manual para diferentes regiões
+- ✅ **Controle Financeiro**: Pagamentos, mensalidades e relatórios detalhados com exportação CSV
+- ✅ **Relatórios Avançados**: Dashboard moderno com gráficos interativos e métricas visuais
+- ✅ **Integração Google**: Agenda e Meet automáticos com sincronização completa
+- ✅ **Design Responsivo**: Interface moderna e otimizada para todos os dispositivos
+- ✅ **Módulo Contábil**: Preparado para geração de relatórios para IR
 
 ## 🚀 Requisitos do Servidor
 

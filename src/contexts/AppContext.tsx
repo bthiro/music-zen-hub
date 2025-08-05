@@ -6,6 +6,9 @@ export interface Aluno {
   nome: string;
   email: string;
   telefone?: string;
+  cidade?: string;
+  estado?: string;
+  pais?: string;
   mensalidade: number;
   duracaoAula: 30 | 50; // Duração da aula em minutos
   observacoes?: string;

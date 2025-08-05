@@ -33,7 +33,7 @@ export default function Configuracoes() {
     testIntegration 
   } = useGoogleIntegration();
   const [config, setConfig] = useState({
-    horarioPadrao: "14:00",
+    fusoHorario: Intl.DateTimeFormat().resolvedOptions().timeZone,
     chavePix: "professor@email.com",
     linkPagamento: "https://mercadopago.com.br/checkout/v1/redirect?pref_id=123456789",
     mensagemCobranca: `Olá {ALUNO}! 😊
@@ -83,13 +83,30 @@ Obrigado(a) pela confiança! 🎵`,
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="horarioPadrao">Horário Padrão de Aula</Label>
-                <Input
-                  id="horarioPadrao"
-                  type="time"
-                  value={config.horarioPadrao}
-                  onChange={(e) => setConfig(prev => ({...prev, horarioPadrao: e.target.value}))}
-                />
+                <Label htmlFor="fusoHorario">Fuso Horário</Label>
+                <select 
+                  id="fusoHorario"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={config.fusoHorario}
+                  onChange={(e) => setConfig(prev => ({...prev, fusoHorario: e.target.value}))}
+                >
+                  <option value="America/Sao_Paulo">São Paulo (UTC-3)</option>
+                  <option value="America/Rio_Branco">Acre (UTC-5)</option>
+                  <option value="America/Manaus">Manaus (UTC-4)</option>
+                  <option value="America/Cuiaba">Cuiabá (UTC-4)</option>
+                  <option value="America/Campo_Grande">Campo Grande (UTC-4)</option>
+                  <option value="America/Belem">Belém (UTC-3)</option>
+                  <option value="America/Fortaleza">Fortaleza (UTC-3)</option>
+                  <option value="America/Recife">Recife (UTC-3)</option>
+                  <option value="America/Bahia">Salvador (UTC-3)</option>
+                  <option value="Europe/London">Londres (UTC+0)</option>
+                  <option value="Europe/Madrid">Madrid (UTC+1)</option>
+                  <option value="America/New_York">Nova York (UTC-5)</option>
+                  <option value="America/Los_Angeles">Los Angeles (UTC-8)</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Detectado automaticamente: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                </p>
               </div>
               
               <div className="flex items-center space-x-2">
@@ -98,7 +115,7 @@ Obrigado(a) pela confiança! 🎵`,
                   checked={config.notificacoesPush}
                   onCheckedChange={(checked) => setConfig(prev => ({...prev, notificacoesPush: checked}))}
                 />
-                <Label htmlFor="notificacoes">Receber notificações automáticas</Label>
+                <Label htmlFor="notificacoes">Receber atualizações automáticas</Label>
               </div>
             </CardContent>
           </Card>
