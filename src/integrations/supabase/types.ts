@@ -14,7 +14,258 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alunos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          email: string | null
+          id: string
+          instrumento: string | null
+          nivel: string | null
+          nome: string
+          observacoes: string | null
+          professor_id: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          instrumento?: string | null
+          nivel?: string | null
+          nome: string
+          observacoes?: string | null
+          professor_id: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          instrumento?: string | null
+          nivel?: string | null
+          nome?: string
+          observacoes?: string | null
+          professor_id?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alunos_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aulas: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_hora: string
+          feedback: string | null
+          id: string
+          presenca: boolean | null
+          professor_id: string
+          status: string | null
+          tema: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_hora: string
+          feedback?: string | null
+          id?: string
+          presenca?: boolean | null
+          professor_id: string
+          status?: string | null
+          tema?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_hora?: string
+          feedback?: string | null
+          id?: string
+          presenca?: boolean | null
+          professor_id?: string
+          status?: string | null
+          tema?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aulas_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aulas_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mensagens_enviadas: {
+        Row: {
+          aluno_id: string
+          conteudo: string
+          data_envio: string
+          id: string
+          professor_id: string
+          referencia_externa: string | null
+          status: string
+          tipo_mensagem: string
+        }
+        Insert: {
+          aluno_id: string
+          conteudo: string
+          data_envio?: string
+          id?: string
+          professor_id: string
+          referencia_externa?: string | null
+          status?: string
+          tipo_mensagem: string
+        }
+        Update: {
+          aluno_id?: string
+          conteudo?: string
+          data_envio?: string
+          id?: string
+          professor_id?: string
+          referencia_externa?: string | null
+          status?: string
+          tipo_mensagem?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_enviadas_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mensagens_enviadas_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagamentos: {
+        Row: {
+          aluno_id: string
+          aula_id: string | null
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          forma_pagamento: string | null
+          id: string
+          link_pagamento: string | null
+          professor_id: string
+          referencia_externa: string | null
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          aluno_id: string
+          aula_id?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          forma_pagamento?: string | null
+          id?: string
+          link_pagamento?: string | null
+          professor_id: string
+          referencia_externa?: string | null
+          status?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          aluno_id?: string
+          aula_id?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          forma_pagamento?: string | null
+          id?: string
+          link_pagamento?: string | null
+          professor_id?: string
+          referencia_externa?: string | null
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_aula_id_fkey"
+            columns: ["aula_id"]
+            isOneToOne: false
+            referencedRelation: "aulas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professores: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
