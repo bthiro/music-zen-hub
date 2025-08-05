@@ -59,7 +59,7 @@ export function AppSidebar() {
                     <SidebarMenuButton 
                       asChild 
                       isActive={isActive}
-                      tooltip={item.label}
+                      tooltip={state === "collapsed" ? item.label : undefined}
                       className={cn(
                         "w-full justify-start transition-all duration-200",
                         isActive && "bg-primary/10 text-primary border-r-2 border-primary"
@@ -68,8 +68,8 @@ export function AppSidebar() {
                       <Link to={item.href} className="flex items-center gap-3 px-3 py-2 rounded-l-md">
                         <Icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-primary")} />
                         <span className={cn(
-                          "font-medium transition-opacity",
-                          state === "collapsed" && "opacity-0 w-0 overflow-hidden"
+                          "font-medium transition-all duration-200",
+                          state === "collapsed" ? "lg:opacity-0 lg:w-0 lg:overflow-hidden" : "opacity-100"
                         )}>
                           {item.label}
                         </span>

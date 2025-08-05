@@ -200,23 +200,34 @@ export default function Alunos() {
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2 ml-4">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(aluno)}>
-                      <Edit className="h-4 w-4" />
+                  {/* Ações em layout vertical para mobile */}
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0 sm:ml-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEdit(aluno)}
+                      className="w-full sm:w-auto text-xs"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => setAlunoEvolucao({id: aluno.id, nome: aluno.nome})}
+                      className="w-full sm:w-auto text-xs"
                     >
-                      <Clock className="h-4 w-4" />
+                      <Clock className="h-4 w-4 mr-2" />
+                      Evolução
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => handleDelete(aluno.id, aluno.nome)}
+                      className="w-full sm:w-auto text-xs"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
                     </Button>
                   </div>
                 </div>

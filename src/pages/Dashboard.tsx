@@ -122,7 +122,7 @@ export default function Dashboard() {
         </div>
 
         {/* Google Calendar Integration */}
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -130,34 +130,33 @@ export default function Dashboard() {
                 Google Calendar
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               <GoogleCalendarIntegration />
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="text-base sm:text-lg">Aulas de Hoje</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6 pt-0">
               <div className="space-y-3">
                 {aulasDoDia.map((aula) => (
-                  <div key={aula.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg bg-muted/50 gap-3 sm:gap-0">
+                  <div key={aula.id} className="flex flex-col p-3 border rounded-lg bg-muted/50 gap-2">
                     <div className="flex-1">
-                      <p className="font-medium text-sm sm:text-lg">{aula.aluno}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                      <p className="font-medium text-sm">{aula.aluno}</p>
+                      <p className="text-xs text-muted-foreground">
                         {aula.horario} - {formatarDataCompleta(aula.data)}
                       </p>
                     </div>
-                    <div className="flex gap-2 self-end sm:self-center">
-                      <div className="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-green-50 text-green-700 border border-green-200">
+                    <div className="flex gap-2 justify-between items-center">
+                      <div className="px-2 py-1 rounded-full text-xs bg-green-50 text-green-700 border border-green-200">
                         Hoje
                       </div>
                       {aula.linkMeet && (
-                        <Button size="sm" variant="default" asChild className="text-xs sm:text-sm">
+                        <Button size="sm" variant="default" asChild className="text-xs">
                           <a href={aula.linkMeet} target="_blank" rel="noopener noreferrer">
-                            <span className="hidden sm:inline">Entrar</span>
-                            <span className="sm:hidden">Meet</span>
+                            Meet
                             <ExternalLink className="h-3 w-3 ml-1" />
                           </a>
                         </Button>
@@ -166,9 +165,9 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {aulasDoDia.length === 0 && (
-                  <div className="text-center py-6 sm:py-8">
-                    <CalendarDays className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground text-sm sm:text-base">Nenhuma aula agendada para hoje</p>
+                  <div className="text-center py-6">
+                    <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground text-sm">Nenhuma aula agendada para hoje</p>
                   </div>
                 )}
               </div>
@@ -176,28 +175,28 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
           {/* Próximas Aulas */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="text-base sm:text-lg">Próximas Aulas (3 dias)</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6 pt-0">
               <div className="space-y-3">
                 {proximasAulas.map((aula) => (
-                  <div key={aula.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-3 sm:gap-0">
+                  <div key={aula.id} className="flex flex-col p-3 border rounded-lg gap-2">
                     <div className="flex-1">
-                      <p className="font-medium text-sm sm:text-base">{aula.aluno}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                      <p className="font-medium text-sm">{aula.aluno}</p>
+                      <p className="text-xs text-muted-foreground">
                         {formatarData(aula.data)} às {aula.horario}
                       </p>
                     </div>
-                    <div className="flex gap-2 self-end sm:self-center">
+                    <div className="flex gap-2 justify-between items-center">
                       <div className="px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700 border border-blue-200">
                         agendada
                       </div>
                       {aula.linkMeet && (
-                        <Button size="sm" variant="outline" asChild className="text-xs sm:text-sm">
+                        <Button size="sm" variant="outline" asChild className="text-xs">
                           <a href={aula.linkMeet} target="_blank" rel="noopener noreferrer">
                             Meet <ExternalLink className="h-3 w-3 ml-1" />
                           </a>
@@ -207,7 +206,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {proximasAulas.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4 text-sm sm:text-base">
+                  <p className="text-center text-muted-foreground py-4 text-sm">
                     Nenhuma aula agendada
                   </p>
                 )}
@@ -217,26 +216,26 @@ export default function Dashboard() {
 
           {/* Pagamentos Pendentes */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="text-base sm:text-lg">Pagamentos Pendentes</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6 pt-0">
               <div className="space-y-3">
                 {pagamentosPendentes.map((pagamento) => (
-                  <div key={pagamento.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-2 sm:gap-0">
+                  <div key={pagamento.id} className="flex flex-col p-3 border rounded-lg gap-2">
                     <div className="flex-1">
-                      <p className="font-medium text-sm sm:text-base">{pagamento.aluno}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                      <p className="font-medium text-sm">{pagamento.aluno}</p>
+                      <p className="text-xs text-muted-foreground">
                         Vence em {formatarData(pagamento.vencimento)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-destructive text-sm sm:text-base">R$ {pagamento.valor}</p>
+                    <div className="flex justify-between items-center">
+                      <p className="font-medium text-destructive text-sm">R$ {pagamento.valor}</p>
                     </div>
                   </div>
                 ))}
                 {pagamentosPendentes.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4 text-sm sm:text-base">
+                  <p className="text-center text-muted-foreground py-4 text-sm">
                     Todos os pagamentos em dia! 🎉
                   </p>
                 )}

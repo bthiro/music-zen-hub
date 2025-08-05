@@ -373,11 +373,12 @@ Professor`;
           </Card>
         )}
 
-        {/* Filtros e busca */}
+        {/* Filtros e busca - Layout Mobile First */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+            <div className="space-y-4">
+              {/* Campo de busca */}
+              <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar por aluno..."
@@ -386,19 +387,24 @@ Professor`;
                   className="pl-10"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex gap-2">
+              
+              {/* Filtros de Status */}
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant={filtroStatus === "ativas" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setFiltroStatus("ativas")}
+                    className="text-xs"
                   >
+                    <Filter className="h-3 w-3 mr-1" />
                     Ativas
                   </Button>
                   <Button
                     variant={filtroStatus === "todas" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setFiltroStatus("todas")}
+                    className="text-xs"
                   >
                     Todas
                   </Button>
@@ -406,6 +412,7 @@ Professor`;
                     variant={filtroStatus === "agendada" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setFiltroStatus("agendada")}
+                    className="text-xs"
                   >
                     Agendadas
                   </Button>
@@ -413,6 +420,7 @@ Professor`;
                     variant={filtroStatus === "realizada" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setFiltroStatus("realizada")}
+                    className="text-xs"
                   >
                     Realizadas
                   </Button>
@@ -420,23 +428,25 @@ Professor`;
                     variant={filtroStatus === "cancelada" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setFiltroStatus("cancelada")}
+                    className="text-xs"
                   >
                     Canceladas
                   </Button>
                 </div>
                 
-                <div className="flex gap-2">
+                {/* Filtro Dia da Semana */}
+                <div className="w-full">
                   <select 
                     value={filtroDiaSemana} 
                     onChange={(e) => setFiltroDiaSemana(e.target.value)}
-                    className="px-3 py-1 border rounded text-sm"
+                    className="w-full px-3 py-2 border rounded text-sm bg-background"
                   >
-                    <option value="todos">Todos os dias</option>
-                    <option value="1">Segunda</option>
-                    <option value="2">Terça</option>
-                    <option value="3">Quarta</option>
-                    <option value="4">Quinta</option>
-                    <option value="5">Sexta</option>
+                    <option value="todos">📅 Todos os dias</option>
+                    <option value="1">Segunda-feira</option>
+                    <option value="2">Terça-feira</option>
+                    <option value="3">Quarta-feira</option>
+                    <option value="4">Quinta-feira</option>
+                    <option value="5">Sexta-feira</option>
                     <option value="6">Sábado</option>
                     <option value="0">Domingo</option>
                   </select>

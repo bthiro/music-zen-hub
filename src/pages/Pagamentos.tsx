@@ -176,61 +176,65 @@ export default function Pagamentos() {
           </CardContent>
         </Card>
 
-        {/* Lista de pagamentos */}
+        {/* Lista de pagamentos responsiva */}
         <div className="grid gap-4">
           {pagamentosFiltrados.map((pagamento) => (
             <Card key={pagamento.id}>
               <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {getStatusIcon(pagamento.status)}
-                      <h3 className="text-lg font-semibold">{pagamento.aluno}</h3>
-                      <Badge className={getStatusColor(pagamento.status)}>
-                        {pagamento.status}
-                      </Badge>
+                <div className="flex flex-col space-y-4">
+                  {/* Header com status */}
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(pagamento.status)}
+                    <h3 className="text-lg font-semibold flex-1">{pagamento.aluno}</h3>
+                    <Badge className={getStatusColor(pagamento.status)}>
+                      {pagamento.status}
+                    </Badge>
+                  </div>
+                  
+                  {/* Grid responsivo de informações */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
+                    <div>
+                      <p className="font-medium text-foreground">Período:</p>
+                      <p>{pagamento.mes}</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                      <div>
-                        <p className="font-medium text-foreground">Período:</p>
-                        <p>{pagamento.mes}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">Valor:</p>
-                        <p className="text-lg font-semibold text-foreground">R$ {pagamento.valor}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">Vencimento:</p>
-                        <p>{pagamento.vencimento}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">Pagamento:</p>
-                        <p>{pagamento.pagamento || "Não realizado"}</p>
-                        {pagamento.formaPagamento && (
-                          <p className="text-xs text-muted-foreground">
-                            via {pagamento.formaPagamento.toUpperCase()}
-                            {pagamento.metodoPagamento && ` (${pagamento.metodoPagamento})`}
-                          </p>
-                        )}
-                      </div>
+                    <div>
+                      <p className="font-medium text-foreground">Valor:</p>
+                      <p className="text-lg font-semibold text-foreground">R$ {pagamento.valor}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Vencimento:</p>
+                      <p>{pagamento.vencimento}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Pagamento:</p>
+                      <p>{pagamento.pagamento || "Não realizado"}</p>
+                      {pagamento.formaPagamento && (
+                        <p className="text-xs text-muted-foreground">
+                          via {pagamento.formaPagamento.toUpperCase()}
+                          {pagamento.metodoPagamento && ` (${pagamento.metodoPagamento})`}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div className="flex gap-2 ml-4">
+                  {/* Ações em layout vertical para mobile */}
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0 sm:ml-4 w-full sm:w-auto">
                     {pagamento.status !== "pago" && (
                       <>
                         <Button 
                           variant="outline"
                           size="sm"
                           onClick={() => handleCobrarAluno(pagamento)}
+                          className="w-full sm:w-auto text-xs"
                         >
-                          <MessageCircle className="h-4 w-4 mr-1" />
-                          Cobrar
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Cobrar WhatsApp
                         </Button>
                         <Button 
                           size="sm"
                           onClick={() => handleMarcarPago(pagamento)}
+                          className="w-full sm:w-auto text-xs"
                         >
-                          <CreditCard className="h-4 w-4 mr-1" />
+                          <CreditCard className="h-4 w-4 mr-2" />
                           Marcar como Pago
                         </Button>
                       </>
@@ -243,7 +247,9 @@ export default function Pagamentos() {
                           setAlunoSelecionado({ id: pagamento.alunoId, nome: pagamento.aluno });
                           setAulaDialogOpen(true);
                         }}
+                        className="w-full sm:w-auto text-xs"
                       >
+                        <Calendar className="h-4 w-4 mr-2" />
                         Agendar Aulas
                       </Button>
                     )}

@@ -111,7 +111,7 @@ export default function SessaoAoVivo() {
               {aulasDisponiveis.length > 0 ? (
                 <div className="space-y-3">
                   {aulasDisponiveis.map((aula) => (
-                    <div key={aula.id} className="flex items-center justify-between p-4 border rounded-lg bg-card">
+                    <div key={aula.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg bg-card gap-3">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
                           {aula.aluno.charAt(0)}
@@ -123,11 +123,14 @@ export default function SessaoAoVivo() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 text-center">
                           Pronta para iniciar
                         </Badge>
-                        <Button onClick={() => iniciarAula(aula)}>
+                        <Button 
+                          onClick={() => iniciarAula(aula)}
+                          className="w-full sm:w-auto"
+                        >
                           <Video className="h-4 w-4 mr-2" />
                           Iniciar Aula
                         </Button>
