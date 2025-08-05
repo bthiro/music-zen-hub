@@ -83,7 +83,7 @@ export default function Auth() {
     setError('');
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`,
@@ -95,10 +95,20 @@ export default function Auth() {
       });
 
       if (error) {
-        setError(error.message);
+        // Verificar se é erro de provider não habilitado
+        if (error.message.includes('provider is not enabled')) {
+          setError('Google OAuth não está configurado. Configure no Supabase Dashboard → Authentication → Providers');
+        } else {
+          setError(error.message);
+        }
+        console.error('Google OAuth Error:', error);
+      } else {
+        // OAuth iniciado com sucesso - usuário será redirecionado
+        console.log('Google OAuth initiated successfully');
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao conectar com Google');
+      console.error('Google OAuth Exception:', err);
     }
     
     setGoogleLoading(false);
