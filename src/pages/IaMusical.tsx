@@ -844,11 +844,11 @@ nivelDetectado === 'intermediario' ?
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                   {messages.map((message) => (
                     <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[90%] ${
+                      <div className={`max-w-[90%] min-w-[200px] ${
                         message.role === 'user' 
                           ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground' 
-                          : 'bg-gradient-to-r from-muted to-muted/50'
-                      } rounded-lg p-4 shadow-lg`}>
+                          : 'message-bubble'
+                      } rounded-lg p-4 shadow-md`}>
                         
                         {/* Message Header */}
                         <div className="flex items-center gap-2 mb-3">
@@ -875,7 +875,7 @@ nivelDetectado === 'intermediario' ?
                         </div>
                         
                         {/* Message Content */}
-                        <div className="text-sm mb-3 whitespace-pre-wrap leading-relaxed">
+                        <div className="message-bubble-content text-sm mb-3 whitespace-pre-wrap leading-relaxed">
                           {message.content}
                         </div>
                         

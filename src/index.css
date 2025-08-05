@@ -272,3 +272,20 @@ All colors MUST be HSL.
     @apply text-sm leading-relaxed text-muted-foreground;
   }
 }
+
+/* IA Musical - Message bubble fixes */
+.message-bubble {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+}
+
+.message-bubble-content {
+  flex: 1;
+  width: 100%;
+}
