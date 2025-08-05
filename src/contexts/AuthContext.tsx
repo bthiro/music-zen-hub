@@ -46,16 +46,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Configurar listener de mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Defer para evitar problemas de concorrência
-          setTimeout(() => {
-            fetchProfessor();
-          }, 0);
-        } else {
+        if (event === 'SIGNED_OUT' || !session) {
           setProfessor(null);
+          setLoading(false);
+          return;
+        }
+        
+        if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+          if (session?.user) {
+            setTimeout(() => {
+              fetchProfessor();
+            }, 0);
+          }
         }
         
         setLoading(false);
@@ -63,7 +70,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+        // Limpar dados corrompidos
+        supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setProfessor(null);
+        setLoading(false);
+        return;
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -71,6 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fetchProfessor();
         }, 0);
       }
+      setLoading(false);
+    }).catch((error) => {
+      console.error('Session check failed:', error);
       setLoading(false);
     });
 
