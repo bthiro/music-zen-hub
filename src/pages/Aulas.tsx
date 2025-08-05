@@ -11,6 +11,7 @@ import { ReagendarLoteDialog } from "@/components/dialogs/ReagendarLoteDialog";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Clock, Video, Plus, Search, ExternalLink, FileText, MessageCircle, Mail, Upload, Edit, Save, X, Filter, RefreshCw } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Aulas() {
   const { aulas, updateAula, getAlunoById } = useApp();
@@ -298,47 +299,43 @@ Professor`;
           </Button>
         </div>
 
-        {/* Estatísticas */}
+        {/* Estatísticas com design unificado */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Agendadas</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{estatisticas.agendadas}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Realizadas</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{estatisticas.realizadas}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Canceladas</CardTitle>
-              <Video className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{estatisticas.canceladas}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{estatisticas.total}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Aulas Agendadas"
+            value={estatisticas.agendadas}
+            subtitle="Próximas aulas"
+            icon={Calendar}
+            color="blue"
+            badge={{ text: "Ativas", variant: "default" }}
+          />
+          
+          <StatsCard
+            title="Aulas Realizadas"
+            value={estatisticas.realizadas}
+            subtitle="Finalizadas com sucesso"
+            icon={Clock}
+            color="green"
+            trend={{ value: 12, direction: 'up', label: 'vs mês anterior' }}
+          />
+          
+          <StatsCard
+            title="Aulas Canceladas"
+            value={estatisticas.canceladas}
+            subtitle="Necessitam reagendamento"
+            icon={Video}
+            color="red"
+            badge={{ text: "Atenção", variant: "destructive" }}
+          />
+          
+          <StatsCard
+            title="Total de Aulas"
+            value={estatisticas.total}
+            subtitle="Histórico completo"
+            icon={Calendar}
+            color="purple"
+            trend={{ value: 8, direction: 'up', label: 'crescimento' }}
+          />
         </div>
 
         {/* Próximas Aulas */}

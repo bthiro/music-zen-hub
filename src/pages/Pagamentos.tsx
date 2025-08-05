@@ -7,8 +7,9 @@ import { PagamentoDialog } from "@/components/dialogs/PagamentoDialog";
 import { CobrancaDialog } from "@/components/dialogs/CobrancaDialog";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, DollarSign, CheckCircle, XCircle, Clock, MessageCircle, CreditCard } from "lucide-react";
+import { Calendar, DollarSign, CheckCircle, XCircle, Clock, MessageCircle, CreditCard, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Pagamentos() {
   const { pagamentos, alunos } = useApp();
@@ -100,37 +101,43 @@ export default function Pagamentos() {
           </p>
         </div>
 
-        {/* Resumo financeiro */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Recebido</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">R$ {totalPago}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pendente</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">R$ {totalPendente}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Esperado</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">R$ {totalPago + totalPendente}</div>
-            </CardContent>
-          </Card>
+        {/* Resumo financeiro com design unificado */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <StatsCard
+            title="Total Recebido"
+            value={`R$ ${totalPago}`}
+            subtitle="Pagamentos confirmados"
+            icon={DollarSign}
+            color="green"
+            badge={{ text: "Recebido", variant: "success" }}
+            trend={{ value: 15, direction: 'up', label: 'vs mês anterior' }}
+          />
+          
+          <StatsCard
+            title="Pendente"
+            value={`R$ ${totalPendente}`}
+            subtitle="Aguardando pagamento"
+            icon={Clock}
+            color="yellow"
+            badge={{ text: "Pendente", variant: "outline" }}
+          />
+          
+          <StatsCard
+            title="Total Esperado"
+            value={`R$ ${totalPago + totalPendente}`}
+            subtitle="Receita total projetada"
+            icon={TrendingUp}
+            color="blue"
+          />
+          
+          <StatsCard
+            title="Taxa de Recebimento"
+            value={`${totalPago + totalPendente > 0 ? ((totalPago / (totalPago + totalPendente)) * 100).toFixed(1) : 0}%`}
+            subtitle="Eficiência de cobrança"
+            icon={CheckCircle}
+            color="purple"
+            trend={{ value: 8, direction: 'up', label: 'melhoria' }}
+          />
         </div>
 
         {/* Filtros */}

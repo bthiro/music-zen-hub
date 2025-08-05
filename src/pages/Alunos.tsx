@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AlunoForm } from "@/components/forms/AlunoForm";
 import { useApp } from "@/contexts/AppContext";
-import { Plus, Search, Edit, Trash2, Clock } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Clock, UserCheck, UserX, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { StudentEvolution } from "@/components/StudentEvolution";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Alunos() {
   const { alunos, deleteAluno } = useApp();
@@ -95,6 +96,48 @@ export default function Alunos() {
   return (
     <Layout>
       <div className="space-y-6">
+        {/* Estatísticas de Alunos */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <StatsCard
+            title="Alunos Ativos"
+            value={alunos.filter(a => a.status === "ativo").length}
+            subtitle="Mensalidades em dia"
+            icon={UserCheck}
+            color="green"
+            badge={{ text: "Ativos", variant: "success" }}
+          />
+          
+          <StatsCard
+            title="Novos este Mês"
+            value={alunos.filter(a => {
+              const cadastro = new Date(a.dataCadastro);
+              const hoje = new Date();
+              return cadastro.getMonth() === hoje.getMonth() && cadastro.getFullYear() === hoje.getFullYear();
+            }).length}
+            subtitle="Novos cadastros"
+            icon={UserPlus}
+            color="blue"
+            trend={{ value: 25, direction: 'up', label: 'vs mês anterior' }}
+          />
+          
+          <StatsCard
+            title="Pendentes"
+            value={alunos.filter(a => a.status === "pendente").length}
+            subtitle="Aguardando pagamento"
+            icon={Clock}
+            color="yellow"
+            badge={{ text: "Atenção", variant: "outline" }}
+          />
+          
+          <StatsCard
+            title="Inativos"
+            value={alunos.filter(a => a.status === "inativo").length}
+            subtitle="Não participam mais"
+            icon={UserX}
+            color="red"
+          />
+        </div>
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1">
             <h2 className="text-3xl font-bold tracking-tight font-display">Alunos</h2>

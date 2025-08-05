@@ -2,14 +2,25 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Music } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Tipos de compasso disponíveis
+const timeSignatures = [
+  { label: "2/4", beats: 2, subdivision: 4, pattern: [1, 0] },
+  { label: "3/4", beats: 3, subdivision: 4, pattern: [1, 0, 0] },
+  { label: "4/4", beats: 4, subdivision: 4, pattern: [1, 0, 1, 0] },
+  { label: "6/8", beats: 6, subdivision: 8, pattern: [1, 0, 0, 1, 0, 0] },
+  { label: "12/8", beats: 12, subdivision: 8, pattern: [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0] }
+];
 
 export function MetronomeAfinador() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(120);
   const [volume, setVolume] = useState(50);
   const [isMuted, setIsMuted] = useState(false);
+  const [timeSignature, setTimeSignature] = useState(timeSignatures[2]); // 4/4 por padrão
+  const [currentBeat, setCurrentBeat] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const { toast } = useToast();
@@ -30,7 +41,7 @@ export function MetronomeAfinador() {
     };
   }, []);
 
-  const playClick = () => {
+  const playClick = (isAccent = false) => {
     if (!audioContextRef.current || isMuted) return;
 
     const context = audioContextRef.current;
@@ -40,8 +51,9 @@ export function MetronomeAfinador() {
     oscillator.connect(gainNode);
     gainNode.connect(context.destination);
 
-    oscillator.frequency.setValueAtTime(800, context.currentTime);
-    gainNode.gain.setValueAtTime(volume / 100, context.currentTime);
+    // Tom mais agudo para tempo forte (acento)
+    oscillator.frequency.setValueAtTime(isAccent ? 1000 : 800, context.currentTime);
+    gainNode.gain.setValueAtTime((volume / 100) * (isAccent ? 1.2 : 1), context.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.1);
 
     oscillator.start(context.currentTime);
@@ -55,27 +67,47 @@ export function MetronomeAfinador() {
         intervalRef.current = null;
       }
       setIsPlaying(false);
+      setCurrentBeat(0);
     } else {
       const interval = 60000 / bpm; // Converter BPM para millisegundos
-      playClick(); // Tocar imediatamente
-      intervalRef.current = setInterval(playClick, interval);
+      let beat = 0;
+      
+      // Tocar primeiro beat
+      const isAccent = timeSignature.pattern[beat] === 1;
+      playClick(isAccent);
+      setCurrentBeat(beat);
+      
+      intervalRef.current = setInterval(() => {
+        beat = (beat + 1) % timeSignature.beats;
+        const isAccent = timeSignature.pattern[beat] === 1;
+        playClick(isAccent);
+        setCurrentBeat(beat);
+      }, interval);
+      
       setIsPlaying(true);
       
       toast({
         title: "Metrônomo iniciado",
-        description: `Tocando em ${bpm} BPM`
+        description: `Tocando em ${bpm} BPM - ${timeSignature.label}`
       });
     }
   };
 
-  // Atualizar intervalo quando BPM muda
+  // Atualizar intervalo quando BPM ou compasso muda
   useEffect(() => {
     if (isPlaying && intervalRef.current) {
       clearInterval(intervalRef.current);
       const interval = 60000 / bpm;
-      intervalRef.current = setInterval(playClick, interval);
+      let beat = currentBeat;
+      
+      intervalRef.current = setInterval(() => {
+        beat = (beat + 1) % timeSignature.beats;
+        const isAccent = timeSignature.pattern[beat] === 1;
+        playClick(isAccent);
+        setCurrentBeat(beat);
+      }, interval);
     }
-  }, [bpm, isPlaying]);
+  }, [bpm, timeSignature, isPlaying]);
 
   // Afinador básico com frequências das notas
   const notes = [
@@ -130,6 +162,47 @@ export function MetronomeAfinador() {
           <div className="text-center">
             <div className="text-4xl font-bold mb-2">{bpm}</div>
             <div className="text-sm text-muted-foreground">BPM</div>
+            <div className="text-lg font-semibold text-primary mt-2">{timeSignature.label}</div>
+          </div>
+
+          {/* Indicador visual de compasso */}
+          <div className="flex justify-center gap-2 mb-4">
+            {timeSignature.pattern.map((accent, index) => (
+              <div
+                key={index}
+                className={`w-4 h-4 rounded-full border-2 transition-all duration-150 ${
+                  index === currentBeat
+                    ? accent === 1 
+                      ? 'bg-red-500 border-red-500 scale-125' 
+                      : 'bg-blue-500 border-blue-500 scale-125'
+                    : accent === 1
+                      ? 'border-red-300 bg-red-100'
+                      : 'border-gray-300 bg-gray-100'
+                }`}
+                title={accent === 1 ? 'Tempo forte' : 'Tempo fraco'}
+              />
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Fórmula de Compasso</label>
+            <select
+              value={timeSignature.label}
+              onChange={(e) => {
+                const newSignature = timeSignatures.find(ts => ts.label === e.target.value);
+                if (newSignature) {
+                  setTimeSignature(newSignature);
+                  setCurrentBeat(0);
+                }
+              }}
+              className="w-full px-3 py-2 border rounded-md bg-background"
+            >
+              {timeSignatures.map((ts) => (
+                <option key={ts.label} value={ts.label}>
+                  {ts.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
