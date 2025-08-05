@@ -10,6 +10,7 @@ import Pagamentos from "./pages/Pagamentos";
 import Aulas from "./pages/Aulas";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
+import IaMusical from "./pages/IaMusical";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/pagamentos" element={<Pagamentos />} />
             <Route path="/aulas" element={<Aulas />} />
             <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/ia-musical" element={<IaMusical />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -5,8 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useApp, Aluno } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
+import { countries, getStatesByCountry, getCitiesByState, getTimezoneInfo } from "@/data/locations";
+import { MapPin, Clock } from "lucide-react";
 
 interface AlunoFormProps {
   aluno?: Aluno;
@@ -22,14 +25,22 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
     nome: aluno?.nome || "",
     email: aluno?.email || "",
     telefone: aluno?.telefone || "",
-    cidade: aluno?.cidade || "",
+    pais: aluno?.pais || "BR",
     estado: aluno?.estado || "",
-    pais: aluno?.pais || "Brasil",
+    cidade: aluno?.cidade || "",
     mensalidade: aluno?.mensalidade || 0,
     duracaoAula: aluno?.duracaoAula || 50,
     status: aluno?.status || "ativo",
     observacoes: aluno?.observacoes || ""
   });
+
+  const [availableStates, setAvailableStates] = useState(getStatesByCountry(formData.pais));
+  const [availableCities, setAvailableCities] = useState(
+    formData.estado ? getCitiesByState(formData.pais, formData.estado) : []
+  );
+  const [timezoneInfo, setTimezoneInfo] = useState(
+    getTimezoneInfo(formData.pais, formData.estado, formData.cidade)
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +80,26 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Atualizar estados e cidades baseado na seleção
+    if (field === 'pais') {
+      const states = getStatesByCountry(value);
+      setAvailableStates(states);
+      setAvailableCities([]);
+      setFormData(prev => ({ ...prev, estado: "", cidade: "" }));
+      setTimezoneInfo(getTimezoneInfo(value));
+    }
+    
+    if (field === 'estado') {
+      const cities = getCitiesByState(formData.pais, value);
+      setAvailableCities(cities);
+      setFormData(prev => ({ ...prev, cidade: "" }));
+      setTimezoneInfo(getTimezoneInfo(formData.pais, value));
+    }
+    
+    if (field === 'cidade') {
+      setTimezoneInfo(getTimezoneInfo(formData.pais, formData.estado, value));
+    }
   };
 
   return (
@@ -109,36 +140,91 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
                 placeholder="(11) 99999-9999"
               />
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="cidade">Cidade *</Label>
-              <Input
-                id="cidade"
-                value={formData.cidade}
-                onChange={(e) => handleChange("cidade", e.target.value)}
-                placeholder="São Paulo"
-              />
-            </div>
+          {/* Localização */}
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MapPin className="h-5 w-5" />
+                Localização e Fuso Horário
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="pais">País *</Label>
+                <Select value={formData.pais} onValueChange={(value) => handleChange("pais", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div>
-              <Label htmlFor="estado">Estado *</Label>
-              <Input
-                id="estado"
-                value={formData.estado}
-                onChange={(e) => handleChange("estado", e.target.value)}
-                placeholder="SP"
-              />
-            </div>
+              <div>
+                <Label htmlFor="estado">Estado *</Label>
+                <Select 
+                  value={formData.estado} 
+                  onValueChange={(value) => handleChange("estado", value)}
+                  disabled={!formData.pais}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableStates.map((state) => (
+                      <SelectItem key={state.code} value={state.code}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div>
-              <Label htmlFor="pais">País</Label>
-              <Input
-                id="pais"
-                value={formData.pais}
-                onChange={(e) => handleChange("pais", e.target.value)}
-                placeholder="Brasil"
-              />
-            </div>
+              <div>
+                <Label htmlFor="cidade">Cidade *</Label>
+                <Select 
+                  value={formData.cidade} 
+                  onValueChange={(value) => handleChange("cidade", value)}
+                  disabled={!formData.estado}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a cidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCities.map((city) => (
+                      <SelectItem key={city.name} value={city.name}>
+                        {city.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Informações de Fuso Horário */}
+              {formData.cidade && (
+                <div className="md:col-span-3">
+                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <span className="text-sm">
+                      <strong>Fuso Horário:</strong> {timezoneInfo.displayName}
+                    </span>
+                    <Badge variant="outline" className="ml-auto">
+                      {timezoneInfo.utcOffset}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <div>
               <Label htmlFor="mensalidade">Mensalidade *</Label>
