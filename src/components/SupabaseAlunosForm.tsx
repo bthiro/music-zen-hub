@@ -35,12 +35,22 @@ export function SupabaseAlunosForm({ aluno, onClose }: AlunoFormProps) {
     };
 
     try {
+      // Validação básica
+      if (!dadosAluno.nome?.trim()) {
+        throw new Error('Nome é obrigatório');
+      }
+      if (!dadosAluno.instrumento) {
+        throw new Error('Instrumento é obrigatório');
+      }
+
       const { error } = isEditing 
         ? await atualizarAluno(aluno.id, dadosAluno)
         : await adicionarAluno(dadosAluno);
 
       if (error) {
-        throw error;
+        console.error('Erro do Supabase:', error);
+        const errorMessage = typeof error === 'string' ? error : error.message || 'Erro ao salvar no banco de dados';
+        throw new Error(errorMessage);
       }
 
       toast({
@@ -50,9 +60,10 @@ export function SupabaseAlunosForm({ aluno, onClose }: AlunoFormProps) {
 
       onClose();
     } catch (error: any) {
+      console.error('Erro completo ao salvar aluno:', error);
       toast({
-        title: 'Erro',
-        description: error.message || 'Ocorreu um erro ao salvar o aluno.',
+        title: 'Erro ao salvar aluno',
+        description: error.message || 'Verifique se todos os campos obrigatórios estão preenchidos corretamente.',
         variant: 'destructive',
       });
     } finally {
