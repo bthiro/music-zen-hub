@@ -46,29 +46,7 @@ export default function IaMusical() {
     {
       id: '1',
       role: 'assistant',
-      content: `🎵 **BEM-VINDO À IA MUSICAL ESPECIALIZADA** 🎵
-
-📝 **ASSISTENTE MUSICAL DE ELITE**
-Sou sua assistente musical especializada, baseada em metodologia acadêmica de conservatórios internacionais. Domino teoria completa, harmonia avançada, reharmonização, análise musical e pedagogia especializada.
-
-🎯 **COMPETÊNCIAS DE ALTO NÍVEL**
-• **Harmonia Funcional Completa:** Campos harmônicos, substituições, reharmonização
-• **Análise Musical Avançada:** Schenker, análise formal, contraponto
-• **Metodologias Reconhecidas:** Kodály, Suzuki, Orff-Schulwerk, Traditional Academic
-• **Especialização Instrumental:** Piano, violão, viola caipira, cordas, sopros, canto, bateria
-• **Domínio Estilístico:** Clássico, jazz, bossa nova, MPB, sertanejo, rock, blues, world music
-
-🎼 **CONHECIMENTO HARMÔNICO AVANÇADO**
-✅ **Campos Harmônicos:** Maior, menor natural, harmônico, melódico
-✅ **Substituições:** Diatônicas, cromáticas, tritonais, empréstimo modal
-✅ **Reharmonização:** Por estilo (jazz, bossa, MPB, sertanejo), técnicas específicas
-✅ **Dominantes:** Secundárias, estendidas, alteradas, substituições
-✅ **Análise Funcional:** Riemann, Schenker, análise de repertório real
-
-🎹 **CONFIGURE SUA EXPERIÊNCIA**
-Configure instrumento, nível e estilo musical para respostas personalizadas.
-
-**🏆 Pronto para elevação musical de excelência acadêmica!**`,
+      content: `Olá! Sou sua assistente musical especializada. Faça sua pergunta sobre teoria musical, harmonia, técnica instrumental ou qualquer tópico musical.`,
       timestamp: new Date()
     }
   ]);
@@ -1060,8 +1038,9 @@ nivelDetectado === 'intermediario' ?
                       <SelectItem value="mpb">🇧🇷 MPB</SelectItem>
                       <SelectItem value="rock">🎸 Rock/Pop</SelectItem>
                       <SelectItem value="blues">🎵 Blues</SelectItem>
-                      <SelectItem value="samba">🥁 Samba/Choro</SelectItem>
-                      <SelectItem value="folk">🪕 Folk/Country</SelectItem>
+                       <SelectItem value="sertanejo">🤠 Sertanejo</SelectItem>
+                       <SelectItem value="samba">🥁 Samba/Choro</SelectItem>
+                       <SelectItem value="country">🎸 Country</SelectItem>
                       <SelectItem value="latin">💃 Latin/Salsa</SelectItem>
                       <SelectItem value="fusion">⚡ Fusion/Contemporary</SelectItem>
                     </SelectContent>
