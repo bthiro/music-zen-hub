@@ -54,7 +54,7 @@ export default function IaMusical() {
   const [isLoading, setIsLoading] = useState(false);
   const [instrument, setInstrument] = useState('');
   const [nivel, setNivel] = useState<'iniciante' | 'elementar' | 'intermediario' | 'avancado'>('elementar');
-  const [musicStyle, setMusicStyle] = useState('');
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -128,7 +128,7 @@ export default function IaMusical() {
     const nivelDetectado = diagnosticarNivel(message);
     const topicoDetectado = identificarTopico(message);
     const instrumentoUser = instrument || 'piano';
-    const estiloUser = musicStyle || 'música popular';
+    
     
     // ============= CAMPOS HARMÔNICOS COMPLETOS =============
     if (lowerMessage.includes('campo harmônico') || lowerMessage.includes('campos harmônicos')) {
@@ -565,7 +565,7 @@ ii7b5  - V7 - IMaj7 (em C Maior)
 **Nível detectado:** ${nivelDetectado.toUpperCase()}
 **Tópico identificado:** ${topicoDetectado.toUpperCase()}
 **Instrumento:** ${instrumentoUser}
-**Estilo musical:** ${estiloUser}
+
 
 🎯 **COMPETÊNCIAS MASTER DISPONÍVEIS**
 
@@ -583,7 +583,7 @@ ii7b5  - V7 - IMaj7 (em C Maior)
 • **Pedagogia Instrumental:** Suzuki, Russian, Traditional methods
 • **Master Classes:** Insights de grandes mestres
 
-**🎨 Análise Estilística Profunda (${estiloUser}):**
+**🎨 Análise Estilística Profunda:**
 • **Características Históricas:** Contexto social e cultural
 • **Harmonia Idiomática:** Progressões típicas e clichês estilísticos
 • **Instrumentação Específica:** Timbres e técnicas características
@@ -611,16 +611,16 @@ nivelDetectado === 'elementar' ?
 ☑ "Técnicas de estudo de escalas eficientes para ${instrumentoUser}"
 ☑ "Como identificar tonalidade e acordes básicos em músicas"
 ☑ "Exercícios de leitura musical progressiva"
-☑ "Repertório ${estiloUser} adequado ao meu nível"` :
+☑ "Repertório adequado ao meu nível"` :
 
 nivelDetectado === 'intermediario' ?
-`☑ "Análise de progressões harmônicas em ${estiloUser}"
+`☑ "Análise de progressões harmônicas"
 ☑ "Como usar dominantes secundárias na prática"
 ☑ "Técnicas de improvisação usando modos gregos"
-☑ "Estudo de forma musical em peças ${estiloUser}"
+☑ "Estudo de forma musical em peças musicais"
 ☑ "Como desenvolver interpretação musical expressiva"` :
 
-`☑ "Análise schenkeriana aplicada ao repertório ${estiloUser}"
+`☑ "Análise schenkeriana aplicada ao repertório"
 ☑ "Técnicas avançadas de reharmonização e substituição"
 ☑ "Contraponto a 2 e 3 vozes: composição e análise"
 ☑ "Modulação cromática e enarmônica em contexto prático"
@@ -653,7 +653,7 @@ nivelDetectado === 'intermediario' ?
 "Como analisar [música específica] usando método [Schenker/Funcional/Modal]"
 
 **Para Composição/Improvisação:**
-"Técnicas de [composição/improvisação] em estilo ${estiloUser} para ${instrumentoUser}"
+"Técnicas de [composição/improvisação] para ${instrumentoUser}"
 
 ═══════════════════════════════════════════════════════════════════
 🎼 **LOVART - IA MUSICAL MASTER ESPECIALIZADA** 🎼
@@ -951,7 +951,7 @@ nivelDetectado === 'intermediario' ?
                   <Textarea
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder={`Digite sua consulta musical avançada (nível ${nivel}, ${instrument || 'instrumento'}, ${musicStyle || 'estilo'})...`}
+                    placeholder={`Digite sua consulta musical avançada (nível ${nivel}, ${instrument || 'instrumento'})...`}
                     className="flex-1 min-h-[90px] resize-none border-2 border-primary/20 focus:border-primary/40 transition-all"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
@@ -1026,27 +1026,6 @@ nivelDetectado === 'intermediario' ?
                   </Select>
                 </div>
                 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Estilo Musical</label>
-                  <Select value={musicStyle} onValueChange={setMusicStyle}>
-                    <SelectTrigger className="border-primary/20">
-                      <SelectValue placeholder="Selecione estilo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="classico">🎼 Clássico/Erudito</SelectItem>
-                      <SelectItem value="jazz">🎷 Jazz/Bebop</SelectItem>
-                      <SelectItem value="bossa nova">🌴 Bossa Nova</SelectItem>
-                      <SelectItem value="mpb">🇧🇷 MPB</SelectItem>
-                      <SelectItem value="rock">🎸 Rock/Pop</SelectItem>
-                      <SelectItem value="blues">🎵 Blues</SelectItem>
-                       <SelectItem value="sertanejo">🤠 Sertanejo</SelectItem>
-                       <SelectItem value="samba">🥁 Samba/Choro</SelectItem>
-                       <SelectItem value="country">🎸 Country</SelectItem>
-                      <SelectItem value="latin">💃 Latin/Salsa</SelectItem>
-                      <SelectItem value="fusion">⚡ Fusion/Contemporary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 
                 <Button 
                   className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 transition-all"
@@ -1079,7 +1058,7 @@ nivelDetectado === 'intermediario' ?
                       variant="outline"
                       size="sm"
                       className="justify-start text-xs h-8 hover:bg-primary/5 hover:border-primary/30 transition-all"
-                      onClick={() => setInputMessage(`Explique ${topic} para nível ${nivel} no ${instrument || 'piano'} estilo ${musicStyle || 'geral'}`)}
+                      onClick={() => setInputMessage(`Explique ${topic} para nível ${nivel} no ${instrument || 'piano'}`)}
                     >
                       <Target className="h-3 w-3 mr-2" />
                       {topic}
@@ -1124,7 +1103,7 @@ nivelDetectado === 'intermediario' ?
                   <div className="flex flex-wrap gap-1 justify-center">
                     <Badge variant="outline" className="text-xs">{nivel}</Badge>
                     {instrument && <Badge variant="outline" className="text-xs">{instrument}</Badge>}
-                    {musicStyle && <Badge variant="outline" className="text-xs">{musicStyle}</Badge>}
+                    
                   </div>
                 </div>
               </CardContent>
