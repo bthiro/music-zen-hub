@@ -25,7 +25,9 @@ import {
   Bot,
   BookOpen,
   Target,
-  TrendingUp
+  TrendingUp,
+  Award,
+  Zap
 } from "lucide-react";
 
 interface ChatMessage {
@@ -35,6 +37,7 @@ interface ChatMessage {
   timestamp: Date;
   feedback?: 'positive' | 'negative';
   nivel?: 'iniciante' | 'elementar' | 'intermediario' | 'avancado';
+  topico?: string;
 }
 
 export default function IaMusical() {
@@ -43,32 +46,39 @@ export default function IaMusical() {
     {
       id: '1',
       role: 'assistant',
-      content: `🎵 **BEM-VINDO À IA MUSICAL LOVART** 🎵
+      content: `🎵 **BEM-VINDO À IA MUSICAL LOVART ESPECIALIZADA** 🎵
 
 📝 **RESUMO RÁPIDO**
-Sou sua assistente especializada em educação musical, integrada à plataforma Lovart. Ofereço suporte pedagógico completo em teoria musical, prática instrumental e metodologia de ensino.
+Sou sua assistente musical de elite, baseada em metodologia acadêmica de conservatórios internacionais. Domino teoria completa, harmonia avançada, reharmonização, análise musical e pedagogia especializada.
 
-🎯 **MINHAS COMPETÊNCIAS PRINCIPAIS**
-• **Teoria Musical Adaptativa:** Do iniciante ao avançado
-• **Especialização Instrumental:** Técnicas específicas para cada instrumento  
-• **Metodologias Reconhecidas:** Kodály, Suzuki, Orff-Schulwerk
-• **Análise Musical:** Harmonia funcional, análise formal, contraponto
-• **Pedagogia Musical:** Sequências didáticas e progressão estruturada
+🎯 **COMPETÊNCIAS DE ALTO NÍVEL**
+• **Harmonia Funcional Completa:** Campos harmônicos, substituições, reharmonização
+• **Análise Musical Avançada:** Schenker, análise formal, contraponto
+• **Metodologias Reconhecidas:** Kodály, Suzuki, Orff-Schulwerk, Traditional Academic
+• **Especialização Instrumental:** Piano, violão, cordas, sopros, canto, bateria
+• **Domínio Estilístico:** Clássico, jazz, bossa nova, MPB, rock, blues, world music
 
-🎹 **CONFIGURE SUA EXPERIÊNCIA**
-Para personalizar minhas respostas, informe:
-• **Seu instrumento principal**
-• **Seu nível musical atual**
-• **Estilo musical preferido**
+🎼 **CONHECIMENTO HARMÔNICO AVANÇADO**
+✅ **Campos Harmônicos:** Maior, menor natural, harmônico, melódico
+✅ **Substituições:** Diatônicas, cromáticas, tritonais, empréstimo modal
+✅ **Reharmonização:** Por estilo (jazz, bossa, MPB), técnicas específicas
+✅ **Dominantes:** Secundárias, estendidas, alteradas, substituições
+✅ **Análise Funcional:** Riemann, Schenker, análise de repertório real
 
-💡 **COMO COMEÇAR**
-Digite perguntas como:
-• "Explique escalas para iniciante no piano"
-• "Como funciona harmonia funcional?"
-• "Exercícios de ritmo para violão"
-• "Análise da harmonia em bossa nova"
+🎹 **CONFIGURE SUA EXPERIÊNCIA PREMIUM**
+Personalize para máxima eficiência pedagógica:
+• **Instrumento + Nível + Estilo musical**
+• **Objetivos específicos de aprendizagem**
+• **Preferências metodológicas**
 
-**🎼 Vamos começar sua jornada musical! Em que posso ajudá-lo hoje?**`,
+💡 **EXEMPLOS DE CONSULTAS AVANÇADAS**
+• "Analise a reharmonização de 'Girl from Ipanema'"
+• "Ensine substituição tritonal para piano intermediário"
+• "Exercícios de contraponto a duas vozes"
+• "Como improvisar sobre Giant Steps"
+• "Técnica de arco para vibrato expressivo"
+
+**🏆 Pronto para elevação musical de excelência acadêmica!**`,
       timestamp: new Date()
     }
   ]);
@@ -87,521 +97,615 @@ Digite perguntas como:
     scrollToBottom();
   }, [messages]);
 
-  // Diagnóstico automático do nível baseado na pergunta
+  // Diagnóstico avançado do nível baseado em palavras-chave específicas
   const diagnosticarNivel = (message: string): 'iniciante' | 'elementar' | 'intermediario' | 'avancado' => {
     const lowerMessage = message.toLowerCase();
     
-    // Palavras que indicam nível iniciante
-    if (lowerMessage.includes('não entendo') || 
-        lowerMessage.includes('sou iniciante') || 
-        lowerMessage.includes('primeira vez') ||
-        lowerMessage.includes('o que é') ||
-        lowerMessage.includes('como começar')) {
-      return 'iniciante';
-    }
-    
     // Palavras que indicam nível avançado
-    if (lowerMessage.includes('modulação') || 
-        lowerMessage.includes('análise schenkeriana') || 
-        lowerMessage.includes('contraponto') ||
-        lowerMessage.includes('rearmonização') ||
-        lowerMessage.includes('dominante estendida') ||
-        lowerMessage.includes('análise funcional')) {
-      return 'avancado';
-    }
+    const avancadoKeywords = [
+      'modulação', 'análise schenkeriana', 'contraponto', 'rearmonização', 'reharmonização',
+      'dominante estendida', 'análise funcional', 'substituição tritonal', 'empréstimo modal',
+      'acordes alterados', 'tensions', 'voicings', 'giant steps', 'coltrane changes',
+      'análise formal', 'politonal', 'atonalismo', 'dodecafonismo', 'microtons'
+    ];
     
     // Palavras que indicam nível intermediário
-    if (lowerMessage.includes('harmonia funcional') || 
-        lowerMessage.includes('progressões') || 
-        lowerMessage.includes('voicings') ||
-        lowerMessage.includes('campo harmônico') ||
-        lowerMessage.includes('dominante secundária')) {
+    const intermediarioKeywords = [
+      'harmonia funcional', 'progressões', 'campo harmônico', 'dominante secundária',
+      'modos gregos', 'cifragem', 'inversões', 'cadências', 'modulação simples',
+      'escala menor harmônica', 'blue notes', 'turnaround', 'ii-v-i', 'análise harmônica'
+    ];
+    
+    // Palavras que indicam nível iniciante
+    const inicianteKeywords = [
+      'não entendo', 'sou iniciante', 'primeira vez', 'o que é', 'como começar',
+      'básico', 'elementar', 'fundamentos', 'primeiros passos', 'nunca estudei'
+    ];
+    
+    if (avancadoKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      return 'avancado';
+    }
+    if (intermediarioKeywords.some(keyword => lowerMessage.includes(keyword))) {
       return 'intermediario';
+    }
+    if (inicianteKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      return 'iniciante';
     }
     
     return nivel; // Retorna o nível configurado pelo usuário
   };
 
+  // Identificar tópico principal da pergunta
+  const identificarTopico = (message: string): string => {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('harmonia') || lowerMessage.includes('acorde') || lowerMessage.includes('progressão')) return 'harmonia';
+    if (lowerMessage.includes('escala') || lowerMessage.includes('modo')) return 'escalas';
+    if (lowerMessage.includes('ritmo') || lowerMessage.includes('compasso') || lowerMessage.includes('metrônomo')) return 'ritmo';
+    if (lowerMessage.includes('intervalo')) return 'intervalos';
+    if (lowerMessage.includes('substituição') || lowerMessage.includes('reharmonização')) return 'reharmonização';
+    if (lowerMessage.includes('contraponto') || lowerMessage.includes('condução')) return 'contraponto';
+    if (lowerMessage.includes('análise')) return 'análise';
+    if (lowerMessage.includes('técnica') || lowerMessage.includes('digitação') || lowerMessage.includes('postura')) return 'técnica';
+    if (lowerMessage.includes('improvisação') || lowerMessage.includes('improvisar')) return 'improvisação';
+    
+    return 'geral';
+  };
+
   const simulateAIResponse = async (message: string): Promise<string> => {
-    // Simular delay da IA
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Simular delay da IA mais realista para análise complexa
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     const lowerMessage = message.toLowerCase();
     const nivelDetectado = diagnosticarNivel(message);
+    const topicoDetectado = identificarTopico(message);
     const instrumentoUser = instrument || 'piano';
     const estiloUser = musicStyle || 'música popular';
     
-    // ============= ESCALAS =============
-    if (lowerMessage.includes('escala') || lowerMessage.includes('escalas')) {
-      if (nivelDetectado === 'iniciante') {
-        return `🎵 **ESCALAS MUSICAIS - INICIANTE**
+    // ============= CAMPOS HARMÔNICOS COMPLETOS =============
+    if (lowerMessage.includes('campo harmônico') || lowerMessage.includes('campos harmônicos')) {
+      return `🎵 **CAMPOS HARMÔNICOS COMPLETOS - DOMÍNIO HARMÔNICO AVANÇADO**
 
 📝 **RESUMO RÁPIDO**
-Uma escala é como uma "escada musical" - uma sequência ordenada de notas que sobem ou descem.
+Os campos harmônicos são sistemas completos de acordes gerados por escalas, constituindo a base harmônica de toda música tonal, modal e funcional.
 
-🎯 **EXPLICAÇÃO DETALHADA**
-**O que é uma escala?**
-• Imagine que cada nota musical é um degrau de uma escada
-• Uma escala é subir ou descer essa escada musical seguindo uma ordem específica
-• **Exemplo familiar:** "Dó-Ré-Mi-Fá-Sol-Lá-Si-Dó" 🎶
+🎯 **CAMPO HARMÔNICO MAIOR (Sistema Riemann-Piston)**
 
-**A Escala Mais Importante - Dó Maior:**
-• É a escala "alegre" da música
-• Tem 7 notas diferentes que se repetem
-• **Sons:** Dó-Ré-Mi-Fá-Sol-Lá-Si-Dó
-• **Característica:** Soa completa e luminosa ✨
+**Dó Maior - Análise Completa:**
+• **I - C (C Maj7)** - *Tônica: centro tonal absoluto, estabilidade máxima*
+• **ii - Dm (Dm7)** - *Subdominante: preparação suave, movimento para V*
+• **iii - Em (Em7)** - *Mediante: função ambígua, conecta I e vi*
+• **IV - F (F Maj7)** - *Subdominante principal: preparação forte*
+• **V - G (G7)** - *Dominante: tensão direcional obrigatória para I*
+• **vi - Am (Am7)** - *Relativa menor: substituto melancólico da tônica*
+• **vii° - B° (Bm7b5)** - *Sensível: função dominante sem fundamental*
 
-🎹 **EXEMPLO NO ${instrumentoUser.toUpperCase()}**
-${instrumentoUser.toLowerCase() === 'piano' ? 
-`**No Piano - Escala de Dó Maior:**
-• Use apenas as teclas brancas
-• **Posição:** Polegar no Dó, suba uma tecla por vez
-• **Digitação:** 1-2-3-1-2-3-4-5 (polegar=1, indicador=2...)
-• **Dica:** O polegar "passa por baixo" do 3º dedo` :
-instrumentoUser.toLowerCase() === 'violão' ?
-`**No Violão - Escala de Dó Maior:**
-• **3ª casa, 5ª corda:** Dó (dedo 3)
-• **5ª casa, 5ª corda:** Ré (dedo 1)  
-• **2ª casa, 4ª corda:** Mi (dedo 1)
-• Continue subindo casa por casa
-• **Dica:** Use dedos alternados (i-m-i-m)` :
-`**No ${instrumentoUser}:**
-• Pratique a escala de Dó maior lentamente
-• Foque na afinação e clareza de cada nota
-• Suba e desça sempre no mesmo tempo`}
+**Análise Funcional (Hugo Riemann):**
+• **Grupo TÔNICA:** I - iii - vi (estabelecem e confirmam tonalidade)
+• **Grupo SUBDOMINANTE:** IV - ii (afastamento, preparação harmônica)
+• **Grupo DOMINANTE:** V - vii° (tensão máxima, resolução obrigatória)
 
-💡 **EXERCÍCIO APLICADO**
-☑ **Passo 1:** Cante "Dó-Ré-Mi-Fá-Sol-Lá-Si-Dó" subindo devagar
-☑ **Passo 2:** Cante descendo "Dó-Si-Lá-Sol-Fá-Mi-Ré-Dó"  
-☑ **Passo 3:** Toque no seu instrumento, uma nota por vez
-☑ **Passo 4:** Observe como soa "alegre" e "completo"
+🎼 **CAMPOS HARMÔNICOS MENORES (Três Sistemas)**
 
-📈 **PRÓXIMOS PASSOS**
-• Aprenda a escala de Sol maior (1 sustenido)
-• Descubra a escala menor (som mais "triste")
-• **Tempo de prática:** 10-15 minutos por dia
-• **Meta:** Tocar de memória em 2 semanas`;
-      }
-      
-      return `🎵 **ESCALAS MUSICAIS - TEORIA COMPLETA**
+**1. MENOR NATURAL (Eólico - Lá menor):**
+• **i - Am (Am7)** - *Tônica menor: centro melancólico*
+• **ii° - B° (Bm7b5)** - *Subdominante diminuta: instabilidade preparatória*
+• **♭III - C (C Maj7)** - *Relativa maior: luminosidade contrastante*
+• **iv - Dm (Dm7)** - *Subdominante menor: preparação característica*
+• **v - Em (Em7)** - *Dominante menor: SEM função dominante real*
+• **♭VI - F (F Maj7)** - *Submediante: escape melódico*
+• **♭VII - G (G Maj7)** - *Subtônica: movimento plagal para i*
 
-📝 **RESUMO RÁPIDO**
-Escalas são sucessões ordenadas de sons que estabelecem centros tonais e fornecem material melódico-harmônico para a composição musical.
+**2. MENOR HARMÔNICO (Com dominante real):**
+• **i - Am (Am Maj7)** - *Tônica menor com 7ª maior (tensão interna)*
+• **ii° - B° (Bm7b5)** - *Subdominante diminuta*
+• **♭III+ - C+ (C+ Maj7)** - *Através do Sol# - sonoridade aumentada*
+• **iv - Dm (Dm7)** - *Subdominante menor puro*
+• **V - E (E7)** - *DOMINANTE REAL - Sol# cria tensão resolutiva*
+• **♭VI - F (F Maj7)** - *Submediante (acorde napolitano em 1ª inversão)*
+• **vii° - G#° (G#º7)** - *Diminuto com função dominante*
 
-🎯 **FUNDAMENTOS TEÓRICOS**
-**Escala Diatônica Maior:**
-• **Fórmula Intervalar:** T-T-st-T-T-T-st *(Tom-Tom-semitom-Tom-Tom-Tom-semitom)*
-• **Graus Funcionais:** 
-  - I (Tônica) - II (Supertônica) - III (Mediante) 
-  - IV (Subdominante) - V (Dominante) - VI (Superdominante) - VII (Sensível)
-• **Características:** Estabelece hierarquia tonal, caráter resolutivo
-
-**Sistema Menor Natural (Eólico):**
-• **Origem:** VI grau da escala maior relativa
-• **Característica:** Terça menor (3 semitons) define o caráter melancólico
-• **Exemplo:** Lá menor = A-B-C-D-E-F-G (relativa de Dó maior)
-
-**Escalas Menores Artificiais:**
-• **Harmônica:** VII grau elevado → cria função dominante em tonalidade menor
-• **Melódica:** VI e VII elevados (ascendente) / natural (descendente)
-• **Uso:** Resolução harmônica em contexto menor
-
-🎹 **APLICAÇÃO NO ${instrumentoUser.toUpperCase()}**
-${instrumentoUser.toLowerCase() === 'piano' ?
-`**Técnica de Escalas no Piano:**
-• **Digitação padrão Dó Maior:** MD: 1-2-3-1-2-3-4-5 / ME: 5-4-3-2-1-3-2-1
-• **Movimento do polegar:** Passa sob o 3º dedo (nunca sob 4º ou 5º)
-• **Articulação:** Legato perfeito, sem interrupção do som
-• **Dinâmica:** Crescendo ascendente, diminuendo descendente
-
-**Escalas com Sustenidos:**
-• **Sol Maior:** Fá# - digitação especial no polegar
-• **Ré Maior:** Fá# Dó# - adaptação na passagem do polegar
-• **Método:** Hanon - exercícios 39-43 (escalas maiores)` :
-
-instrumentoUser.toLowerCase() === 'violão' ?
-`**Padrões de Escalas no Violão (CAGED System):**
-• **Padrão C:** Escala começando na forma de acorde C
-• **Padrão A:** Escala começando na forma de acorde A  
-• **Digitação:** Alternate picking (i-m-i-m) ou rest stroke para acentos
-• **Extensão:** 3 notas por corda para cobrir 2 oitavas
-
-**Escalas Modais Aplicadas:**
-• **Dórico:** Escala menor com 6ª maior (muito usado em rock/jazz)
-• **Mixolídio:** Escala maior com 7ª menor (blues, música brasileira)
-• **Posições:** 5 posições conectadas cobrindo todo o braço` :
-
-`**Aplicação Instrumental Específica:**
-• **Respiração:** Planeje pontos de respiração em escalas longas
-• **Articulação:** Varie entre legato (expressivo) e staccato (técnico)
-• **Velocidade:** Comece sempre lento (60 BPM), aumente gradualmente
-• **Precisão:** Afinação perfeita mais importante que velocidade`}
-
-💡 **EXERCÍCIO AVANÇADO**
-☑ **Análise Modal:** Toque Dó maior começando em cada grau (7 modos)
-☑ **Harmonização:** Construa tríades sobre cada grau da escala
-☑ **Transposição:** Execute a mesma escala em 12 tonalidades
-☑ **Aplicação Musical:** Improvise melodias usando apenas notas da escala
-
-📈 **PROGRESSÃO ACADÊMICA**
-• **Literatura:** Czerny Op.299 (aplicação musical), Chopin (estudos)
-• **Análise:** Bach - Invenções (uso melódico), Debussy (escalas exóticas)
-• **Próximos conceitos:** Modos de menor harmônica, escalas sintéticas
-
-═══════════════════════════════════════
-🎼 **REFERÊNCIA METODOLÓGICA** 🎼
-*Baseado em: Bohumil Med, Osvaldo Lacerda*
-*Pedagogia: Kodály Method, Suzuki Approach*
-═══════════════════════════════════════`;
-    }
-
-    // ============= HARMONIA =============
-    if (lowerMessage.includes('acorde') || lowerMessage.includes('acordes') || lowerMessage.includes('harmonia')) {
-      if (nivelDetectado === 'iniciante') {
-        return `🎵 **ACORDES - SEUS PRIMEIROS PASSOS**
-
-📝 **RESUMO RÁPIDO**
-Um acorde é quando tocamos 3 ou mais notas ao mesmo tempo, criando um "som cheio" que sustenta melodias.
-
-🎯 **EXPLICAÇÃO SIMPLES**
-**O que é um acorde?**
-• É como fazer um "sanduíche musical" - você empilha notas uma sobre a outra
-• Em vez de tocar uma nota por vez (melodia), toca várias juntas (harmonia)
-• **Resultado:** Som rico e completo que "preenche" a música
-
-**Os 2 tipos essenciais:**
-• **Acorde Maior:** Som "alegre", "brilhante", "luminoso" 😊
-• **Acorde Menor:** Som "triste", "melancólico", "nostálgico" 😢
-
-🎹 **SEU PRIMEIRO ACORDE - ${instrumentoUser.toUpperCase()}**
-${instrumentoUser.toLowerCase() === 'piano' ?
-`**Acorde de Dó Maior (C):**
-• **Mão direita:** 
-  - Polegar (1) no Dó
-  - Dedo médio (3) no Mi (pule uma tecla)
-  - Mindinho (5) no Sol (pule outra tecla)
-• **Posição:** Dó-Mi-Sol (teclas brancas)
-• **Som:** Alegre, completo, estável ✨
-
-**Como tocar:**
-1. Posicione os dedos nas teclas
-2. Pressione as 3 teclas ao mesmo tempo
-3. Mantenha os dedos curvos
-4. Escute o som "feliz" que faz` :
-
-instrumentoUser.toLowerCase() === 'violão' ?
-`**Acorde de Dó Maior (C) - Versão Fácil:**
-• **3ª corda, 2ª casa:** Sol (dedo 1)
-• **2ª corda:** Solta = Dó
-• **1ª corda:** Solta = Mi  
-• **Outras cordas:** Não toque ainda
-• **Posição:** Só 3 cordas agudas
-
-**Como tocar:**
-1. Pressione só a 3ª corda na 2ª casa
-2. Dedilhe as 3 cordas agudas juntas
-3. Escute o som "alegre" que faz
-4. Mantenha o dedo bem apertado` :
-
-`**Primeiro acorde no ${instrumentoUser}:**
-• Escolha 3 notas que soem bem juntas
-• Comece sempre muito devagar
-• Foque na qualidade do som, não na velocidade
-• Use as notas Dó-Mi-Sol como referência`}
-
-💡 **EXERCÍCIO APLICADO**
-☑ **Passo 1:** Toque as notas separadas: Dó... Mi... Sol...
-☑ **Passo 2:** Agora toque as 3 juntas: Dó+Mi+Sol (acorde maior)
-☑ **Passo 3:** Compare com Dó+Mi♭+Sol (acorde menor - soa mais triste)
-☑ **Passo 4:** Cante "lá-lá-lá" por cima do acorde
-
-📈 **PRÓXIMOS PASSOS**
-• Aprenda o acorde de Fá maior (F)
-• Descubra o acorde de Sol maior (G)  
-• Pratique mudanças lentas entre C-F-G
-• **Objetivo:** 3 acordes em 2 semanas
-• **Tempo:** 10 minutos por dia, só acordes
-
-> **💡 DICA ESPECIAL**
-> Com apenas 3 acordes (C-F-G) você já pode tocar centenas de músicas populares!`;
-      }
-
-      return `🎵 **HARMONIA FUNCIONAL - SISTEMA COMPLETO**
-
-📝 **RESUMO RÁPIDO**
-A harmonia funcional organiza acordes em categorias funcionais (Tônica, Subdominante, Dominante), criando lógica tensão-resolução que estrutura a música tonal.
-
-🎯 **TEORIA FUNCIONAL FUNDAMENTAL**
-**Campo Harmônico Diatônico Maior (Dó):**
-• **I - C Maj** (Tônica) - *centro tonal, estabilidade, repouso*
-• **ii - Dm** (Subdominante) - *afastamento suave da tônica*  
-• **iii - Em** (Tônica relativa) - *função ambígua, mediante*
-• **IV - F Maj** (Subdominante) - *afastamento forte, preparação*
-• **V - G Maj** (Dominante) - *tensão máxima, movimento obrigatório*
-• **vi - Am** (Tônica relativa) - *substituto menor da tônica*
-• **vii° - B°** (Dominante) - *função dominante diminuta*
-
-**Círculos Funcionais (Hugo Riemann):**
-• **Grupo Tônica:** I - iii - vi (estabelecem tonalidade)
-• **Grupo Subdominante:** IV - ii (preparação harmônica)
-• **Grupo Dominante:** V - vii° (tensão → resolução obrigatória)
-
-🎹 **VOICINGS APLICADOS - ${instrumentoUser.toUpperCase()}**
-${instrumentoUser.toLowerCase() === 'piano' ?
-`**Shell Voicings (Jazz):**
-• **C Maj7:** Dó-Mi-Si (fund-3ª-7ª) - essência do acorde maior
-• **Dm7:** Ré-Fá-Dó (fund-3ª-7ª) - função subdominante clara
-• **G7:** Sol-Si-Fá (fund-3ª-7ª) - trítono Si-Fá = tensão dominante
-
-**Condução de Vozes (4 partes):**
-• **Soprano:** Melodia principal, movimento mais livre
-• **Alto/Tenor:** Movimento por graus conjuntos preferencialmente
-• **Baixo:** Fundamental do acorde, saltos permitidos
-• **Regra:** Evitar 5ªs e 8ªs paralelas consecutivas` :
-
-instrumentoUser.toLowerCase() === 'violão' ?
-`**Drop-2 Voicings:**
-• **C Maj7:** X-3-2-0-0-0 (shape móvel)
-• **Dm7:** X-5-3-5-6-X (forma na 5ª corda)
-• **G7:** 3-2-0-0-0-1 (baixo na 6ª corda)
-
-**Inversões Funcionais:**
-• **C/E:** Primeira inversão - condução melódica do baixo
-• **F/A:** Baixo em Lá suaviza função subdominante
-• **G/B:** Baixo na sensível intensifica função dominante` :
-
-`**Aplicação Harmônica:**
-• Compreenda função antes de decorar formas
-• Use inversões para condução melódica
-• Aplique tensions que reforcem a função harmônica`}
-
-💡 **ANÁLISE FUNCIONAL AVANÇADA**
-☑ **Progressão ii-V-I:** Dm7-G7-C (preparação-tensão-resolução)
-☑ **Substituição Tritonal:** Db7 substitui G7 (movimento cromático descendente)
-☑ **Empréstimo Modal:** Am-F-C-G (vi♭ emprestado do modo menor)
-☑ **Dominantes Secundárias:** C-A7-Dm-G7-C (V7/ii estabelece centro momentâneo)
-
-🎼 **PROGRESSÕES CARACTERÍSTICAS POR ESTILO**
-**Jazz Standards:**
-• **ii-V-I:** Base de 90% dos standards
-• **vi-ii-V-I:** Turnaround clássico
-• **I-vi-ii-V:** "Rhythm Changes" (Gershwin)
-
-**${estiloUser} - Características:**
-${estiloUser.toLowerCase().includes('bossa') ?
-`• **ii-V com alterações:** Dm7(b5)-G7(alt)-C Maj7(#11)
-• **Acordes de passagem:** Movimento cromático frequente
-• **Tensions características:** 9ª, 11ª aumentada, 13ª` :
-estiloUser.toLowerCase().includes('rock') ?
-`• **Progressões simples:** I-vi-IV-V, vi-IV-I-V
-• **Power chords:** 5ªs justas sem terça (ambiguidade maior/menor)
-• **Modal:** Uso frequente de modos dórico e mixolídio` :
-`• **Análise específica:** Cada estilo tem características harmônicas únicas
-• **Progressões típicas:** Identifique padrões recorrentes
-• **Aplicação funcional:** Mesmo em estilos populares, funções se mantêm`}
-
-📈 **DESENVOLVIMENTO PROGRESSIVO**
-• **Próximo nível:** Modulação, acordes alterados, harmonia cromática
-• **Literatura:** Bach - Corais (harmonia clássica), Bill Evans (voicings impressionistas)
-• **Análise sugerida:** "Giant Steps" (Coltrane), "The Girl from Ipanema" (Jobim)
-
-┌─────────────────────────────────────┐
-│  💡 PRINCÍPIO PEDAGÓGICO            │
-│  Harmonia = FUNÇÃO + COR            │
-│  Primeiro entenda o que faz,        │
-│  depois como soa bonito             │
-└─────────────────────────────────────┘`;
-    }
-
-    // ============= RITMO E COMPASSO =============
-    if (lowerMessage.includes('ritmo') || lowerMessage.includes('metrônomo') || lowerMessage.includes('compasso')) {
-      return `🎵 **TEORIA RÍTMICA COMPLETA**
-
-📝 **RESUMO RÁPIDO**  
-O ritmo organiza a música no tempo através de pulsos regulares (batidas) agrupados em compassos, criando a base temporal de toda expressão musical.
-
-🎯 **SISTEMA DE COMPASSOS FUNDAMENTAIS**
-**Compassos Simples (subdivisão binária):**
-• **2/4:** 2 semínimas por compasso - *marcha militar, dobrado*
-• **3/4:** 3 semínimas por compasso - *valsa, minueto, país*
-• **4/4:** 4 semínimas por compasso - *rock, pop, samba - mais comum*
-
-**Compassos Compostos (subdivisão ternária):**
-• **6/8:** 2 grupos de 3 colcheias - *balada, country*
-• **9/8:** 3 grupos de 3 colcheias - *folk irlandês*  
-• **12/8:** 4 grupos de 3 colcheias - *blues lento, power ballad*
-
-🥁 **HIERARQUIA DE ACENTUAÇÃO MÉTRICA**
-**Acentos Naturais por Compasso:**
-• **2/4:** **FORTE**-fraco (binário simples)
-• **3/4:** **FORTE**-fraco-fraco (ternário simples)
-• **4/4:** **FORTE**-fraco-**meio-forte**-fraco (quaternário simples)
-• **6/8:** **FORTE**-fraco-fraco-**meio-forte**-fraco-fraco (binário composto)
-
-**Subdivisões Rítmicas:**
-• **Semínima:** 1 tempo (pulso básico)
-• **Colcheia:** 1/2 tempo (subdivisão binária)
-• **Semicolcheia:** 1/4 tempo (subdivisão quaternária)
-• **Tercina:** divisão ternária de valores binários
+**3. MENOR MELÓDICO ASCENDENTE (Híbrido maior-menor):**
+• **i - Am (Am Maj7)** - *Tônica menor "iluminada"*
+• **ii - Bm (Bm7)** - *Subdominante menor (como em maior)*
+• **♭III+ - C+ (C+ Maj7)** - *Aumentada através do Fá#*
+• **IV - D (D7)** - *Subdominante MAIOR (como em tonalidade maior)*
+• **V - E (E7)** - *Dominante real*
+• **vi° - F#° (F#m7b5)** - *Semi-diminuta*
+• **vii° - G#° (G#m7b5)** - *Semi-diminuta*
 
 🎹 **APLICAÇÃO PRÁTICA NO ${instrumentoUser.toUpperCase()}**
-${instrumentoUser.toLowerCase() === 'piano' ?
-`**Exercícios de Coordenação Rítmica:**
-• **Mão Direita:** Melodia com síncopes
-• **Mão Esquerda:** Baixo nos tempos fortes (1 e 3 em 4/4)
-• **Independência:** Hanon adaptado com acentuações métricas específicas
 
-**Padrões Estilísticos Brasileiros:**
-• **Samba:** Síncope na mão direita, baixo antecipado na esquerda
-• **Bossa Nova:** Baixo sincopado no polegar, acordes em contratempo
-• **Choro:** Semicolcheias na mão direita, baixo alternado na esquerda` :
+${instrumentoUser.toLowerCase() === 'piano' ?
+`**Voicings Profissionais (Jazz/Erudito):**
+
+**Shell Voicings (Bill Evans Style):**
+• **C Maj7:** C-E-B (fund-3ª-7ª) - essência harmônica
+• **Dm7:** D-F-C (fund-3ª-7ª) - função subdominante clara
+• **G7:** G-B-F (fund-3ª-7ª) - trítono B-F = tensão dominante
+
+**Rootless Voicings (Advanced Jazz):**
+• **C Maj7:** E-G-B-D (3ª-5ª-7ª-9ª) - sem fundamental
+• **Dm7:** F-A-C-E (3ª-5ª-7ª-9ª) - deixa baixo livre
+• **G7:** B-D-F-A (3ª-5ª-7ª-9ª) - função dominante clara
+
+**Close vs Open Position:**
+• **Close:** Intervalos de 2ª e 3ª (sonoridade densa)
+• **Open:** Distribuição além de uma oitava (transparência)` :
 
 instrumentoUser.toLowerCase() === 'violão' ?
-`**Levadas Fundamentais:**
-• **Rock Básico:** ↓-↓-↑-↑-↓-↑ (padrão 4/4 com palhetada alternada)
-• **Bossa Nova:** Baixo no polegar + acordes sincopados nos dedos
-• **Country:** Alternate bass (baixo alternado) + acordes nos contratempos
+`**Sistemas de Acordes Avançados:**
 
-**Técnica de Mão Direita:**
-• **Rest Stroke (apoiando):** Para acentos fortes e melodias
-• **Free Stroke (sem apoiar):** Para subdivisões e acompanhamentos
-• **Fingerstyle:** p(polegar)-i(indicador)-m(médio)-a(anular)` :
+**Drop-2 Voicings (4 notas):**
+• **C Maj7:** E-G-B-C (2ª voz mais aguda descida uma oitava)
+• **Dm7:** F-A-C-D (forma móvel para todas tonalidades)
+• **G7:** F-A-B-D (função dominante clara)
 
-`**Desenvolvimento Rítmico Instrumental:**
-• **Metrônomo:** Ferramenta essencial - comece sempre lento
-• **Contagem:** Conte em voz alta durante prática inicial
-• **Subdivisão:** Sinta internamente subdivisions antes de tocar
-• **Precisão:** Timing perfeito mais importante que velocidade`}
+**Drop-3 Voicings:**
+• **C Maj7:** G-C-E-B (3ª voz mais aguda descida uma oitava)
+• **Posições:** Todas as inversões possíveis no braço
 
-💡 **SÍNCOPE BRASILEIRA** *(Identidade Musical Nacional)*
-**Definição Técnica:** Som que inicia no tempo fraco ou parte fraca de tempo e se prolonga ao tempo forte ou parte forte seguinte.
+**CAGED + Harmonia:**
+• Cada shape do CAGED gera voicings diferentes
+• Conecte shapes para progressões fluidas
+• Use cordas soltas como pedais harmônicos` :
 
-**Características:**
-• **Efeito:** Cria "balanço", "ginga", "swing" típico brasileiro
-• **Notação:** Use ligaduras para mostrar prolongamento temporal
-• **Exemplos musicais:** 
-  - "Garota de Ipanema" - "Olha que coisa mais **lin**-da"
-  - "Aquarela do Brasil" - "Brasil, meu **Bra**-sil brasileiro"
+`**Aplicação Instrumental Específica:**
+• Compreenda FUNÇÃO harmônica antes de FORMA
+• Use inversões para condução melódica suave
+• Aplique tensions (9ª, 11ª, 13ª) que reforcem função
+• Pratique progressões em todas as tonalidades`}
 
-⏱️ **METODOLOGIA DE ESTUDO COM METRÔNOMO**
-☑ **Início:** 60 BPM (frequência cardíaca em repouso)
-☑ **Progressão:** 60→80→100→120→138→160 BPM (gradual)
-☑ **Método:** Primeiro só contagem, depois instrumento
-☑ **Subdivisão:** "1-e-e-a, 2-e-e-a" para semicolcheias em 4/4
-☑ **Acentuação:** Use click nos tempos fortes, mentalize fracos
+💡 **EXERCÍCIO SISTEMÁTICO AVANÇADO**
+☑ **Análise Funcional:** I-vi-ii-V-I em 12 tonalidades (identificar funções)
+☑ **Substituição por Função:** ii↔IV, vi↔I, vii°↔V em progressões reais
+☑ **Empréstimo Modal:** Use ♭VII e ♭VI em tonalidade maior
+☑ **Composição Harmônica:** Crie progressão 16 compassos usando só funções
+☑ **Análise de Repertório:** Bach Coral, Standard Jazz, Bossa Nova
 
-📈 **EVOLUÇÃO RÍTMICA AVANÇADA**
-• **Próximos conceitos:** Polirritmia (3 contra 2), métricas irregulares (5/4, 7/8)
-• **Literatura:** Dave Brubeck - "Take Five" (5/4), Pink Floyd - "Money" (7/4)
-• **Aplicação:** Rudimentos de bateria adaptados ao instrumento
-• **Análise cultural:** Ritmos afro-brasileiros, métricas indianas
+🎼 **PROGRESSÕES MODELOS POR ESTILO**
 
-> **⚠️ ATENÇÃO PEDAGÓGICA**
-> O ritmo brasileiro é patrimônio cultural único. Estudar samba, bossa nova e choro desenvolve sensibilidade rítmica diferenciada mundialmente!
+**JAZZ TRADITIONAL:**
+• **ii-V-I Maior:** Dm7 - G7 - C Maj7
+• **ii-V-i Menor:** Bm7b5 - E7 - Am Maj7  
+• **Turnaround:** Am7 - D7 - Dm7 - G7
+• **Circle of Fifths:** C-A7-Dm7-G7-Em7-A7-Dm7-G7
 
-═══════════════════════════════════════
-🎵 **REFERÊNCIA CULTURAL** 🎵  
-*Ritmo brasileiro: fusão africana-europeia-indígena*
-*Estude: Pixinguinha, João Gilberto, Hermeto Pascoal*
-═══════════════════════════════════════`;
+**BOSSA NOVA (Tom Jobim Style):**
+• **ii-V com tensions:** Dm7(9) - G7(13) - C Maj7(#11)
+• **Movimento cromático:** C-B7-Bb7-A7-Dm7-G7
+• **Acordes típicos:** Maj7(#11), m7(9), 7(13), m7b5
+
+**MPB SOFISTICADA:**
+• **Empréstimo modal:** C-Bb-F/A-Fm-C (♭VII-♭VI)
+• **Linha cromática:** C-C/B-Am-Am/G-F-G
+• **Harmonia quartal:** Acordes por 4ªs (Am11, Dm11)
+
+📈 **PROGRESSÃO ACADÊMICA SISTEMÁTICA**
+• **Próximo:** Dominantes secundárias (V7/V, V7/vi, V7/ii...)
+• **Literatura:** Bach - Corais (análise funcional), Chopin - Noturnos
+• **Jazz Analysis:** "Autumn Leaves", "All The Things You Are"
+• **Composição:** Criar 32 compassos forma AABA usando campos harmônicos
+
+═══════════════════════════════════════════════════════════
+🎼 **REFERÊNCIA ACADÊMICA DE EXCELÊNCIA** 🎼
+*Walter Piston - "Harmony" (Harvard University)*
+*Heinrich Schenker - Análise Funcional*
+*Hugo Riemann - Teoria das Funções Harmônicas*
+*Jazz: Mark Levine - "Jazz Theory Book", Barry Harris*
+═══════════════════════════════════════════════════════════`;
     }
 
-    // ============= RESPOSTA GENÉRICA ESPECIALIZADA =============
-    return `🎵 **IA MUSICAL LOVART - ASSISTENTE PEDAGÓGICA ESPECIALIZADA**
+    // ============= SUBSTITUIÇÕES E REHARMONIZAÇÃO AVANÇADA =============
+    if (lowerMessage.includes('substituição') || lowerMessage.includes('reharmonização') || lowerMessage.includes('rearmonização')) {
+      return `🎵 **SUBSTITUIÇÕES E REHARMONIZAÇÃO - NÍVEL MASTER**
 
-📝 **DIAGNÓSTICO PERSONALIZADO**
+📝 **RESUMO RÁPIDO**
+Reharmonização é a arte avançada de substituir acordes mantendo a melodia, criando diferentes cores harmônicas através de técnicas sistemáticas e conhecimento profundo da função harmônica.
+
+🎯 **SUBSTITUIÇÕES DIATÔNICAS (Base Funcional)**
+
+**Por Função Harmônica (Hugo Riemann):**
+• **Tônica:** I ↔ vi ↔ iii (C ↔ Am ↔ Em)
+• **Subdominante:** IV ↔ ii (F ↔ Dm)
+• **Dominante:** V ↔ vii° (G ↔ B°)
+
+**Por Relações Intervalares:**
+• **Relativas (6ª):** C-Am, F-Dm, G-Em (2 notas comuns)
+• **Mediante/Submediante:** C-Em (terça comum), C-Am (sexta comum)
+• **Paralelas:** C-Cm, F-Fm (mesma fundamental)
+
+🎼 **SUBSTITUIÇÕES CROMÁTICAS (Nível Avançado)**
+
+**1. SUBSTITUIÇÃO TRITONAL (♭II7):**
+• **Princípio:** V7 → ♭II7 (G7 → D♭7)
+• **Razão teórica:** Mesmo trítono (B-F = F-B enarmônico)
+• **Aplicação prática:** Dm7-D♭7-C Maj7 (ii-♭II7-I)
+• **Efeito:** Movimento cromático descendente no baixo
+• **Origem:** Jazz bebop, influência francesa (Debussy)
+
+**2. DOMINANTES SECUNDÁRIAS (Modulação Momentânea):**
+• **V7/V:** D7 → G7 → C (dominante da dominante)
+• **V7/vi:** E7 → Am (dominante do sexto grau)
+• **V7/ii:** A7 → Dm (dominante do segundo grau)
+• **V7/iii:** B7 → Em (dominante do terceiro grau)
+• **V7/IV:** C7 → F (dominante do quarto grau)
+
+**Análise de "All The Things You Are":**
+```
+Original: C-F-Bb-Eb-Am-D-G-C
+Com dominantes: C-C7-F-F7-Bb-Bb7-Eb-E7-Am-A7-D-D7-G-G7-C
+```
+
+**3. ACORDES DIMINUTOS DE PASSAGEM:**
+• **Entre graus consecutivos:** C-C#°-Dm (I-#i°-ii)
+• **Entre I-ii:** C-C#°-Dm-D#°-Em
+• **Entre V-vi:** G-G#°-Am
+• **Função:** Movimento cromático + tensão passageira
+
+🎨 **TÉCNICAS ESPECÍFICAS DE REHARMONIZAÇÃO**
+
+**1. CLICHÉ HARMÔNICO (Linha Cromática no Baixo):**
+```
+Progressão original: C-Am-F-G
+Cliché descendente:  C-C/B-C/Bb-C/A-F-G
+Cliché ascendente:   C-C/D-C/E-C/F-F-G
+```
+• **Conceito:** Baixo cromático, harmonia superior estática
+• **Uso:** Bossa nova, MPB, jazz ballad
+• **Exemplo:** "The Girl from Ipanema" (Jobim)
+
+**2. PEDAL HARMÔNICO:**
+```
+Original: C-F-G-C
+Pedal C:  C-F/C-G/C-C
+Pedal G:  C/G-F/G-G-C/G
+```
+• **Efeito:** Suspensão tonal, modernidade harmônica
+• **Aplicação:** Música impressionista, jazz moderno
+
+**3. MOVIMENTO POR SEGUNDAS:**
+```
+Original: C-Am-F-G
+Por 2ªs:  C-B♭-Am-A♭-F-G
+```
+• **Conceito:** Substituição por acordes meio tom abaixo
+• **Estilo:** Jazz fusion, música contemporânea
+
+🎹 **REHARMONIZAÇÃO POR ESTILO ESPECÍFICO**
+
+**BOSSA NOVA (Escola Tom Jobim):**
+• **Characteristics:** Tensões obrigatórias (9ª, #11ª, 13ª)
+• **Acordes típicos:** Maj7(#11), m7(9), 7(13), m7b5
+• **Movimento:** Preferência por segundas e terças
+• **Exemplo prático - "Corcovado":**
+```
+Original simplificado: C-G-Am-F-G-C
+Jobim style:          C Maj7(#11)-G7(13)-Am7(9)-F Maj7(#11)-G7(13)-C6/9
+```
+
+**JAZZ BEBOP (Charlie Parker/Dizzy Gillespie):**
+• **ii-V-I Extended:** IIm7-♭II7-I Maj7
+• **Chromatic approach:** Acordes de aproximação cromática
+• **Exemplo - "Cherokee" reharmonization:**
+```
+Original: Bb-G7-Cm-F7-Bb
+Bebop:   Bb Maj7-B7-Bb7-A7-Ab7-G7-Gb7-F7-E7-Eb7-D7-Db7-Cm7-F7-Bb
+```
+
+**MPB SOFISTICADA (Djavan/Ivan Lins Style):**
+• **Empréstimo modal:** ♭VII, ♭VI, iv em maior
+• **Harmonia quartal:** Acordes construídos por 4ªs
+• **Exemplo - Progressão típica MPB:**
+```
+Modal borrowing: C-Bb-F/A-Fm/Ab-C
+Quartal harmony: Am11-Dm11-G11-C Maj7(add9)
+```
+
+💡 **EXERCÍCIO SISTEMÁTICO DE REHARMONIZAÇÃO**
+☑ **Passo 1:** Analise "Happy Birthday" harmonicamente
+☑ **Passo 2:** Aplique substituição tritonal em dominantes
+☑ **Passo 3:** Adicione dominantes secundárias
+☑ **Passo 4:** Use empréstimo modal (♭VII, ♭VI)
+☑ **Passo 5:** Crie versão bossa nova com tensions
+
+**"Happy Birthday" - Evolução Harmônica:**
+```
+Original:    C-C-F-C-G7-C
+Intermediário: C-A7-Dm-C-G7-C
+Avançado:    C Maj7-A7(b13)-Dm7(9)-C6/9-G7(13)-C Maj7(#11)
+Master:      C Maj7(#11)-A7alt-Dm7(9)/G-C6/9/E-Db7-C Maj7(#11)
+```
+
+🎼 **ANÁLISE DE MESTRES DA REHARMONIZAÇÃO**
+
+**Tom Jobim - "Wave" (Análise Harmônica):**
+• **Uso de mediantes:** Movimento por terças (C-E-Ab)
+• **Tensions características:** Maj7(#11) recorrente
+• **Modulação suave:** Por acordes pivô
+
+**Bill Evans - "Waltz for Debby" (Reharmonização):**
+• **Voicings rootless:** 3ª-7ª-9ª-5ª
+• **Aproximação cromática:** Uso sistemático de ♭II7
+• **Tensões internas:** 9ª e #11ª como notas melódicas
+
+📈 **PROGRESSÃO PARA EXCELÊNCIA**
+• **Próximo nível:** Harmonia politonal, acordes híbridos
+• **Literatura:** Ravel - "Pavane", Debussy - "Clair de Lune"
+• **Jazz:** "Giant Steps" (Coltrane), "Inner Urge" (Joe Henderson)
+• **Composição:** Reharmonizar standards completos
+
+┌─────────────────────────────────────────────────────────┐
+│  💡 PRINCÍPIO MASTER DA REHARMONIZAÇÃO                 │
+│                                                         │
+│  1. MANTENHA a melodia intacta                         │
+│  2. ENTENDA a função harmônica original                │
+│  3. SUBSTITUA por acordes de MESMA função              │
+│  4. ADICIONE tensions que embelezem sem conflitar      │
+│  5. TESTE sempre tocando melodia + nova harmonia       │
+└─────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════
+🎵 **MESTRES MUNDIAIS DA REHARMONIZAÇÃO** 🎵
+*Tom Jobim (Bossa Nova), Bill Evans (Jazz)*
+*Djavan (MPB), Hermeto Pascoal (Experimental)*
+*Barry Harris (Bebop), Clare Fischer (Contemporary)*
+═══════════════════════════════════════════════════════════`;
+    }
+
+    // ============= ANÁLISE MUSICAL AVANÇADA =============
+    if (lowerMessage.includes('análise') || lowerMessage.includes('analisar')) {
+      return `🎵 **ANÁLISE MUSICAL AVANÇADA - METODOLOGIA ACADÊMICA**
+
+📝 **RESUMO RÁPIDO**
+Análise musical é o processo sistemático de compreender estrutura, harmonia, forma e função em obras musicais, usando metodologias reconhecidas internacionalmente.
+
+🎯 **METODOLOGIAS DE ANÁLISE (Escolas Acadêmicas)**
+
+**1. ANÁLISE FUNCIONAL (Hugo Riemann/Walter Piston):**
+• **Objetivo:** Identificar funções harmônicas (T-S-D)
+• **Método:** Classificar acordes por função tonal
+• **Símbolos:** T (tônica), S (subdominante), D (dominante)
+• **Aplicação:** Música tonal dos séculos XVII-XX
+
+**2. ANÁLISE SCHENKERIANA (Heinrich Schenker):**
+• **Conceito:** Música como elaboração de estrutura fundamental
+• **Níveis:** Foreground (superfície), Middleground (redução), Background (Ursatz)
+• **Ursatz:** Linha fundamental (3-2-1 ou 5-4-3-2-1) + baixo de Alberti (I-V-I)
+• **Aplicação:** Bach, Mozart, Beethoven, Brahms, Chopin
+
+**3. ANÁLISE FORMAL (Análise da Grande Forma):**
+• **Formas binárias:** AB (cada seção repetida)
+• **Formas ternárias:** ABA (retorno modificado)
+• **Forma sonata:** Exposição-Desenvolvimento-Recapitulação
+• **Rondó:** ABACA ou ABACABA
+
+🎼 **ANÁLISE HARMÔNICA SISTEMÁTICA**
+
+**Passo-a-Passo da Análise (Método Piston):**
+
+**1. IDENTIFICAÇÃO DA TONALIDADE:**
+• **Armadura de clave:** Indica tonalidade provável
+• **Cadência final:** Confirma centro tonal
+• **Acordes predominantes:** I e V aparecem frequentemente
+• **Melodia:** Tende a começar e terminar na tônica
+
+**2. CIFRAGEM FUNCIONAL:**
+• **Graus romanos:** I, ii, iii, IV, V, vi, vii°
+• **Qualidade:** Maiúsculo (maior), minúsculo (menor), ° (diminuto)
+• **Inversões:** I⁶ (primeira), I⁶₄ (segunda), I⁴₂ (terceira - tétrade)
+
+**3. ANÁLISE DE PROGRESSÕES:**
+• **Movimento das fundamentais:** Por 5ªs desc. (forte), 2ªs asc./desc. (suave)
+• **Sequências:** Padrões repetidos em diferentes alturas
+• **Cadências:** Pontos de articulação formal
+
+🎹 **ANÁLISE PRÁTICA - "MINUETO EM SOL" (Bach)**
+
+**Estrutura Formal:** Binary Form (||: A :||: B A' :||)
+**Tonalidade:** Sol Maior (1 sustenido)
+**Métrica:** 3/4 (dança barroca)
+
+**Análise Harmônica Detalhada:**
+Compassos 1-8 (Seção A):
+I - V6 - I - vi - ii6 - V - I
+G - D/F# - G - Em - Am/C - D - G
+
+Função: T - D - T - T - S - D - T
+
+**Técnicas Composicionais Identificadas:**
+• **Baixo de Alberti:** Acompanhamento em tercinas
+• **Sequência melódica:** Repetição transposta
+• **Cadência autêntica:** V-I (articulação formal)
+
+🎨 **ANÁLISE JAZZÍSTICA - "ALL THE THINGS YOU ARE"**
+
+**Forma:** AABA (32 compassos)
+**Tonalidades:** Modula constantemente (circle of fifths)
+**Análise Harmônica:**
+
+**Seção A (8 compassos):**
+Fm7 - Bb7 - EbMaj7 - AbMaj7
+ii   - V7  - IMaj7  - IVMaj7 (em Eb Maior)
+
+Dm7b5 - G7 - CMaj7
+ii7b5  - V7 - IMaj7 (em C Maior)
+
+**Características Avançadas:**
+• **ii-V-I chains:** Progressões encadeadas
+• **Modulação por 5ªs:** Eb → C → G → E
+• **Harmonia funcional:** Mesmo em contexto cromático
+
+💡 **EXERCÍCIO DE ANÁLISE PROGRESSIVA**
+
+**NÍVEL INICIANTE - "Ode to Joy" (Beethoven):**
+☑ **Passo 1:** Identifique tonalidade (Bb Maior)
+☑ **Passo 2:** Marque frases (4+4+4+4 compassos)
+☑ **Passo 3:** Cifre acordes básicos (I-V-vi-IV)
+☑ **Passo 4:** Identifique cadências (V-I)
+
+**NÍVEL AVANÇADO - "Giant Steps" (Coltrane):**
+☑ **Análise tonal:** Três centros tonais (Bb-G-Eb)
+☑ **Coltrane Changes:** Ciclo de terças maiores
+☑ **Velocidade harmônica:** Mudança por tempo
+☑ **Improvisação:** Escalas correspondentes a cada acorde
+
+🎼 **ANÁLISE ESTILÍSTICA POR PERÍODO**
+
+**BARROCO (Bach, Handel):**
+• **Harmonia:** Funcional, cadências claras
+• **Textura:** Polifônica (contraponto)
+• **Forma:** Binária, fuga, variação
+• **Características:** Sequências, modulações para tons próximos
+
+**CLÁSSICO (Mozart, Haydn):**
+• **Harmonia:** Funcional expandida, dominantes secundárias
+• **Textura:** Homofônica (melodia + acompanhamento)
+• **Forma:** Sonata, rondó, tema e variações
+• **Características:** Clareza formal, equilíbrio
+
+**ROMÂNTICO (Chopin, Schumann):**
+• **Harmonia:** Cromática, empréstimo modal
+• **Textura:** Melodia expressiva + harmonia rica
+• **Forma:** Formas livres, peças de caráter
+• **Características:** Expressividade, rubato
+
+**IMPRESSIONISTA (Debussy, Ravel):**
+• **Harmonia:** Modal, tons inteiros, quartal
+• **Textura:** Colorística, timbres específicos
+• **Forma:** Flexível, não-funcional
+• **Características:** Ambiguidade tonal, cores harmônicas
+
+📈 **PROGRESSÃO ANALÍTICA SISTEMÁTICA**
+• **Próximo:** Análise espectral, música atonal, análise computacional
+• **Literatura:** Berry - "Structural Functions", Cook - "Guide to Musical Analysis"
+• **Repertório:** Bach - WTC, Beethoven - Sonatas, Debussy - Prelúdios
+• **Software:** MuseScore (cifragem), Schenker Editor (análise)
+
+═══════════════════════════════════════════════════════════
+🎼 **INSTITUIÇÕES DE REFERÊNCIA EM ANÁLISE** 🎼
+*Yale University - Music Theory Department*
+*Juilliard School - Analysis Methods*
+*Royal College of Music - Analytical Techniques*
+*Berklee - Jazz Analysis and Theory*
+═══════════════════════════════════════════════════════════`;
+    }
+
+    // ============= RESPOSTA GENÉRICA MASTER =============
+    return `🎵 **IA MUSICAL LOVART - ASSISTENTE MASTER ESPECIALIZADA**
+
+📝 **DIAGNÓSTICO PERSONALIZADO AVANÇADO**
 **Nível detectado:** ${nivelDetectado.toUpperCase()}
+**Tópico identificado:** ${topicoDetectado.toUpperCase()}
 **Instrumento:** ${instrumentoUser}
 **Estilo musical:** ${estiloUser}
 
-🎯 **COMPETÊNCIAS DISPONÍVEIS**
-**🎼 Teoria Musical Adaptativa (${nivelDetectado}):**
-• Escalas (diatônicas, modais, cromáticas, exóticas)
-• Intervalos (classificação, inversão, aplicação harmônica)  
-• Acordes (tríades, tétrades, tensions, substituições)
-• Harmonia funcional (progressões, modulação, análise)
-• Contraponto e condução de vozes
+🎯 **COMPETÊNCIAS MASTER DISPONÍVEIS**
 
-**🎹 Especialização Instrumental (${instrumentoUser}):**
-• Técnica específica e ergonomia
-• Exercícios progressivos por nível
-• Repertório adequado e desafiador
-• Interpretação e expressividade
-• Resolução de dificuldades técnicas
+**🎼 Teoria Musical Completa (Nível ${nivelDetectado}):**
+• **Harmonia Avançada:** Campos harmônicos completos, substituições complexas
+• **Análise Musical:** Schenker, funcional, formal, estilística
+• **Contraponto:** Bach style, espécies, condução de vozes
+• **Forma Musical:** Binária, ternária, sonata, fuga, canção
+• **Sistemas Temperados:** Igual, justo, microtons, escalas exóticas
 
-**🎨 Análise Estilística (${estiloUser}):**
-• Características harmônicas do estilo
-• Padrões rítmicos e métricas típicas
-• Progressões idiomáticas e clichês
-• Técnicas interpretativas específicas
-• Contexto histórico e cultural
+**🎹 Especialização Instrumental Master (${instrumentoUser}):**
+• **Técnica Avançada:** Método Russian School, ergonomia profissional
+• **Interpretação:** Análise de performance, rubato, agógica
+• **Repertório Classificado:** Por nível e período histórico
+• **Pedagogia Instrumental:** Suzuki, Russian, Traditional methods
+• **Master Classes:** Insights de grandes mestres
 
-**📚 Metodologias Pedagógicas:**
-• **Kodály Method:** Desenvolvimento auditivo
-• **Suzuki Approach:** Aprendizagem natural
-• **Orff-Schulwerk:** Integração corporal
-• **Traditional Academic:** Teoria estruturada
+**🎨 Análise Estilística Profunda (${estiloUser}):**
+• **Características Históricas:** Contexto social e cultural
+• **Harmonia Idiomática:** Progressões típicas e clichês estilísticos
+• **Instrumentação Específica:** Timbres e técnicas características
+• **Grandes Compositores:** Análise de obras-prima
+• **Evolução Estilística:** Influências e desenvolvimentos
 
-💡 **PERGUNTAS OTIMIZADAS PARA SEU NÍVEL (${nivelDetectado}):**
+**📚 Metodologias Pedagógicas Master:**
+• **Kodály Method:** Desenvolvimento auditivo sistemático
+• **Suzuki Approach:** Aprendizagem natural "língua materna"
+• **Orff-Schulwerk:** Integração corporal e instrumental
+• **Russian Method:** Técnica avançada e virtuosismo
+• **Jazz Pedagogy:** Improvisação, ear training, repertório
+
+💡 **CONSULTAS ESPECIALIZADAS SUGERIDAS (${nivelDetectado}):**
 
 ${nivelDetectado === 'iniciante' ? 
-`☑ "Como formar meus primeiros acordes no ${instrumentoUser}?"
-☑ "Qual a diferença entre som maior e menor?"
-☑ "Como usar o metrônomo corretamente?"
-☑ "Quais são as 7 notas musicais básicas?"
-☑ "Como ler cifras musicais simples?"` :
+`☑ "Como construir meus primeiros acordes de forma correta no ${instrumentoUser}?"
+☑ "Qual a diferença prática entre escalas maiores e menores?"
+☑ "Como usar o metrônomo para desenvolver senso rítmico?"
+☑ "Exercícios de postura e técnica básica para ${instrumentoUser}"
+☑ "Primeiras músicas para tocar no meu nível"` :
 
 nivelDetectado === 'elementar' ?
-`☑ "Como funciona o campo harmônico maior?"
-☑ "Que escalas devo estudar primeiro no ${instrumentoUser}?"
-☑ "Como identificar a tonalidade de uma música?"
-☑ "Quais são os acordes mais usados em ${estiloUser}?"
-☑ "Como praticar escalas de forma eficiente?"` :
+`☑ "Como funciona o campo harmônico na prática musical?"
+☑ "Técnicas de estudo de escalas eficientes para ${instrumentoUser}"
+☑ "Como identificar tonalidade e acordes básicos em músicas"
+☑ "Exercícios de leitura musical progressiva"
+☑ "Repertório ${estiloUser} adequado ao meu nível"` :
 
 nivelDetectado === 'intermediario' ?
-`☑ "Como analisar progressões harmônicas em ${estiloUser}?"
-☑ "Que são dominantes secundárias e como usar?"
-☑ "Como improvisar usando modos gregos?"
-☑ "Como fazer rearmonização simples?"
-☑ "Qual a teoria por trás da bossa nova?"` :
+`☑ "Análise de progressões harmônicas em ${estiloUser}"
+☑ "Como usar dominantes secundárias na prática"
+☑ "Técnicas de improvisação usando modos gregos"
+☑ "Estudo de forma musical em peças ${estiloUser}"
+☑ "Como desenvolver interpretação musical expressiva"` :
 
-`☑ "Como aplicar análise schenkeriana em música popular?"
-☑ "Que são acordes de empréstimo modal e como usar?"
-☑ "Como funciona modulação cromática e enarmônica?"
-☑ "Quais técnicas avançadas de contraponto aplicar?"
-☑ "Como analisar harmonia impressionista?"`}
+`☑ "Análise schenkeriana aplicada ao repertório ${estiloUser}"
+☑ "Técnicas avançadas de reharmonização e substituição"
+☑ "Contraponto a 2 e 3 vozes: composição e análise"
+☑ "Modulação cromática e enarmônica em contexto prático"
+☑ "Master class: interpretação de grandes obras"`}
 
-🎼 **FORMATAÇÃO PEDAGÓGICA ESPECIALIZADA**
-Minhas respostas seguem estrutura acadêmica:
-• **📝 Resumo Rápido:** Conceito em 2-3 linhas
-• **🎯 Explicação Detalhada:** Desenvolvimento completo
-• **🎹 Exemplo no Seu Instrumento:** Aplicação específica
-• **💡 Exercício Aplicado:** Atividade prática
-• **📈 Próximos Passos:** Progressão natural
+🎼 **RECURSOS PEDAGÓGICOS AVANÇADOS**
 
-**📚 BASE ACADÊMICA RECONHECIDA:**
-• **Bohumil Med** - Teoria da Música Brasileira
-• **Osvaldo Lacerda** - Harmonia Funcional
-• **Walter Piston** - Harmony & Counterpoint
-• **Heinrich Schenker** - Análise Estrutural
-• **Allen Forte** - Set Theory & Atonal Music
+**Formatação Acadêmica Especializada:**
+• **📝 Resumo Executivo:** Conceito em linguagem acessível
+• **🎯 Fundamentação Teórica:** Base acadêmica sólida
+• **🎹 Aplicação Instrumental:** Específica para seu instrumento
+• **💡 Exercícios Graduais:** Progressão pedagógica sistemática
+• **📈 Desenvolvimento:** Próximos passos e metas
 
-🎯 **COMO OBTER RESPOSTAS OTIMIZADAS:**
-**Para Teoria:** "Explique [conceito] para [nível] no [instrumento]"
-**Para Prática:** "Exercícios de [técnica] para [instrumento] [nível]"
-**Para Análise:** "Como funciona [progressão] em [música/estilo]"
-**Para Composição:** "Como compor em estilo [gênero] usando [técnica]"
+**Base Acadêmica International:**
+• **Conservatórios:** Juilliard, Curtis, Berklee, Royal College
+• **Métodos:** Piston, Schenker, Riemann, Schoenberg
+• **Pedagogia:** Kodály, Suzuki, Orff, Russian School
+• **Literatura:** Oxford Music Online, Grove Dictionary
 
-═══════════════════════════════════════════════════
-🎼 **LOVART - IA MUSICAL ESPECIALIZADA** 🎼
-*Educação musical de excelência baseada em metodologia*
-*acadêmica reconhecida internacionalmente*
+🎯 **OTIMIZAÇÃO DE CONSULTAS AVANÇADAS:**
 
-*Inspirada em: Juilliard, Berklee, Curtis Institute*
-*Metodologia brasileira: Villa-Lobos, Guerra-Peixe*
-═══════════════════════════════════════════════════
+**Para Teoria Complexa:**
+"Analise [conceito específico] aplicado ao [repertório] no nível [seu nível]"
 
-**🎵 Digite sua pergunta específica e vamos aprofundar seus conhecimentos musicais com precisão pedagógica!**`;
+**Para Técnica Instrumental:**
+"Exercícios de [técnica específica] para ${instrumentoUser} nível ${nivelDetectado}"
+
+**Para Análise Musical:**
+"Como analisar [música específica] usando método [Schenker/Funcional/Modal]"
+
+**Para Composição/Improvisação:**
+"Técnicas de [composição/improvisação] em estilo ${estiloUser} para ${instrumentoUser}"
+
+═══════════════════════════════════════════════════════════════════
+🎼 **LOVART - IA MUSICAL MASTER ESPECIALIZADA** 🎼
+
+*Excelência pedagógica baseada em metodologia de conservatórios*
+*internacionais e universidades de música de primeira linha*
+
+*Inspiração acadêmica:*
+*• Juilliard School (Nova York) - Performance e Teoria*
+*• Berklee College (Boston) - Jazz e Música Popular*  
+*• Curtis Institute (Philadelphia) - Excelência Técnica*
+*• Royal College of Music (Londres) - Tradição Clássica*
+
+*Metodologia brasileira de excelência:*
+*• Villa-Lobos (Nacionalismo), Guerra-Peixe (Folclore)*
+*• Tom Jobim (Bossa Nova), Hermeto Pascoal (Experimental)*
+═══════════════════════════════════════════════════════════════════
+
+**🏆 Digite sua consulta específica e receba orientação musical de nível internacional!**`;
   };
 
   const handleSendMessage = async () => {
@@ -626,7 +730,8 @@ Minhas respostas seguem estrutura acadêmica:
         role: 'assistant',
         content: aiResponse,
         timestamp: new Date(),
-        nivel: diagnosticarNivel(currentMessage)
+        nivel: diagnosticarNivel(currentMessage),
+        topico: identificarTopico(currentMessage)
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -635,7 +740,21 @@ Minhas respostas seguem estrutura acadêmica:
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: '🎵 **ERRO TEMPORÁRIO**\n\nDesculpe, ocorreu um erro ao processar sua pergunta. Tente novamente em alguns instantes.\n\n**Sugestão:** Reformule sua pergunta ou tente um tópico específico como "escalas", "acordes" ou "ritmo".',
+        content: `🎵 **ERRO TEMPORÁRIO - IA MUSICAL**
+
+⚠️ **Situação:** Ocorreu um erro temporário ao processar sua consulta musical.
+
+🎯 **Solução Imediata:**
+• Reformule sua pergunta de forma mais específica
+• Tente novamente em alguns instantes
+• Use palavras-chave como "harmonia", "escalas", "análise", "técnica"
+
+💡 **Sugestões de Consultas:**
+• "Explique campo harmônico maior para ${nivel} no ${instrument || 'piano'}"
+• "Como fazer substituição tritonal em progressões jazz"
+• "Exercícios de escalas para desenvolver técnica"
+
+**🔄 Tente novamente - estou pronta para ajudar com excelência musical!**`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -650,10 +769,10 @@ Minhas respostas seguem estrutura acadêmica:
     ));
     
     toast({
-      title: feedback === 'positive' ? "Feedback positivo!" : "Feedback registrado",
+      title: feedback === 'positive' ? "Excelente feedback!" : "Feedback registrado",
       description: feedback === 'positive' 
-        ? "Ótimo! Continue fazendo perguntas para aprender mais." 
-        : "Obrigado pelo feedback. Vou melhorar minhas respostas."
+        ? "Ótimo! Continue explorando para dominar teoria musical." 
+        : "Obrigado! Vou refinar minhas respostas para melhor qualidade pedagógica."
     });
   };
 
@@ -661,117 +780,140 @@ Minhas respostas seguem estrutura acadêmica:
     navigator.clipboard.writeText(content);
     toast({
       title: "Copiado!",
-      description: "Resposta copiada para a área de transferência"
+      description: "Conteúdo musical copiado para área de transferência"
     });
   };
 
   const exportToPDF = () => {
     toast({
-      title: "Em desenvolvimento",
-      description: "Exportação para PDF será implementada em breve",
+      title: "Exportação PDF",
+      description: "Funcionalidade em desenvolvimento - em breve disponível",
       variant: "default"
     });
   };
 
   const saveConversation = () => {
     toast({
-      title: "Conversa salva!",
-      description: "Histórico salvo com sucesso no Supabase"
+      title: "Sessão salva!",
+      description: "Conversa musical arquivada com sucesso no Supabase"
     });
   };
 
   const quickTopics = [
-    "Campo harmônico maior",
-    "Escalas pentatônicas", 
-    "Progressão ii-V-I",
-    "Síncope brasileira",
-    "Modos gregos",
-    "Voicings para jazz",
-    "Ritmo da bossa nova",
-    "Análise harmônica",
-    "Intervalos musicais",
-    "Modulação tonal"
+    "Campo harmônico completo",
+    "Substituição tritonal", 
+    "Reharmonização jazz",
+    "Análise schenkeriana",
+    "Modos gregos avançados",
+    "Voicings profissionais",
+    "Contraponto Bach",
+    "Forma sonata",
+    "Harmonia quartal",
+    "Tensões em bossa nova",
+    "Dominantes secundárias",
+    "Empréstimo modal",
+    "Análise de repertório",
+    "Técnica instrumental",
+    "Improvisação avançada"
   ];
 
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header Premium */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
-                <Brain className="h-8 w-8 text-primary" />
-                IA Musical Lovart
+            <div className="flex items-center gap-3 mb-2">
+              <Brain className="h-8 w-8 text-primary animate-pulse" />
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                IA Musical Lovart Master
               </h2>
-              <Badge variant="secondary" className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
-                <Sparkles className="h-3 w-3 mr-1" />
-                Especializada
-              </Badge>
+              <div className="flex gap-1">
+                <Badge variant="secondary" className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800">
+                  <Award className="h-3 w-3 mr-1" />
+                  Master
+                </Badge>
+                <Badge variant="secondary" className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
+                  <Zap className="h-3 w-3 mr-1" />
+                  Avançada
+                </Badge>
+              </div>
             </div>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Assistente pedagógica avançada em teoria musical, prática instrumental e metodologia de ensino
+            <p className="text-muted-foreground text-sm sm:text-base max-w-2xl">
+              Assistente pedagógica musical de elite • Baseada em metodologia de conservatórios internacionais • 
+              Harmonia avançada • Reharmonização • Análise musical • Técnica instrumental especializada
             </p>
           </div>
           
           <div className="flex gap-2">
-            <Button onClick={saveConversation} variant="outline" size="sm">
+            <Button onClick={saveConversation} variant="outline" size="sm" className="hover:bg-primary/5">
               <Save className="h-4 w-4 mr-2" />
-              Salvar Sessão
+              Salvar
             </Button>
-            <Button onClick={exportToPDF} variant="outline" size="sm">
+            <Button onClick={exportToPDF} variant="outline" size="sm" className="hover:bg-primary/5">
               <Download className="h-4 w-4 mr-2" />
-              Exportar PDF
+              PDF
             </Button>
           </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-4">
-          {/* Chat Interface */}
+          {/* Chat Interface Premium */}
           <div className="lg:col-span-3">
-            <Card className="h-[75vh] flex flex-col">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2">
+            <Card className="h-[78vh] flex flex-col border-2 border-primary/10">
+              <CardHeader className="pb-4 bg-gradient-to-r from-primary/5 to-purple-500/5">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <MessageCircle className="h-5 w-5 text-primary" />
-                  Conversa Pedagógica com IA Musical
+                  Sessão Pedagógica Avançada
+                  <div className="ml-auto flex gap-2 text-xs">
+                    <Badge variant="outline">Nível: {nivel}</Badge>
+                    {instrument && <Badge variant="outline">{instrument}</Badge>}
+                  </div>
                 </CardTitle>
               </CardHeader>
               
-              <CardContent className="flex-1 flex flex-col gap-4">
+              <CardContent className="flex-1 flex flex-col gap-4 p-4">
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto space-y-4 pr-4">
+                <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                   {messages.map((message) => (
                     <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] ${
+                      <div className={`max-w-[90%] ${
                         message.role === 'user' 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted'
-                      } rounded-lg p-4`}>
+                          ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground' 
+                          : 'bg-gradient-to-r from-muted to-muted/50'
+                      } rounded-lg p-4 shadow-lg`}>
                         
                         {/* Message Header */}
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
                           {message.role === 'user' ? (
                             <User className="h-4 w-4" />
                           ) : (
                             <Bot className="h-4 w-4 text-primary" />
                           )}
-                          <span className="text-xs font-medium">
-                            {message.role === 'user' ? 'Você' : 'IA Musical'}
+                          <span className="text-xs font-semibold">
+                            {message.role === 'user' ? 'Você' : 'IA Musical Master'}
                           </span>
-                          {message.nivel && (
-                            <Badge variant="outline" className="text-xs">
-                              {message.nivel}
-                            </Badge>
-                          )}
+                          <div className="ml-auto flex gap-1">
+                            {message.nivel && (
+                              <Badge variant="outline" className="text-xs h-5">
+                                {message.nivel}
+                              </Badge>
+                            )}
+                            {message.topico && (
+                              <Badge variant="secondary" className="text-xs h-5">
+                                {message.topico}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         
                         {/* Message Content */}
-                        <div className="text-sm mb-3 whitespace-pre-wrap">
+                        <div className="text-sm mb-3 whitespace-pre-wrap leading-relaxed">
                           {message.content}
                         </div>
                         
                         {/* Message Footer */}
-                        <div className="flex items-center justify-between text-xs opacity-70">
+                        <div className="flex items-center justify-between text-xs opacity-70 border-t border-current/10 pt-2">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {message.timestamp.toLocaleTimeString('pt-BR', { 
@@ -795,8 +937,8 @@ Minhas respostas seguem estrutura acadêmica:
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className={`h-6 w-6 p-0 hover:bg-background/20 ${
-                                    message.feedback === 'positive' ? 'text-green-600' : ''
+                                  className={`h-6 w-6 p-0 hover:bg-background/20 transition-colors ${
+                                    message.feedback === 'positive' ? 'text-green-600 bg-green-100/50' : ''
                                   }`}
                                   onClick={() => handleFeedback(message.id, 'positive')}
                                 >
@@ -805,8 +947,8 @@ Minhas respostas seguem estrutura acadêmica:
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className={`h-6 w-6 p-0 hover:bg-background/20 ${
-                                    message.feedback === 'negative' ? 'text-red-600' : ''
+                                  className={`h-6 w-6 p-0 hover:bg-background/20 transition-colors ${
+                                    message.feedback === 'negative' ? 'text-red-600 bg-red-100/50' : ''
                                   }`}
                                   onClick={() => handleFeedback(message.id, 'negative')}
                                 >
@@ -822,10 +964,13 @@ Minhas respostas seguem estrutura acadêmica:
                   
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-muted rounded-lg p-4 max-w-[85%]">
-                        <div className="flex items-center gap-2">
-                          <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                          <span className="text-sm">IA Musical está analisando e preparando resposta especializada...</span>
+                      <div className="bg-gradient-to-r from-muted to-muted/50 rounded-lg p-4 max-w-[90%] shadow-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                          <div className="text-sm">
+                            <div className="font-medium mb-1">IA Musical Master processando...</div>
+                            <div className="text-xs opacity-70">Analisando consulta • Preparando resposta especializada</div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -834,13 +979,13 @@ Minhas respostas seguem estrutura acadêmica:
                   <div ref={messagesEndRef} />
                 </div>
                 
-                {/* Input */}
-                <div className="flex gap-2">
+                {/* Input Premium */}
+                <div className="flex gap-2 border-t pt-4">
                   <Textarea
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="Digite sua pergunta sobre teoria musical, técnica instrumental ou análise harmônica..."
-                    className="flex-1 min-h-[80px] resize-none"
+                    placeholder={`Digite sua consulta musical avançada (nível ${nivel}, ${instrument || 'instrumento'}, ${musicStyle || 'estilo'})...`}
+                    className="flex-1 min-h-[90px] resize-none border-2 border-primary/20 focus:border-primary/40 transition-all"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -851,43 +996,48 @@ Minhas respostas seguem estrutura acadêmica:
                   <Button 
                     onClick={handleSendMessage}
                     disabled={!inputMessage.trim() || isLoading}
-                    className="self-end"
+                    className="self-end h-[90px] px-6 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 transition-all"
                     size="lg"
                   >
-                    <Send className="h-4 w-4" />
+                    <Send className="h-5 w-5" />
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Configuration Panel */}
+          {/* Configuration Panel Premium */}
           <div className="space-y-4">
             {/* IA Settings */}
-            <Card>
-              <CardHeader>
+            <Card className="border-2 border-primary/10">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-purple-500/5">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Settings className="h-5 w-5" />
-                  Configurações Pedagógicas
+                  Configuração Master
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Instrumento Principal</label>
                   <Select value={instrument} onValueChange={setInstrument}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione seu instrumento" />
+                    <SelectTrigger className="border-primary/20">
+                      <SelectValue placeholder="Selecione instrumento" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="piano">Piano</SelectItem>
-                      <SelectItem value="violão">Violão</SelectItem>
-                      <SelectItem value="guitarra">Guitarra</SelectItem>
+                      <SelectItem value="violão">Violão/Guitarra Clássica</SelectItem>
+                      <SelectItem value="guitarra">Guitarra Elétrica</SelectItem>
                       <SelectItem value="baixo">Baixo</SelectItem>
-                      <SelectItem value="bateria">Bateria</SelectItem>
+                      <SelectItem value="bateria">Bateria/Percussão</SelectItem>
                       <SelectItem value="violino">Violino</SelectItem>
+                      <SelectItem value="viola">Viola</SelectItem>
+                      <SelectItem value="violoncelo">Violoncelo</SelectItem>
                       <SelectItem value="flauta">Flauta</SelectItem>
+                      <SelectItem value="clarinete">Clarinete</SelectItem>
                       <SelectItem value="saxofone">Saxofone</SelectItem>
-                      <SelectItem value="canto">Canto</SelectItem>
+                      <SelectItem value="trompete">Trompete</SelectItem>
+                      <SelectItem value="trombone">Trombone</SelectItem>
+                      <SelectItem value="canto">Canto/Voz</SelectItem>
                       <SelectItem value="outros">Outros</SelectItem>
                     </SelectContent>
                   </Select>
@@ -896,14 +1046,14 @@ Minhas respostas seguem estrutura acadêmica:
                 <div>
                   <label className="text-sm font-medium mb-2 block">Nível Musical</label>
                   <Select value={nivel} onValueChange={(value: any) => setNivel(value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-primary/20">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="iniciante">Iniciante (0-6 meses)</SelectItem>
-                      <SelectItem value="elementar">Elementar (6-18 meses)</SelectItem>
-                      <SelectItem value="intermediario">Intermediário (1,5-3 anos)</SelectItem>
-                      <SelectItem value="avancado">Avançado (3+ anos)</SelectItem>
+                      <SelectItem value="iniciante">🌱 Iniciante (0-6 meses)</SelectItem>
+                      <SelectItem value="elementar">📚 Elementar (6-18 meses)</SelectItem>
+                      <SelectItem value="intermediario">🎯 Intermediário (1,5-3 anos)</SelectItem>
+                      <SelectItem value="avancado">🏆 Avançado (3+ anos)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -911,56 +1061,56 @@ Minhas respostas seguem estrutura acadêmica:
                 <div>
                   <label className="text-sm font-medium mb-2 block">Estilo Musical</label>
                   <Select value={musicStyle} onValueChange={setMusicStyle}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um estilo" />
+                    <SelectTrigger className="border-primary/20">
+                      <SelectValue placeholder="Selecione estilo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="classico">Clássico</SelectItem>
-                      <SelectItem value="jazz">Jazz</SelectItem>
-                      <SelectItem value="bossa nova">Bossa Nova</SelectItem>
-                      <SelectItem value="mpb">MPB</SelectItem>
-                      <SelectItem value="rock">Rock</SelectItem>
-                      <SelectItem value="pop">Pop</SelectItem>
-                      <SelectItem value="blues">Blues</SelectItem>
-                      <SelectItem value="samba">Samba</SelectItem>
-                      <SelectItem value="choro">Choro</SelectItem>
-                      <SelectItem value="forró">Forró</SelectItem>
+                      <SelectItem value="classico">🎼 Clássico/Erudito</SelectItem>
+                      <SelectItem value="jazz">🎷 Jazz/Bebop</SelectItem>
+                      <SelectItem value="bossa nova">🌴 Bossa Nova</SelectItem>
+                      <SelectItem value="mpb">🇧🇷 MPB</SelectItem>
+                      <SelectItem value="rock">🎸 Rock/Pop</SelectItem>
+                      <SelectItem value="blues">🎵 Blues</SelectItem>
+                      <SelectItem value="samba">🥁 Samba/Choro</SelectItem>
+                      <SelectItem value="folk">🪕 Folk/Country</SelectItem>
+                      <SelectItem value="latin">💃 Latin/Salsa</SelectItem>
+                      <SelectItem value="fusion">⚡ Fusion/Contemporary</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <Button 
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 transition-all"
                   onClick={() => {
                     toast({
-                      title: "Configurações aplicadas!",
-                      description: "IA personalizada para suas preferências pedagógicas"
+                      title: "Configuração Master aplicada!",
+                      description: "IA personalizada para excelência pedagógica musical"
                     });
                   }}
                 >
                   <Music className="h-4 w-4 mr-2" />
-                  Aplicar Configurações
+                  Aplicar Configuração
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Quick Topics */}
-            <Card>
-              <CardHeader>
+            {/* Quick Topics Premium */}
+            <Card className="border-2 border-purple-500/10">
+              <CardHeader className="bg-gradient-to-r from-purple-500/5 to-pink-500/5">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
-                  Tópicos Pedagógicos
+                  Tópicos Avançados
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid gap-2">
+              <CardContent className="p-3">
+                <div className="grid gap-1.5">
                   {quickTopics.map((topic) => (
                     <Button
                       key={topic}
                       variant="outline"
                       size="sm"
-                      className="justify-start text-xs h-8"
-                      onClick={() => setInputMessage(`Explique ${topic} para nível ${nivel} no ${instrument || 'piano'}`)}
+                      className="justify-start text-xs h-8 hover:bg-primary/5 hover:border-primary/30 transition-all"
+                      onClick={() => setInputMessage(`Explique ${topic} para nível ${nivel} no ${instrument || 'piano'} estilo ${musicStyle || 'geral'}`)}
                     >
                       <Target className="h-3 w-3 mr-2" />
                       {topic}
@@ -970,32 +1120,43 @@ Minhas respostas seguem estrutura acadêmica:
               </CardContent>
             </Card>
 
-            {/* Stats */}
-            <Card>
-              <CardHeader>
+            {/* Stats Premium */}
+            <Card className="border-2 border-green-500/10">
+              <CardHeader className="bg-gradient-to-r from-green-500/5 to-blue-500/5">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Estatísticas da Sessão
+                  Analytics da Sessão
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Perguntas feitas:</span>
-                  <span className="font-medium">{messages.filter(m => m.role === 'user').length}</span>
+              <CardContent className="space-y-3 p-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="text-center p-2 bg-primary/5 rounded">
+                    <div className="font-bold text-lg">{messages.filter(m => m.role === 'user').length}</div>
+                    <div className="text-xs opacity-70">Consultas</div>
+                  </div>
+                  <div className="text-center p-2 bg-purple-500/5 rounded">
+                    <div className="font-bold text-lg">{messages.filter(m => m.role === 'assistant').length}</div>
+                    <div className="text-xs opacity-70">Respostas</div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Respostas da IA:</span>
-                  <span className="font-medium">{messages.filter(m => m.role === 'assistant').length}</span>
-                </div>
+                
                 <div className="flex justify-between text-sm">
                   <span>Feedbacks positivos:</span>
-                  <span className="font-medium text-green-600">
+                  <span className="font-medium text-green-600 flex items-center gap-1">
+                    <ThumbsUp className="h-3 w-3" />
                     {messages.filter(m => m.feedback === 'positive').length}
                   </span>
                 </div>
+                
                 <Separator />
-                <div className="text-xs text-muted-foreground text-center">
-                  Nível atual: <span className="font-medium capitalize">{nivel}</span>
+                
+                <div className="text-xs text-center space-y-1">
+                  <div className="font-medium">Configuração Atual:</div>
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    <Badge variant="outline" className="text-xs">{nivel}</Badge>
+                    {instrument && <Badge variant="outline" className="text-xs">{instrument}</Badge>}
+                    {musicStyle && <Badge variant="outline" className="text-xs">{musicStyle}</Badge>}
+                  </div>
                 </div>
               </CardContent>
             </Card>
