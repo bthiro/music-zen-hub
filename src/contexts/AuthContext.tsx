@@ -32,11 +32,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('professores')
         .select('*')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Erro ao buscar professor:', error);
         setProfessor(null);
+      } else if (!data) {
+        // Se professor não existe, criar um novo
+        const { data: novoProfessor, error: errorCriar } = await supabase
+          .from('professores')
+          .insert({
+            user_id: session.user.id,
+            nome: session.user.user_metadata?.nome || session.user.email || 'Professor',
+            email: session.user.email || '',
+          })
+          .select()
+          .single();
+
+        if (errorCriar) {
+          console.error('Erro ao criar professor:', errorCriar);
+          setProfessor(null);
+        } else {
+          setProfessor(novoProfessor);
+        }
       } else {
         setProfessor(data);
       }

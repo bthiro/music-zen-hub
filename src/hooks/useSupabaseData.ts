@@ -11,7 +11,10 @@ export function useSupabaseData() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
-    if (!professor?.id) return;
+    if (!professor?.id) {
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     try {
