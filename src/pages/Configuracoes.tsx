@@ -1,363 +1,283 @@
-import { useState, useEffect } from 'react';
-import { Layout } from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AutoIntegrationPanel } from '@/components/AutoIntegrationPanel';
-import { ConfigurationNavigation, ConfigSection } from '@/components/ConfigurationNavigation';
-import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { Layout } from "@/components/Layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
+import { 
+  Settings, 
+  Clock, 
+  MessageCircle, 
+  Mail, 
+  CreditCard, 
+  Key,
+  Chrome,
+  CheckCircle,
+  XCircle,
+  TestTube
+} from "lucide-react";
 
 export default function Configuracoes() {
-  const { professor, fetchProfessor } = useAuth();
-  const [activeSection, setActiveSection] = useState<ConfigSection>('perfil');
-  
-  // Estados para perfil
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [bio, setBio] = useState('');
-  const [especialidades, setEspecialidades] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-  
-  // Estados para preferências
-  const [timezone, setTimezone] = useState('America/Sao_Paulo');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [autoSync, setAutoSync] = useState(false);
-  const [reminderTime, setReminderTime] = useState('60');
-  
-  // Estados para mensagens
-  const [pixKey, setPixKey] = useState('');
-  const [paymentLink, setPaymentLink] = useState('');
-  const [messageTemplate, setMessageTemplate] = useState('Olá {aluno}, sua aula está agendada para {data} às {horario}. Nos vemos em breve!');
-  const [emailSignature, setEmailSignature] = useState('');
+  const { toast } = useToast();
+  const { 
+    isAuthenticated, 
+    userEmail, 
+    isLoading, 
+    signIn, 
+    signOut, 
+    testIntegration 
+  } = useGoogleIntegration();
+  const [config, setConfig] = useState({
+    fusoHorario: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    chavePix: "professor@email.com",
+    linkPagamento: "https://mercadopago.com.br/checkout/v1/redirect?pref_id=123456789",
+    mensagemCobranca: `Olá {ALUNO}! 😊
 
-  // Carregar dados do professor quando disponível
-  useEffect(() => {
-    if (professor) {
-      setNome(professor.nome || '');
-      setEmail(professor.email || '');
-      setTelefone(professor.telefone || '');
-      setBio(professor.bio || '');
-      setEspecialidades(professor.especialidades || '');
-      setAvatarUrl(professor.avatar_url || '');
-    }
-  }, [professor]);
+📋 *Lembrete de Pagamento*
+• Período: {PERIODO}
+• Valor: R$ {VALOR}
+• Vencimento: {VENCIMENTO}
 
-  // Carregar configurações do localStorage
-  useEffect(() => {
-    const savedConfig = localStorage.getItem('configuracoes');
-    if (savedConfig) {
-      try {
-        const config = JSON.parse(savedConfig);
-        setTimezone(config.timezone || 'America/Sao_Paulo');
-        setPixKey(config.pixKey || '');
-        setPaymentLink(config.paymentLink || '');
-        setMessageTemplate(config.messageTemplate || 'Olá {aluno}, sua aula está agendada para {data} às {horario}. Nos vemos em breve!');
-        setEmailSignature(config.emailSignature || '');
-        setNotificationsEnabled(config.notificationsEnabled !== false);
-        setAutoSync(config.autoSync || false);
-        setReminderTime(config.reminderTime || '60');
-      } catch (error) {
-        console.error('Erro ao carregar configurações:', error);
-      }
-    }
-  }, []);
+💳 *Formas de Pagamento:*
+🔸 *PIX:* {PIX}
+🔸 *Cartão:* {LINK_PAGAMENTO}
 
-  const salvarPerfil = async () => {
-    if (!professor?.id) {
-      toast.error('Erro: Professor não encontrado');
-      return;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('professores')
-        .update({
-          nome,
-          telefone,
-          bio,
-          especialidades,
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', professor.id);
-
-      if (error) throw error;
-      
-      await fetchProfessor();
-      toast.success('Perfil atualizado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao salvar perfil:', error);
-      toast.error('Erro ao salvar perfil');
-    }
-  };
+Qualquer dúvida, estou à disposição!
+Obrigado(a) pela confiança! 🎵`,
+    emailGoogle: "",
+    notificacoesPush: true
+  });
 
   const salvarConfiguracoes = () => {
-    const config = {
-      timezone,
-      pixKey,
-      paymentLink,
-      messageTemplate,
-      emailSignature,
-      notificationsEnabled,
-      autoSync,
-      reminderTime
-    };
-    
+    // Aqui você salvaria no localStorage ou context
     localStorage.setItem('configuracoes', JSON.stringify(config));
-    toast.success('Configurações salvas com sucesso!');
+    toast({
+      title: "Configurações salvas!",
+      description: "Suas preferências foram atualizadas com sucesso."
+    });
   };
 
   return (
     <Layout>
-      <div className="flex gap-6 h-full">
-        {/* Sidebar de navegação */}
-        <div className="w-64 flex-shrink-0">
-          <Card className="h-fit">
-            <CardHeader>
-              <CardTitle className="text-lg">Configurações</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ConfigurationNavigation 
-                activeSection={activeSection}
-                onSectionChange={setActiveSection}
-              />
-            </CardContent>
-          </Card>
+      <div className="space-y-4 sm:space-y-6">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Configurações</h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Gerencie suas preferências e integrações
+          </p>
         </div>
 
-        {/* Conteúdo principal */}
-        <div className="flex-1 space-y-6">
-          {activeSection === 'perfil' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Perfil do Professor</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Gerencie suas informações pessoais e foto de perfil
+        <div className="grid gap-6">
+          {/* Preferências Gerais */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Preferências Gerais
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fusoHorario">Fuso Horário</Label>
+                <select 
+                  id="fusoHorario"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={config.fusoHorario}
+                  onChange={(e) => setConfig(prev => ({...prev, fusoHorario: e.target.value}))}
+                >
+                  <option value="America/Sao_Paulo">São Paulo (UTC-3)</option>
+                  <option value="America/Rio_Branco">Acre (UTC-5)</option>
+                  <option value="America/Manaus">Manaus (UTC-4)</option>
+                  <option value="America/Cuiaba">Cuiabá (UTC-4)</option>
+                  <option value="America/Campo_Grande">Campo Grande (UTC-4)</option>
+                  <option value="America/Belem">Belém (UTC-3)</option>
+                  <option value="America/Fortaleza">Fortaleza (UTC-3)</option>
+                  <option value="America/Recife">Recife (UTC-3)</option>
+                  <option value="America/Bahia">Salvador (UTC-3)</option>
+                  <option value="Europe/London">Londres (UTC+0)</option>
+                  <option value="Europe/Madrid">Madrid (UTC+1)</option>
+                  <option value="America/New_York">Nova York (UTC-5)</option>
+                  <option value="America/Los_Angeles">Los Angeles (UTC-8)</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Detectado automaticamente: {Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex justify-center">
-                  <ProfilePhotoUpload
-                    currentPhoto={avatarUrl}
-                    onUpload={setAvatarUrl}
-                    professorName={nome || professor?.nome}
-                  />
-                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="notificacoes"
+                  checked={config.notificacoesPush}
+                  onCheckedChange={(checked) => setConfig(prev => ({...prev, notificacoesPush: checked}))}
+                />
+                <Label htmlFor="notificacoes">Receber atualizações automáticas</Label>
+              </div>
+            </CardContent>
+          </Card>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome Completo</Label>
-                    <Input
-                      id="nome"
-                      value={nome}
-                      onChange={(e) => setNome(e.target.value)}
-                      placeholder="Seu nome completo"
-                    />
+          {/* Pagamentos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Métodos de Pagamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="chavePix">Chave PIX Padrão</Label>
+                <Input
+                  id="chavePix"
+                  value={config.chavePix}
+                  onChange={(e) => setConfig(prev => ({...prev, chavePix: e.target.value}))}
+                  placeholder="Sua chave PIX"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="linkPagamento">Link de Pagamento (Cartão)</Label>
+                <Input
+                  id="linkPagamento"
+                  value={config.linkPagamento}
+                  onChange={(e) => setConfig(prev => ({...prev, linkPagamento: e.target.value}))}
+                  placeholder="Link do Mercado Pago, PagSeguro, etc."
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Mensagens */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Texto Padrão de Cobrança
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="mensagemCobranca">Mensagem Padrão</Label>
+                <Textarea
+                  id="mensagemCobranca"
+                  value={config.mensagemCobranca}
+                  onChange={(e) => setConfig(prev => ({...prev, mensagemCobranca: e.target.value}))}
+                  rows={10}
+                  placeholder="Use {ALUNO}, {PERIODO}, {VALOR}, {VENCIMENTO}, {PIX}, {LINK_PAGAMENTO}"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use as variáveis {`{ALUNO}, {PERIODO}, {VALOR}, {VENCIMENTO}, {PIX}, {LINK_PAGAMENTO}`} para personalização automática
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Integrações Google */}
+          <Card className="card-modern">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Chrome className="h-5 w-5 text-primary" />
+                Integrações Google
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-base font-medium">Google Agenda & Meet</Label>
+                      {isAuthenticated ? (
+                        <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Conectado
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-destructive/10 text-destructive border-destructive/20">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Desconectado
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Sincronização automática de aulas e criação de links do Meet
+                    </p>
+                    {isAuthenticated && userEmail && (
+                      <p className="text-xs text-primary font-medium">
+                        Conectado como: {userEmail}
+                      </p>
+                    )}
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="telefone">Telefone/WhatsApp</Label>
-                    <Input
-                      id="telefone"
-                      value={telefone}
-                      onChange={(e) => setTelefone(e.target.value)}
-                      placeholder="(11) 99999-9999"
-                    />
+                  <div className="flex gap-2">
+                    {isAuthenticated ? (
+                      <Button variant="outline" onClick={signOut} size="sm">
+                        Desconectar
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={signIn} 
+                        disabled={isLoading}
+                        size="sm"
+                        className="btn-primary"
+                      >
+                        {isLoading ? "Conectando..." : "Conectar"}
+                      </Button>
+                    )}
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="especialidades">Especialidades Musicais</Label>
-                  <Input
-                    id="especialidades"
-                    value={especialidades}
-                    onChange={(e) => setEspecialidades(e.target.value)}
-                    placeholder="Ex: Violão, Piano, Teoria Musical, Canto..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio/Apresentação</Label>
-                  <Textarea
-                    id="bio"
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Conte um pouco sobre sua experiência musical, formação e metodologia de ensino..."
-                    rows={4}
-                  />
-                </div>
-
-                <Button onClick={salvarPerfil} className="w-full">
-                  Salvar Perfil
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeSection === 'preferencias' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferências do Sistema</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Configure suas preferências de uso e notificações
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="timezone">Fuso Horário</Label>
-                    <Select value={timezone} onValueChange={setTimezone}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="America/Sao_Paulo">São Paulo (GMT-3)</SelectItem>
-                        <SelectItem value="America/Rio_Branco">Rio Branco (GMT-5)</SelectItem>
-                        <SelectItem value="America/Manaus">Manaus (GMT-4)</SelectItem>
-                        <SelectItem value="America/Cuiaba">Cuiabá (GMT-4)</SelectItem>
-                        <SelectItem value="America/Campo_Grande">Campo Grande (GMT-4)</SelectItem>
-                        <SelectItem value="America/Belem">Belém (GMT-3)</SelectItem>
-                        <SelectItem value="America/Fortaleza">Fortaleza (GMT-3)</SelectItem>
-                        <SelectItem value="America/Recife">Recife (GMT-3)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="reminder">Lembrete das Aulas</Label>
-                    <Select value={reminderTime} onValueChange={setReminderTime}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="15">15 minutos antes</SelectItem>
-                        <SelectItem value="30">30 minutos antes</SelectItem>
-                        <SelectItem value="60">1 hora antes</SelectItem>
-                        <SelectItem value="120">2 horas antes</SelectItem>
-                        <SelectItem value="240">4 horas antes</SelectItem>
-                        <SelectItem value="1440">1 dia antes</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Notificações por Email</Label>
-                      <p className="text-sm text-muted-foreground">Receba lembretes por email</p>
+              </div>
+              
+              {isAuthenticated && (
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="text-sm font-medium">Configurações da Integração</h4>
+                  
+                  <div className="grid gap-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Cor Personalizada</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Eventos da plataforma em verde claro
+                        </p>
+                      </div>
+                      <div className="w-6 h-6 bg-green-400 rounded border"></div>
                     </div>
-                    <Switch
-                      checked={notificationsEnabled}
-                      onCheckedChange={setNotificationsEnabled}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Sincronização Automática</Label>
-                      <p className="text-sm text-muted-foreground">Sincronizar automaticamente com Google Calendar</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Notificações Automáticas</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Lembretes pelo Google Agenda
+                        </p>
+                      </div>
+                      <Switch defaultChecked />
                     </div>
-                    <Switch
-                      checked={autoSync}
-                      onCheckedChange={setAutoSync}
-                    />
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={testIntegration}
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <TestTube className="h-4 w-4" />
+                      Testar Integração
+                    </Button>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
 
-                <Button onClick={salvarConfiguracoes} className="w-full">
-                  Salvar Preferências
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeSection === 'mensagens' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Templates de Mensagens</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Configure templates para mensagens automáticas e dados de pagamento
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pix">Chave PIX</Label>
-                    <Input
-                      id="pix"
-                      value={pixKey}
-                      onChange={(e) => setPixKey(e.target.value)}
-                      placeholder="sua.chave@pix.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentLink">Link de Pagamento</Label>
-                    <Input
-                      id="paymentLink"
-                      value={paymentLink}
-                      onChange={(e) => setPaymentLink(e.target.value)}
-                      placeholder="https://seu-link-de-pagamento.com"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="messageTemplate">Template de Agendamento</Label>
-                    <Textarea
-                      id="messageTemplate"
-                      value={messageTemplate}
-                      onChange={(e) => setMessageTemplate(e.target.value)}
-                      placeholder="Olá {aluno}, sua aula está agendada para {data} às {horario}."
-                      rows={3}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Use {'{aluno}'}, {'{data}'}, {'{horario}'} para personalizar a mensagem
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="emailSignature">Assinatura de Email</Label>
-                    <Textarea
-                      id="emailSignature"
-                      value={emailSignature}
-                      onChange={(e) => setEmailSignature(e.target.value)}
-                      placeholder="Seu nome, Qualificações, Contato"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                <Button onClick={salvarConfiguracoes} className="w-full">
-                  Salvar Templates
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeSection === 'integracoes' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Integrações</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Configure suas integrações com serviços externos
-                </p>
-              </CardHeader>
-              <CardContent>
-                <AutoIntegrationPanel />
-              </CardContent>
-            </Card>
-          )}
+          <div className="flex justify-end">
+            <Button onClick={salvarConfiguracoes}>
+              Salvar Configurações
+            </Button>
+          </div>
         </div>
       </div>
     </Layout>

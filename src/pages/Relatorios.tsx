@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FinancialDashboard } from "@/components/reports/FinancialDashboard";
 import { AccountingReport } from "@/components/reports/AccountingReport";
-import { StatsCard } from "@/components/ui/stats-card";
 import { useApp } from "@/contexts/AppContext";
 import { 
   Users, 
@@ -146,44 +145,45 @@ export default function Relatorios() {
             <div>
               <h3 className="text-lg sm:text-xl font-semibold mb-4">🎵 Métricas Operacionais</h3>
               <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-                <StatsCard
-                  title="Aulas do Mês"
-                  value={dadosAulas.aulasMes}
-                  subtitle="Agendadas este mês"
-                  icon={Calendar}
-                  color="blue"
-                />
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Aulas do Mês</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{dadosAulas.aulasMes}</div>
+                  </CardContent>
+                </Card>
 
-                <StatsCard
-                  title="Realizadas"
-                  value={dadosAulas.aulasRealizadas}
-                  subtitle="Total realizadas"
-                  icon={Calendar}
-                  color="green"
-                  badge={{ text: "Sucesso", variant: "success" }}
-                />
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Realizadas</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">{dadosAulas.aulasRealizadas}</div>
+                  </CardContent>
+                </Card>
 
-                <StatsCard
-                  title="Canceladas"
-                  value={dadosAulas.aulasCanceladas}
-                  subtitle="Total canceladas"
-                  icon={Calendar}
-                  color="red"
-                  badge={dadosAulas.aulasCanceladas > 0 ? { text: "Atenção", variant: "destructive" } : undefined}
-                />
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Canceladas</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-600">{dadosAulas.aulasCanceladas}</div>
+                  </CardContent>
+                </Card>
 
-                <StatsCard
-                  title="Taxa Comparecimento"
-                  value={`${dadosAulas.taxaComparecimento}%`}
-                  subtitle="Aulas realizadas"
-                  icon={TrendingUp}
-                  color="purple"
-                  trend={{
-                    value: Number(dadosAulas.taxaComparecimento),
-                    direction: Number(dadosAulas.taxaComparecimento) >= 80 ? 'up' : 'down',
-                    label: Number(dadosAulas.taxaComparecimento) >= 80 ? 'Excelente' : 'Precisa melhorar'
-                  }}
-                />
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Taxa Comparecimento</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{dadosAulas.taxaComparecimento}%</div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
@@ -236,95 +236,7 @@ export default function Relatorios() {
           </TabsContent>
 
           <TabsContent value="resumo" className="space-y-6">
-            {/* Resumo Executivo - Visão Analítica */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title="Receita Total"
-                value={`R$ ${dadosFinanceiros.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                subtitle="Histórico completo"
-                icon={TrendingUp}
-                color="blue"
-              />
-
-              <StatsCard
-                title="Pendências"
-                value={`R$ ${dadosFinanceiros.pendencias.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                subtitle="Valores em aberto"
-                icon={DollarSign}
-                color="red"
-                badge={{ text: "Atenção", variant: "destructive" }}
-              />
-
-              <StatsCard
-                title="Ticket Médio"
-                value={`R$ ${dadosFinanceiros.ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                subtitle="Valor médio por aluno"
-                icon={BarChart3}
-                color="purple"
-              />
-
-              <StatsCard
-                title="Taxa Inadimplência"
-                value={`${((pagamentos.filter(p => p.status === 'atrasado').length / pagamentos.length) * 100 || 0).toFixed(1)}%`}
-                subtitle="Pagamentos atrasados"
-                icon={FileText}
-                color="yellow"
-                badge={{ text: pagamentos.filter(p => p.status === 'atrasado').length > 0 ? "Monitorar" : "OK", variant: pagamentos.filter(p => p.status === 'atrasado').length > 0 ? "destructive" : "success" }}
-              />
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>📈 Resumo Executivo Analítico</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <h4 className="font-semibold mb-3">Indicadores Financeiros</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Total de Alunos Ativos:</span>
-                        <span className="font-medium">{alunos.filter(a => a.status === 'ativo').length}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Receita Potencial Mensal:</span>
-                        <span className="font-medium">
-                          R$ {alunos.reduce((sum, a) => sum + a.mensalidade, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Eficiência de Cobrança:</span>
-                        <span className="font-medium">
-                          {((dadosFinanceiros.receitaTotal / (alunos.reduce((sum, a) => sum + a.mensalidade, 0) * 12)) * 100 || 0).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold mb-3">Indicadores Operacionais</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Total de Aulas:</span>
-                        <span className="font-medium">{aulas.length}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Aulas por Aluno (média):</span>
-                        <span className="font-medium">
-                          {alunos.length > 0 ? (aulas.length / alunos.length).toFixed(1) : 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Taxa de Comparecimento:</span>
-                        <span className="font-medium">
-                          {dadosAulas.taxaComparecimento}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <FinancialDashboard />
           </TabsContent>
 
           <TabsContent value="contabil">
@@ -333,40 +245,54 @@ export default function Relatorios() {
 
           <TabsContent value="old-resumo" className="space-y-6">
             {/* Resumo Executivo */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title="Receita do Mês"
-                value={`R$ ${dadosFinanceiros.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                subtitle="Pagamentos recebidos"
-                icon={DollarSign}
-                color="green"
-                trend={{ value: 15, direction: 'up', label: 'vs mês anterior' }}
-              />
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Receita do Mês</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    R$ {dadosFinanceiros.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </CardContent>
+              </Card>
 
-              <StatsCard
-                title="Receita Total"
-                value={`R$ ${dadosFinanceiros.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                subtitle="Histórico completo"
-                icon={TrendingUp}
-                color="blue"
-              />
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    R$ {dadosFinanceiros.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </CardContent>
+              </Card>
 
-              <StatsCard
-                title="Pendências"
-                value={`R$ ${dadosFinanceiros.pendencias.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                subtitle="Valores em aberto"
-                icon={DollarSign}
-                color="red"
-                badge={{ text: "Atenção", variant: "destructive" }}
-              />
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pendências</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    R$ {dadosFinanceiros.pendencias.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </CardContent>
+              </Card>
 
-              <StatsCard
-                title="Ticket Médio"
-                value={`R$ ${dadosFinanceiros.ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                subtitle="Valor médio por aluno"
-                icon={BarChart3}
-                color="purple"
-              />
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    R$ {dadosFinanceiros.ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             <Card>

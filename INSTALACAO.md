@@ -1,431 +1,130 @@
-# 📚 GUIA COMPLETO DE INSTALAÇÃO - PROFESSOR MUSICAL
+# 📋 Tutorial de Instalação - ClassPro (Sistema de Gestão de Aulas)
 
-## 🎯 VISÃO GERAL
-Este é um sistema completo para professores de música com:
-- 🎨 Lousa digital interativa
-- 🎵 Metrônomo e afinador
-- 👥 Gestão de alunos e pagamentos
-- 📅 Agendamento de aulas
-- 🤖 IA Musical especializada
+## 📋 Funcionalidades Principais
 
----
+- ✅ **Gestão de Alunos**: Cadastro completo com informações pessoais, localização e contratos
+- ✅ **Agendamento Inteligente**: Sistema com duração automática baseada no plano do aluno (30 ou 50 min)
+- ✅ **Controle de Fuso Horário**: Detecção automática e ajuste manual para diferentes regiões
+- ✅ **Controle Financeiro**: Pagamentos, mensalidades e relatórios detalhados com exportação CSV
+- ✅ **Relatórios Avançados**: Dashboard moderno com gráficos interativos e métricas visuais
+- ✅ **Integração Google**: Agenda e Meet automáticos com sincronização completa
+- ✅ **Design Responsivo**: Interface moderna e otimizada para todos os dispositivos
+- ✅ **Módulo Contábil**: Preparado para geração de relatórios para IR
 
-## 🖥️ INSTALAÇÃO LOCAL (RECOMENDADA PARA INICIANTES)
+## 🚀 Requisitos do Servidor
 
-### 📋 Pré-requisitos
+### Hostgator ou similar:
+- **PHP**: 8.0 ou superior
+- **Node.js**: 18.0 ou superior 
+- **Banco de dados**: MySQL 8.0 ou PostgreSQL
+- **SSL**: Certificado válido (obrigatório para Google Meet)
 
-**1. Node.js (OBRIGATÓRIO)**
-- Baixe em: https://nodejs.org/
-- Instale a versão LTS (Long Term Support)
-- Teste no terminal: `node --version`
+## 📦 1. Preparação dos Arquivos
 
-**2. Gerenciador de Pacotes**
+1. Baixe todos os arquivos do projeto
+2. Compacte em um arquivo ZIP
+3. Acesse o cPanel do Hostgator
+4. Vá em "Gerenciador de Arquivos"
+5. Navegue até `public_html`
+6. Faça upload do ZIP e extraia
+
+## 🔧 2. Configuração do Banco de Dados
+
+### No cPanel:
+1. Acesse "Bancos de Dados MySQL"
+2. Crie um novo banco: `sistema_aulas`
+3. Crie um usuário com senha forte
+4. Associe o usuário ao banco com todas as permissões
+
+### Configure as variáveis:
 ```bash
-# Instalar Bun (RECOMENDADO - mais rápido)
-npm install -g bun
-
-# OU usar NPM (que já vem com Node.js)
-npm --version
+# Crie arquivo .env na raiz
+DATABASE_URL="mysql://usuario:senha@localhost:3306/sistema_aulas"
+NEXTAUTH_SECRET="sua-chave-secreta-aqui"
+NEXTAUTH_URL="https://seudominio.com"
 ```
 
-**3. Navegador Moderno**
-- Chrome, Firefox, Safari ou Edge atualizados
+## 🔑 3. Configuração Google (API)
 
-### 🚀 Passo-a-passo da Instalação
+1. Acesse [Google Cloud Console](https://console.cloud.google.com)
+2. Crie um novo projeto
+3. Ative APIs: "Calendar API" e "Meet API"
+4. Crie credenciais OAuth 2.0
+5. Configure domínios autorizados
+6. Baixe o arquivo de credenciais
 
-**1. Preparar pasta do projeto:**
 ```bash
-# Criar pasta
-mkdir meu-sistema-musical
-cd meu-sistema-musical
+# Adicione no .env
+GOOGLE_CLIENT_ID="seu-client-id"
+GOOGLE_CLIENT_SECRET="seu-client-secret"
 ```
 
-**2. Obter arquivos do projeto:**
-- Baixe todos os arquivos do projeto
-- Extraia na pasta criada
-- Certifique-se que `package.json` está na raiz
+## 🌐 4. Deploy e Configuração
 
-**3. Instalar dependências:**
-```bash
-# Opção 1: Com Bun (RECOMENDADO)
-bun install
-
-# Opção 2: Com NPM
-npm install
-```
-
-**4. Iniciar o sistema:**
-```bash
-# Com Bun
-bun dev
-
-# Com NPM
-npm run dev
-```
-
-**5. Acessar o sistema:**
-- Abra: http://localhost:5173
-- O sistema carregará automaticamente
-
-### ✅ Verificação se está funcionando:
-
-#### 🎯 **TESTE DA LOUSA MUSICAL INTERATIVA:**
-
-**1. Acesse:** http://localhost:5173/lousa
-
-**2. Teste funcionalidades básicas:**
-- [ ] Upload de imagens (botão no topo)
-- [ ] Desenho livre sobre qualquer elemento
-- [ ] Borracha funciona
-- [ ] Limpar canvas
-- [ ] Salvar/carregar estado
-
-**3. Teste elementos musicais:**
-- [ ] **Pauta Musical:** Clique em "Inserir Pauta" - deve aparecer 5 linhas
-- [ ] **Clave de Sol:** Clique em "Inserir Clave" - símbolo musical
-- [ ] **Braços de instrumentos:** Teste violão, viola caipira, cavaquinho
-- [ ] **Números dos dedos:** Adicione números 1-4 nas cordas
-- [ ] **Arrastar elementos:** Todos devem se mover livremente
-
-**4. Teste cenário real de aula:**
-- [ ] Insira uma pauta com clave
-- [ ] Desenhe uma melodia simples (notas na pauta)
-- [ ] Adicione um braço de violão
-- [ ] Coloque números dos dedos nas casas
-- [ ] Desenhe setas conectando pauta com braço
-- [ ] Faça upload de uma partitura (imagem) e anote em cima
-
-**5. Outras funcionalidades:**
-- [ ] Metrônomo toca (página Ferramentas)
-- [ ] Pode cadastrar alunos
-- [ ] IA Musical responde
-
-### 🎵 **NOVA LOUSA MUSICAL - GUIA DE USO:**
-
-#### **Como usar cada ferramenta:**
-
-**🎼 Pauta Musical:**
-- Clique "Inserir Pauta" → Aparece pauta de 5 linhas
-- Arraste para reposicionar
-- Use lápis para desenhar notas em cima
-
-**🎵 Clave de Sol:**
-- Clique "Inserir Clave" → Símbolo da clave aparece
-- Posicione no início da pauta
-- Redimensione se necessário
-
-**🎸 Braços de Instrumentos:**
-- **Violão:** 6 cordas, 5 casas (padrão)
-- **Viola Caipira:** 5 pares de cordas, 5 casas
-- **Cavaquinho:** 4 cordas, 5 casas
-- Clique no botão do instrumento desejado
-
-**🔢 Digitação (números dos dedos):**
-- Clique nos botões 1, 2, 3, 4
-- Arraste os números para as casas corretas
-- Use para mostrar posição dos dedos
-
-**✏️ Desenho Livre:**
-- Funciona sobre TODOS os elementos
-- Desenhe notas, setas, anotações
-- Ajuste cor e espessura
-
-#### **Exemplo de aula típica:**
-1. **Insira pauta + clave de Sol**
-2. **Desenhe 4 notas simples** (Dó, Ré, Mi, Fá)
-3. **Adicione braço de violão**
-4. **Coloque números:** 1ª casa (Mi), 3ª casa (Sol), etc.
-5. **Desenhe setas** conectando notas da pauta com posições
-6. **Upload foto do aluno tocando** e anote correções
-
----
-
-## 🔗 COMO FAZER INTEGRAÇÕES GOOGLE FUNCIONAREM 100%
-
-### 📋 Pré-requisitos:
-1. **Conta Google** (Gmail)
-2. **Domínio próprio** com SSL (obrigatório para produção)
-3. **Google Cloud Console** configurado
-
-### 🚀 Passo-a-passo COMPLETO:
-
-**1. Criar Projeto no Google Cloud:**
-- Acesse: https://console.cloud.google.com
-- Clique em "Criar Projeto"
-- Nome: "Sistema Musical - [SeuNome]"
-- Anote o ID do projeto
-
-**2. Ativar APIs necessárias:**
-```bash
-# No Google Cloud Console → APIs & Services → Library
-- Google Calendar API
-- Google Meet API  
-- Google Drive API (se quiser salvar arquivos)
-- Gmail API (se quiser enviar emails)
-```
-
-**3. Criar Credenciais OAuth 2.0:**
-- Vá em "APIs & Services" → "Credentials"
-- Clique "Create Credentials" → "OAuth 2.0 Client ID"
-- Tipo: "Web application"
-- Nome: "Sistema Musical Web"
-
-**4. Configurar URLs autorizadas:**
-```bash
-# Para desenvolvimento LOCAL:
-http://localhost:5173
-http://localhost:5173/api/auth/callback/google
-
-# Para produção (HostGator):
-https://seudominio.com
-https://seudominio.com/api/auth/callback/google
-```
-
-**5. Baixar credenciais:**
-- Baixe o arquivo JSON das credenciais
-- Anote `client_id` e `client_secret`
-
-**6. Configurar no projeto:**
-```javascript
-// Criar arquivo .env.local (desenvolvimento)
-GOOGLE_CLIENT_ID=seu_client_id_aqui
-GOOGLE_CLIENT_SECRET=seu_client_secret_aqui
-NEXTAUTH_SECRET=uma_chave_secreta_qualquer
-NEXTAUTH_URL=http://localhost:5173
-
-// Para produção no HostGator
-NEXTAUTH_URL=https://seudominio.com
-```
-
-**7. Instalar dependências Google:**
-```bash
-npm install googleapis google-auth-library
-# OU
-bun add googleapis google-auth-library
-```
-
-**8. Testar integração:**
-- Reinicie o servidor: `bun dev`
-- Vá em "Configurações" no sistema
-- Clique "Conectar Google"
-- Autorize as permissões
-- ✅ Deve aparecer "Conectado"
-
-### 🔧 Configuração Avançada:
-
-**Para Google Calendar:**
-```javascript
-// No hook useGoogleCalendar.ts - substituir simulação por código real:
-import { google } from 'googleapis';
-
-const calendar = google.calendar('v3');
-const auth = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  'http://localhost:5173/api/auth/callback/google'
-);
-```
-
-**Para Google Meet automático:**
-```javascript
-// Criar evento com Meet automático:
-const event = {
-  summary: 'Aula de Música',
-  start: { dateTime: '2024-02-10T14:00:00-03:00' },
-  end: { dateTime: '2024-02-10T15:00:00-03:00' },
-  conferenceData: {
-    createRequest: {
-      requestId: 'meet-' + Date.now(),
-      conferenceSolutionKey: { type: 'hangoutsMeet' }
-    }
-  }
-};
-```
-
----
-
-## 🌐 INSTALAÇÃO EM SERVIDOR (HostGator/Outros)
-
-### ⚠️ IMPORTANTE: LIMITAÇÕES
-Projetos React precisam ser "compilados" antes de ir para servidores tradicionais.
-
-### 🛠️ Processo para HostGator:
-
-**1. Na sua máquina (preparar arquivos):**
+### Via cPanel Terminal:
 ```bash
 # Instalar dependências
-bun install
+npm install
 
-# Gerar arquivos para servidor
-bun build
+# Gerar build de produção
+npm run build
+
+# Configurar permissões
+chmod 755 -R public_html/
+chmod 644 .env
 ```
 
-**2. Upload para HostGator:**
-- Acesse cPanel → Gerenciador de Arquivos
-- Vá para `public_html`
-- Upload todos os arquivos da pasta `dist`
-- Configure domínio para esta pasta
+### Configurar SSL:
+1. No cPanel → "SSL/TLS"
+2. Ative "Forçar HTTPS"
+3. Verifique certificado válido
 
-**3. Configurar no cPanel:**
-- Certifique-se que `index.html` é a página inicial
-- Configure redirecionamentos se necessário
+## 🔧 5. Configurações Finais
 
-### 📊 O que funciona em cada ambiente:
+### No sistema:
+1. Acesse: `https://seudominio.com`
+2. Vá em **Configurações**
+3. Conecte com Google
+4. Configure PIX e links de pagamento
+5. Teste a integração
 
-| Funcionalidade | Local | HostGator | Observações |
-|----------------|-------|-----------|-------------|
-| **Lousa Digital** | ✅ | ✅ | ✅ **AGORA com upload de imagens!** |
-| **Upload Imagens** | ✅ | ✅ | **NOVO:** Funciona em ambos ambientes |
-| **Desenhar sobre imagens** | ✅ | ✅ | **NOVO:** Anotações em partituras, etc. |
-| Metrônomo | ✅ | ✅ | Funciona perfeitamente |
-| Gestão Alunos | ✅ | ⚠️ | Dados não persistem no HostGator |
-| Google Calendar Real | ⚠️ | ⚠️ | **Configuração adicional necessária** |
-| IA Musical | ✅ | ✅ | Interface funciona, mas sem IA real |
-| Hot Reload | ✅ | ❌ | Apenas local |
+### Verificar funcionamento:
+- ✅ Login Google funcionando
+- ✅ Criação de eventos na agenda
+- ✅ Links do Meet sendo gerados
+- ✅ Cores personalizadas aparecendo
 
----
+## 🆘 Solução de Problemas
 
-## 🔧 CONFIGURAÇÕES AVANÇADAS
-
-### 🎨 Personalizar Cores/Logo:
-Edite: `src/index.css` e `tailwind.config.ts`
-
-### 📊 Adicionar Analytics:
-```javascript
-// Adicionar Google Analytics no index.html
-<script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script>
-```
-
-### 🔒 Configurar HTTPS:
-- HostGator: Ativar SSL/TLS gratuito no cPanel
-- Local: Usar `bun dev --https`
-
----
-
-## ❌ PROBLEMAS COMUNS E SOLUÇÕES
-
-### "Comando não encontrado"
+### Erro de autenticação Google:
 ```bash
-# Verificar se Node.js está instalado
-node --version
-npm --version
-
-# Se não estiver, baixar de: https://nodejs.org/
+# Verificar URLs no Google Console
+- https://seudominio.com
+- https://seudominio.com/api/auth/callback/google
 ```
 
-### "Porta já em uso"
+### Banco não conecta:
 ```bash
-# Parar processos na porta 5173
-# Windows:
-netstat -ano | findstr :5173
-taskkill /PID [numero_do_pid] /F
-
-# Mac/Linux:
-lsof -ti:5173 | xargs kill
+# Verificar .env
+# Testar conexão no cPanel → phpMyAdmin
 ```
 
-### "Módulos não encontrados"
+### Build falha:
 ```bash
-# Limpar cache e reinstalar
-rm -rf node_modules
-rm package-lock.json
-bun install
+# Limpar cache
+npm run clean
+npm install --production
+npm run build
 ```
 
-### No HostGator: "Página não carrega"
-1. Verificar se arquivos estão em `public_html`
-2. Certificar que `index.html` existe
-3. Verificar permissões dos arquivos (644)
-4. Limpar cache do navegador
+## 📞 Suporte
+
+- **Logs de erro**: `/logs/error.log`
+- **Teste Google**: Configurações → Testar Integração
+- **Backup**: Configure backup automático no cPanel
 
 ---
 
-## 🚀 MELHORIAS FUTURAS
+⚡ **Sistema pronto para produção!** 
 
-### Para tornar o sistema profissional:
-
-**1. Backend Real:**
-- Conectar ao Supabase (recomendado)
-- Banco de dados PostgreSQL
-- Autenticação de usuários
-
-**2. Pagamentos Reais:**
-- Integrar Stripe ou Mercado Pago
-- Geração automática de boletos
-- Controle de inadimplência
-
-**3. Comunicação:**
-- WhatsApp API Business
-- Envio automático de lembretes
-- E-mail marketing
-
-**4. IA Musical Real:**
-- Integrar ChatGPT/Claude
-- Análise de áudio em tempo real
-- Correção automática de afinação
-
-**5. Upload de Imagens Avançado:**
-- Suporte para mais formatos
-- Edição básica de imagens
-- Biblioteca de imagens musicais
-- Sincronização com Google Drive
-
----
-
-## 📞 SUPORTE
-
-### ✅ Testado e funcionando em:
-- Windows 10/11
-- macOS Big Sur+
-- Ubuntu 20.04+
-- Chrome 100+
-- Firefox 100+
-- Safari 15+
-
-### 🆘 Se precisar de ajuda:
-1. Verificar os logs no terminal
-2. Tentar os "Problemas Comuns" acima
-3. Reinstalar dependências do zero
-4. Verificar versões do Node.js/Bun
-5. **Para Google:** Verificar URLs no Google Cloud Console
-6. **Para uploads:** Verificar se o navegador suporta FileReader API
-
-### 🔍 Problemas Google específicos:
-
-**"Redirect URI mismatch":**
-```bash
-# Verificar no Google Cloud Console → Credentials
-# URLs devem ser EXATAMENTE:
-http://localhost:5173  (local)
-https://seudominio.com  (produção)
-```
-
-**"Access blocked":**
-- Publicar app no Google Cloud Console
-- Adicionar usuários de teste
-- Verificar escopos de permissão
-
-**"Calendar not syncing":**
-- Verificar se Calendar API está ativada
-- Conferir token de acesso válido
-- Testar com conta Google pessoal primeiro
-
----
-
-## ⭐ DICA PRINCIPAL PARA INICIANTES
-
-**COMECE SEMPRE LOCAL!**
-
-Motivos:
-- ✅ Mais fácil de instalar
-- ✅ Modificações instantâneas  
-- ✅ **NOVO:** Upload e edição de imagens
-- ✅ **NOVO:** Funcionalidades da lousa 100% completas
-- ✅ Todas as funcionalidades
-- ✅ Sem custos de hospedagem
-- ✅ Ideal para aprender
-
-Só migre para servidor quando:
-- Quiser compartilhar com outros
-- Precisar acessar de outros lugares
-- Sistema estiver finalizado
+Acesse seu domínio e comece a usar o sistema de gestão de aulas.

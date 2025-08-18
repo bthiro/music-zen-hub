@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AlunoForm } from "@/components/forms/AlunoForm";
-import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { useApp } from "@/contexts/AppContext";
 import { Plus, Search, Edit, Trash2, Clock, UserCheck, UserX, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +12,7 @@ import { StudentEvolution } from "@/components/StudentEvolution";
 import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Alunos() {
-  const { alunos, removerAluno } = useSupabaseData();
+  const { alunos, deleteAluno } = useApp();
   const { toast } = useToast();
   const [busca, setBusca] = useState("");
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -24,21 +24,13 @@ export default function Alunos() {
     aluno.email.toLowerCase().includes(busca.toLowerCase())
   );
 
-  const handleDelete = async (id: string, nome: string) => {
+  const handleDelete = (id: string, nome: string) => {
     if (confirm(`Tem certeza que deseja excluir o aluno ${nome}? Esta ação não pode ser desfeita.`)) {
-      const { error } = await removerAluno(id);
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Erro ao excluir aluno",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Aluno excluído",
-          description: `${nome} foi removido com sucesso.`
-        });
-      }
+      deleteAluno(id);
+      toast({
+        title: "Aluno excluído",
+        description: `${nome} foi removido com sucesso.`
+      });
     }
   };
 
@@ -57,15 +49,16 @@ export default function Alunos() {
     setAlunoEditando(null);
   };
 
-  const getStatusColor = (status: boolean | string) => {
-    if (status === true || status === "ativo") {
-      return "bg-green-100 text-green-800";
-    } else if (status === false || status === "inativo") {
-      return "bg-red-100 text-red-800";
-    } else if (status === "pendente") {
-      return "bg-yellow-100 text-yellow-800";
-    } else {
-      return "bg-gray-100 text-gray-800";
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ativo":
+        return "bg-green-100 text-green-800";
+      case "pendente":
+        return "bg-yellow-100 text-yellow-800";
+      case "inativo":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -107,7 +100,7 @@ export default function Alunos() {
         <div className="grid gap-4 md:grid-cols-4">
           <StatsCard
             title="Alunos Ativos"
-            value={alunos.filter(a => a.ativo === true).length}
+            value={alunos.filter(a => a.status === "ativo").length}
             subtitle="Mensalidades em dia"
             icon={UserCheck}
             color="green"
@@ -117,7 +110,7 @@ export default function Alunos() {
           <StatsCard
             title="Novos este Mês"
             value={alunos.filter(a => {
-              const cadastro = new Date(a.created_at);
+              const cadastro = new Date(a.dataCadastro);
               const hoje = new Date();
               return cadastro.getMonth() === hoje.getMonth() && cadastro.getFullYear() === hoje.getFullYear();
             }).length}
@@ -128,17 +121,17 @@ export default function Alunos() {
           />
           
           <StatsCard
-            title="Total de Alunos"
-            value={alunos.length}
-            subtitle="Total cadastrados"
+            title="Pendentes"
+            value={alunos.filter(a => a.status === "pendente").length}
+            subtitle="Aguardando pagamento"
             icon={Clock}
             color="yellow"
-            badge={{ text: "Total", variant: "outline" }}
+            badge={{ text: "Atenção", variant: "outline" }}
           />
           
           <StatsCard
             title="Inativos"
-            value={alunos.filter(a => a.ativo === false).length}
+            value={alunos.filter(a => a.status === "inativo").length}
             subtitle="Não participam mais"
             icon={UserX}
             color="red"
@@ -182,21 +175,18 @@ export default function Alunos() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold">{aluno.nome}</h3>
-                      <Badge className={getStatusColor(aluno.ativo)}>
-                        {aluno.ativo ? "Ativo" : "Inativo"}
+                      <Badge className={getStatusColor(aluno.status)}>
+                        {aluno.status}
                       </Badge>
-                      {aluno.instrumento && (
-                        <Badge variant="outline">{aluno.instrumento}</Badge>
-                      )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                       <div>
                         <p className="font-medium text-foreground">Email:</p>
-                        <p>{aluno.email || "Não informado"}</p>
+                        <p>{aluno.email}</p>
                       </div>
                       <div>
                         <p className="font-medium text-foreground">Mensalidade:</p>
-                        <p>R$ {aluno.valor_mensalidade || "Não definido"}</p>
+                        <p>R$ {aluno.mensalidade}</p>
                       </div>
                       <div>
                         <p className="font-medium text-foreground">Telefone:</p>

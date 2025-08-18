@@ -20,7 +20,6 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
   const { toast } = useToast();
   const [formaPagamento, setFormaPagamento] = useState<string>("");
   const [metodoPagamento, setMetodoPagamento] = useState("");
-  const [quantidadeAulas, setQuantidadeAulas] = useState(4); // Padrão: 4 aulas
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,16 +39,12 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
       
       toast({
         title: "Pagamento confirmado!",
-        description: `Pagamento de ${alunoNome} confirmado. ${quantidadeAulas} aulas serão criadas automaticamente.`
+        description: `Pagamento de ${alunoNome} marcado como pago via ${formaPagamento.toUpperCase()}.`
       });
-
-      // TODO: Implementar criação automática de aulas baseada na quantidade
-      // Criar ${quantidadeAulas} aulas com intervalo de 1 semana
 
       onOpenChange(false);
       setFormaPagamento("");
       setMetodoPagamento("");
-      setQuantidadeAulas(4);
     } catch (error) {
       console.error('Erro ao confirmar pagamento:', error);
       toast({
@@ -103,22 +98,6 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
               />
             </div>
           )}
-
-          <div className="space-y-2">
-            <Label htmlFor="quantidadeAulas">Quantidade de Aulas a Criar</Label>
-            <Input
-              id="quantidadeAulas"
-              type="number"
-              min="1"
-              max="20"
-              value={quantidadeAulas}
-              onChange={(e) => setQuantidadeAulas(Math.max(1, parseInt(e.target.value) || 1))}
-              placeholder="Quantidade de aulas"
-            />
-            <p className="text-sm text-muted-foreground">
-              Serão criadas {quantidadeAulas} aulas com intervalo de 1 semana
-            </p>
-          </div>
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

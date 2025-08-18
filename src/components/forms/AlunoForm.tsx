@@ -5,76 +5,101 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { Badge } from "@/components/ui/badge";
+import { useApp, Aluno } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
+import { countries, getStatesByCountry, getCitiesByState, getTimezoneInfo } from "@/data/locations";
+import { MapPin, Clock } from "lucide-react";
 
 interface AlunoFormProps {
-  aluno?: any;
+  aluno?: Aluno;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
 export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
-  const { adicionarAluno, atualizarAluno } = useSupabaseData();
+  const { addAluno, updateAluno } = useApp();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     nome: aluno?.nome || "",
     email: aluno?.email || "",
     telefone: aluno?.telefone || "",
-    instrumento: aluno?.instrumento || "",
-    nivel: aluno?.nivel || "iniciante",
-    observacoes: aluno?.observacoes || "",
-    valor_mensalidade: aluno?.valor_mensalidade || 200,
-    duracao_aula: aluno?.duracao_aula || 50,
-    data_nascimento: aluno?.data_nascimento || "",
-    endereco: aluno?.endereco || ""
+    pais: aluno?.pais || "BR",
+    estado: aluno?.estado || "",
+    cidade: aluno?.cidade || "",
+    mensalidade: aluno?.mensalidade || 0,
+    duracaoAula: aluno?.duracaoAula || 50,
+    status: aluno?.status || "ativo",
+    observacoes: aluno?.observacoes || ""
   });
 
+  const [availableStates, setAvailableStates] = useState(getStatesByCountry(formData.pais));
+  const [availableCities, setAvailableCities] = useState(
+    formData.estado ? getCitiesByState(formData.pais, formData.estado) : []
+  );
+  const [timezoneInfo, setTimezoneInfo] = useState(
+    getTimezoneInfo(formData.pais, formData.estado, formData.cidade)
+  );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
-    if (!formData.nome || !formData.instrumento) {
+    if (!formData.nome || !formData.email || !formData.mensalidade || !formData.duracaoAula || !formData.cidade || !formData.estado) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios",
         variant: "destructive"
       });
-      setLoading(false);
       return;
     }
 
     try {
-      const { error } = aluno 
-        ? await atualizarAluno(aluno.id, formData)
-        : await adicionarAluno(formData);
-
-      if (error) {
-        const errorMessage = typeof error === 'string' ? error : error.message || "Erro ao salvar aluno";
-        throw new Error(errorMessage);
+      if (aluno) {
+        updateAluno(aluno.id, formData);
+        toast({
+          title: "Sucesso",
+          description: "Aluno atualizado com sucesso!"
+        });
+      } else {
+        addAluno(formData);
+        toast({
+          title: "Sucesso", 
+          description: "Aluno cadastrado com sucesso!"
+        });
       }
-
-      toast({
-        title: "Sucesso",
-        description: aluno ? "Aluno atualizado com sucesso!" : "Aluno cadastrado com sucesso!"
-      });
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao salvar aluno",
+        description: "Erro ao salvar aluno",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Atualizar estados e cidades baseado na seleção
+    if (field === 'pais') {
+      const states = getStatesByCountry(value);
+      setAvailableStates(states);
+      setAvailableCities([]);
+      setFormData(prev => ({ ...prev, estado: "", cidade: "" }));
+      setTimezoneInfo(getTimezoneInfo(value));
+    }
+    
+    if (field === 'estado') {
+      const cities = getCitiesByState(formData.pais, value);
+      setAvailableCities(cities);
+      setFormData(prev => ({ ...prev, cidade: "" }));
+      setTimezoneInfo(getTimezoneInfo(formData.pais, value));
+    }
+    
+    if (field === 'cidade') {
+      setTimezoneInfo(getTimezoneInfo(formData.pais, formData.estado, value));
+    }
   };
 
   return (
@@ -92,12 +117,11 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
                 value={formData.nome}
                 onChange={(e) => handleChange("nome", e.target.value)}
                 placeholder="Nome completo do aluno"
-                required
               />
             </div>
             
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -116,88 +140,129 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
                 placeholder="(11) 99999-9999"
               />
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="instrumento">Instrumento *</Label>
-              <Select value={formData.instrumento} onValueChange={(value) => handleChange("instrumento", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o instrumento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="violao">Violão</SelectItem>
-                  <SelectItem value="guitarra">Guitarra</SelectItem>
-                  <SelectItem value="baixo">Baixo</SelectItem>
-                  <SelectItem value="bateria">Bateria</SelectItem>
-                  <SelectItem value="piano">Piano</SelectItem>
-                  <SelectItem value="teclado">Teclado</SelectItem>
-                  <SelectItem value="canto">Canto</SelectItem>
-                  <SelectItem value="outros">Outros</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Localização */}
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MapPin className="h-5 w-5" />
+                Localização e Fuso Horário
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="pais">País *</Label>
+                <Select value={formData.pais} onValueChange={(value) => handleChange("pais", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div>
-              <Label htmlFor="nivel">Nível</Label>
-              <Select value={formData.nivel} onValueChange={(value) => handleChange("nivel", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o nível" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="iniciante">Iniciante</SelectItem>
-                  <SelectItem value="basico">Básico</SelectItem>
-                  <SelectItem value="intermediario">Intermediário</SelectItem>
-                  <SelectItem value="avancado">Avançado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div>
+                <Label htmlFor="estado">Estado *</Label>
+                <Select 
+                  value={formData.estado} 
+                  onValueChange={(value) => handleChange("estado", value)}
+                  disabled={!formData.pais}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableStates.map((state) => (
+                      <SelectItem key={state.code} value={state.code}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="cidade">Cidade *</Label>
+                <Select 
+                  value={formData.cidade} 
+                  onValueChange={(value) => handleChange("cidade", value)}
+                  disabled={!formData.estado}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a cidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCities.map((city) => (
+                      <SelectItem key={city.name} value={city.name}>
+                        {city.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Informações de Fuso Horário */}
+              {formData.cidade && (
+                <div className="md:col-span-3">
+                  <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <span className="text-sm">
+                      <strong>Fuso Horário:</strong> {timezoneInfo.displayName}
+                    </span>
+                    <Badge variant="outline" className="ml-auto">
+                      {timezoneInfo.utcOffset}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <div>
-              <Label htmlFor="valor_mensalidade">Valor Mensalidade (R$)</Label>
+              <Label htmlFor="mensalidade">Mensalidade *</Label>
               <Input
-                id="valor_mensalidade"
+                id="mensalidade"
                 type="number"
-                value={formData.valor_mensalidade}
-                onChange={(e) => handleChange("valor_mensalidade", Number(e.target.value))}
+                value={formData.mensalidade}
+                onChange={(e) => handleChange("mensalidade", Number(e.target.value))}
                 placeholder="200"
-                min="0"
-                step="0.01"
               />
             </div>
             
             <div>
-              <Label htmlFor="duracao_aula">Duração da Aula (min)</Label>
-              <Select value={formData.duracao_aula.toString()} onValueChange={(value) => handleChange("duracao_aula", Number(value))}>
+              <Label htmlFor="duracaoAula">Duração da Aula *</Label>
+              <Select value={formData.duracaoAula.toString()} onValueChange={(value) => handleChange("duracaoAula", Number(value))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Duração da aula" />
+                  <SelectValue placeholder="Selecione a duração" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="30">30 minutos</SelectItem>
-                  <SelectItem value="45">45 minutos</SelectItem>
                   <SelectItem value="50">50 minutos</SelectItem>
-                  <SelectItem value="60">60 minutos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div>
-              <Label htmlFor="data_nascimento">Data de Nascimento</Label>
-              <Input
-                id="data_nascimento"
-                type="date"
-                value={formData.data_nascimento}
-                onChange={(e) => handleChange("data_nascimento", e.target.value)}
-              />
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="endereco">Endereço</Label>
-            <Input
-              id="endereco"
-              value={formData.endereco}
-              onChange={(e) => handleChange("endereco", e.target.value)}
-              placeholder="Endereço completo (opcional)"
-            />
           </div>
           
           <div>
@@ -206,14 +271,14 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
               id="observacoes"
               value={formData.observacoes}
               onChange={(e) => handleChange("observacoes", e.target.value)}
-              placeholder="Anotações sobre o aluno, objetivos, horários preferidos, etc."
+              placeholder="Informações adicionais sobre o aluno..."
               rows={3}
             />
           </div>
           
           <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : (aluno ? "Atualizar" : "Cadastrar")}
+            <Button type="submit">
+              {aluno ? "Atualizar" : "Cadastrar"}
             </Button>
             {onCancel && (
               <Button type="button" variant="outline" onClick={onCancel}>

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "lucide-react";
 
@@ -17,7 +17,7 @@ interface AulaDialogProps {
 }
 
 export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialogProps) {
-  const { alunos, adicionarAula } = useSupabaseData();
+  const { alunos, addAula } = useApp();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -64,38 +64,34 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     return dataInicio.toTimeString().slice(0, 5);
   };
 
-  const gerarAulasMensais = async (primeiraData: string, horario: string, alunoId: string, alunoNome: string) => {
+  const gerarAulasMensais = (primeiraData: string, horario: string, alunoId: string, alunoNome: string) => {
+    const aulas = [];
     const dataInicial = new Date(primeiraData);
     const aluno = alunos.find(a => a.id === alunoId);
-    const duracaoMinutos = 50; // Duração padrão
+    const duracaoMinutos = aluno?.duracaoAula || 50;
     const horarioFim = calcularHorarioFim(horario, duracaoMinutos);
-    
-    const aulasCriadas = [];
     
     for (let i = 0; i < 4; i++) {
       const dataAula = new Date(dataInicial);
       dataAula.setDate(dataInicial.getDate() + (i * 7)); // Adiciona 7 dias para cada aula
       
-      const aulaData = {
-        aluno_id: alunoId,
-        data_hora: `${dataAula.toISOString().split('T')[0]}T${horario}:00`,
-        status: "agendada",
-        tema: `Aula ${i + 1}/4 do mês`,
-        feedback: formData.observacoes || `Aula ${i + 1}/4 do mês - ${duracaoMinutos}min`
-      };
-      
-      const { data, error } = await adicionarAula(aulaData);
-      if (error) {
-        const errorMessage = typeof error === 'string' ? error : error.message || 'Erro desconhecido';
-        throw new Error(`Erro ao criar aula ${i + 1}: ${errorMessage}`);
-      }
-      aulasCriadas.push(data);
+      aulas.push({
+        alunoId,
+        aluno: alunoNome,
+        data: dataAula.toISOString().split('T')[0],
+        horario,
+        horarioFim,
+        duracaoMinutos,
+        status: "agendada" as const,
+        linkMeet: gerarLinkMeet(),
+        observacoes: formData.observacoes || `Aula ${i + 1}/4 do mês - ${duracaoMinutos}min`
+      });
     }
     
-    return aulasCriadas;
+    return aulas;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.alunoId || !formData.data || !formData.horario) {
@@ -119,7 +115,11 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
 
     try {
       // Gerar 4 aulas do mês
-      await gerarAulasMensais(formData.data, formData.horario, formData.alunoId, aluno.nome);
+      const aulasGeradas = gerarAulasMensais(formData.data, formData.horario, formData.alunoId, aluno.nome);
+      
+      aulasGeradas.forEach(aula => {
+        addAula(aula);
+      });
 
       toast({
         title: "Sucesso",
@@ -136,10 +136,10 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
       });
       
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao agendar aulas",
+        description: "Erro ao agendar aulas",
         variant: "destructive"
       });
     }
@@ -152,8 +152,10 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
       // Auto-calcular horário de fim quando aluno ou horário mudam
       if (field === 'alunoId' || field === 'horario') {
         if (newData.alunoId && newData.horario) {
-          const duracaoMinutos = 50; // Duração padrão
-          newData.horarioFim = calcularHorarioFim(newData.horario, duracaoMinutos);
+          const aluno = alunos.find(a => a.id === newData.alunoId);
+          if (aluno) {
+            newData.horarioFim = calcularHorarioFim(newData.horario, aluno.duracaoAula);
+          }
         }
       }
       
@@ -183,7 +185,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
                 <SelectValue placeholder="Selecione o aluno" />
               </SelectTrigger>
               <SelectContent>
-                {alunos.filter(a => a.ativo).map(aluno => (
+                {alunos.filter(a => a.status === "ativo").map(aluno => (
                   <SelectItem key={aluno.id} value={aluno.id}>
                     {aluno.nome}
                   </SelectItem>

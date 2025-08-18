@@ -8,13 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { AulaDialog } from "@/components/dialogs/AulaDialog";
 import { EditarAulaDialog } from "@/components/dialogs/EditarAulaDialog";
 import { ReagendarLoteDialog } from "@/components/dialogs/ReagendarLoteDialog";
-import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Clock, Video, Plus, Search, ExternalLink, FileText, MessageCircle, Mail, Upload, Edit, Save, X, Filter, RefreshCw } from "lucide-react";
 import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Aulas() {
-  const { aulas, alunos, atualizarAula } = useSupabaseData();
+  const { aulas, updateAula, getAlunoById } = useApp();
   const { toast } = useToast();
   const [busca, setBusca] = useState("");
   const [aulaDialogOpen, setAulaDialogOpen] = useState(false);
@@ -30,14 +30,8 @@ export default function Aulas() {
     materiaisPdf: [] as string[]
   });
 
-  const getAlunoById = (id: string) => {
-    return alunos.find(aluno => aluno.id === id);
-  };
-
   const aulasFiltradas = aulas.filter(aula => {
-    const aluno = alunos.find(a => a.id === aula.aluno_id);
-    const alunoNome = aluno?.nome || '';
-    const matchBusca = alunoNome.toLowerCase().includes(busca.toLowerCase());
+    const matchBusca = aula.aluno.toLowerCase().includes(busca.toLowerCase());
     
     // Filtro de status
     let matchStatus = true;
@@ -50,7 +44,7 @@ export default function Aulas() {
     // Filtro de dia da semana
     let matchDiaSemana = true;
     if (filtroDiaSemana !== "todos") {
-      const dataAula = new Date(aula.data_hora);
+      const dataAula = new Date(aula.data);
       const diaAula = dataAula.getDay();
       matchDiaSemana = diaAula.toString() === filtroDiaSemana;
     }
@@ -73,50 +67,27 @@ export default function Aulas() {
     }
   };
 
-  const formatarData = (dataHora: string) => {
-    return new Date(dataHora).toLocaleDateString('pt-BR', {
+  const formatarData = (data: string) => {
+    return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
   };
 
-  const formatarHorario = (dataHora: string) => {
-    return new Date(dataHora).toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const marcarComoRealizada = (aulaId: string) => {
+    updateAula(aulaId, { status: "realizada" });
   };
 
-  const marcarComoRealizada = async (aulaId: string) => {
-    const { error } = await atualizarAula(aulaId, { status: "realizada" });
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar aula",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const cancelarAula = async (aulaId: string) => {
-    if (confirm("Tem certeza que deseja cancelar esta aula?")) {
-      const { error } = await atualizarAula(aulaId, { status: "cancelada" });
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Erro ao cancelar aula",
-          variant: "destructive"
-        });
-      }
-    }
+  const cancelarAula = (aulaId: string) => {
+    updateAula(aulaId, { status: "cancelada" });
   };
 
   const iniciarEdicao = (aula: any) => {
     setEditandoAula(aula.id);
     setFormEdicao({
-      observacoesAula: aula.feedback || "",
-      materiaisPdf: aula.materiais || []
+      observacoesAula: aula.observacoesAula || "",
+      materiaisPdf: aula.materiaisPdf || []
     });
   };
 
@@ -125,25 +96,16 @@ export default function Aulas() {
     setFormEdicao({ observacoesAula: "", materiaisPdf: [] });
   };
 
-  const salvarEdicao = async (aulaId: string) => {
-    const { error } = await atualizarAula(aulaId, {
-      feedback: formEdicao.observacoesAula,
-      materiais: formEdicao.materiaisPdf
+  const salvarEdicao = (aulaId: string) => {
+    updateAula(aulaId, {
+      observacoesAula: formEdicao.observacoesAula,
+      materiaisPdf: formEdicao.materiaisPdf
     });
-    
-    if (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar informações da aula",
-        variant: "destructive"
-      });
-    } else {
-      setEditandoAula(null);
-      toast({
-        title: "Sucesso",
-        description: "Informações da aula atualizadas!"
-      });
-    }
+    setEditandoAula(null);
+    toast({
+      title: "Sucesso",
+      description: "Informações da aula atualizadas!"
+    });
   };
 
   const adicionarPdf = () => {
@@ -310,8 +272,8 @@ Professor`;
   };
 
   const proximasAulas = aulasFiltradas
-    .filter(aula => new Date(aula.data_hora) >= new Date() && aula.status === "agendada")
-    .sort((a, b) => new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime())
+    .filter(aula => new Date(aula.data) >= new Date() && aula.status === "agendada")
+    .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
     .slice(0, 5);
 
   const estatisticas = {
@@ -384,31 +346,28 @@ Professor`;
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {proximasAulas.map((aula) => {
-                  const aluno = getAlunoById(aula.aluno_id);
-                  return (
-                    <div key={aula.id} className="flex items-center justify-between p-3 border rounded-lg bg-blue-50">
-                      <div className="flex items-center gap-3">
-                        <Calendar className="h-4 w-4 text-blue-600" />
-                        <div>
-                          <p className="font-medium">{aluno?.nome || 'Aluno não encontrado'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatarData(aula.data_hora)} às {formatarHorario(aula.data_hora)}
-                          </p>
-                        </div>
+                {proximasAulas.map((aula) => (
+                  <div key={aula.id} className="flex items-center justify-between p-3 border rounded-lg bg-blue-50">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="font-medium">{aula.aluno}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatarData(aula.data)} às {aula.horario}
+                        </p>
                       </div>
-                      {aula.link_meet && (
-                        <Button size="sm" asChild>
-                          <a href={aula.link_meet} target="_blank" rel="noopener noreferrer">
-                            <Video className="h-4 w-4 mr-2" />
-                            Meet
-                            <ExternalLink className="h-3 w-3 ml-1" />
-                          </a>
-                        </Button>
-                      )}
                     </div>
-                  );
-                })}
+                    {aula.linkMeet && (
+                      <Button size="sm" asChild>
+                        <a href={aula.linkMeet} target="_blank" rel="noopener noreferrer">
+                          <Video className="h-4 w-4 mr-2" />
+                          Meet
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -499,53 +458,51 @@ Professor`;
 
         {/* Lista de aulas */}
         <div className="grid gap-4">
-          {aulasFiltradas.map((aula) => {
-            const aluno = getAlunoById(aula.aluno_id);
-            return (
-              <Card key={aula.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-4">
-                        <h3 className="text-lg font-semibold">{aluno?.nome || 'Aluno não encontrado'}</h3>
-                        <Badge className={getStatusColor(aula.status)}>
-                          {aula.status}
-                        </Badge>
+          {aulasFiltradas.map((aula) => (
+            <Card key={aula.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-4">
+                      <h3 className="text-lg font-semibold">{aula.aluno}</h3>
+                      <Badge className={getStatusColor(aula.status)}>
+                        {aula.status}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground mb-4">
+                      <div>
+                        <p className="font-medium text-foreground">Data:</p>
+                        <p>{formatarData(aula.data)}</p>
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground mb-4">
-                        <div>
-                          <p className="font-medium text-foreground">Data:</p>
-                          <p>{formatarData(aula.data_hora)}</p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">Horário:</p>
-                          <p>{formatarHorario(aula.data_hora)}</p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">Link:</p>
-                          {aula.link_meet ? (
-                            <a 
-                              href={aula.link_meet} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline flex items-center gap-1"
-                            >
-                              Google Meet <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ) : (
-                            <p>Não disponível</p>
-                          )}
-                        </div>
+                      <div>
+                        <p className="font-medium text-foreground">Horário:</p>
+                        <p>{aula.horario}</p>
                       </div>
+                      <div>
+                        <p className="font-medium text-foreground">Link:</p>
+                        {aula.linkMeet ? (
+                          <a 
+                            href={aula.linkMeet} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline flex items-center gap-1"
+                          >
+                            Google Meet <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          <p>Não disponível</p>
+                        )}
+                      </div>
+                    </div>
 
-                      {/* Observações originais da aula */}
-                      {aula.tema && (
-                        <div className="mb-4">
-                          <p className="font-medium text-foreground text-sm">Tema da aula:</p>
-                          <p className="text-sm text-muted-foreground">{aula.tema}</p>
-                        </div>
-                      )}
+                    {/* Observações originais da aula */}
+                    {aula.observacoes && (
+                      <div className="mb-4">
+                        <p className="font-medium text-foreground text-sm">Observações do agendamento:</p>
+                        <p className="text-sm text-muted-foreground">{aula.observacoes}</p>
+                      </div>
+                    )}
 
                     {/* Seção de observações da aula e materiais */}
                     <div className="border-t pt-4 space-y-4">
@@ -647,7 +604,7 @@ Professor`;
                                     ))}
                                   </div>
                                   
-                                  {aula.materiais.length > 1 && (
+                                  {aula.materiaisPdf.length > 1 && (
                                     <div className="mt-3">
                                       <Button 
                                         size="sm" 
@@ -668,7 +625,7 @@ Professor`;
                                   size="sm" 
                                   variant="outline" 
                                   onClick={() => {
-                                    const aluno = getAlunoById(aula.aluno_id);
+                                    const aluno = getAlunoById(aula.alunoId);
                                     if (!aluno || !aluno.telefone) {
                                       toast({
                                         title: "Erro",
@@ -678,11 +635,11 @@ Professor`;
                                       return;
                                     }
                                     
-                                    const mensagem = `Olá ${aluno.nome}!
+                                    const mensagem = `Olá ${aula.aluno}!
 
-Aqui está o link da sua aula de ${formatarData(aula.data_hora)} às ${formatarHorario(aula.data_hora)}:
+Aqui está o link da sua aula de ${formatarData(aula.data)} às ${aula.horario}:
 
-🎥 Link da aula: ${aula.link_meet}
+🎥 Link da aula: ${aula.linkMeet}
 
 Te espero lá!`;
                                     
@@ -695,7 +652,7 @@ Te espero lá!`;
                                   Enviar Link
                                 </Button>
                                 
-                                {(aula.feedback || (aula.materiais && aula.materiais.length > 0)) && (
+                                {(aula.observacoesAula || (aula.materiaisPdf && aula.materiaisPdf.length > 0)) && (
                                   <>
                                     <Button size="sm" variant="outline" onClick={() => enviarViaWhatsApp(aula)}>
                                       <MessageCircle className="h-4 w-4 mr-2" />
@@ -756,7 +713,7 @@ Te espero lá!`;
                           size="sm" 
                           variant="outline" 
                           onClick={() => {
-                            setAlunoParaReagendar({ id: aula.aluno_id, nome: aluno?.nome || 'Aluno' });
+                            setAlunoParaReagendar({ id: aula.alunoId, nome: aula.aluno });
                             setReagendarLoteDialogOpen(true);
                           }}
                         >
@@ -765,12 +722,11 @@ Te espero lá!`;
                         </Button>
                       </>
                     )}
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {aulasFiltradas.length === 0 && (

@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
-import { StatsCard } from "@/components/ui/stats-card";
 import { 
   BarChart, 
   Bar, 
@@ -100,57 +99,71 @@ export function FinancialDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Hero Metrics com StatsCard unificado */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Receita do Mês"
-          value={`R$ ${receitaMesAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          subtitle="Receita atual"
-          icon={DollarSign}
-          color="green"
-          trend={{
-            value: Math.abs(crescimentoReceita),
-            direction: crescimentoReceita >= 0 ? 'up' : 'down',
-            label: 'vs mês anterior'
-          }}
-        />
+      {/* Hero Metrics */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="card-modern border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Receita do Mês</CardTitle>
+            <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-full">
+              <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-800 dark:text-green-200">
+              R$ {receitaMesAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div className={`text-xs flex items-center mt-2 ${crescimentoReceita >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {crescimentoReceita >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+              {Math.abs(crescimentoReceita).toFixed(1)}% vs mês anterior
+            </div>
+          </CardContent>
+        </Card>
 
-        <StatsCard
-          title="Aulas do Mês"
-          value={aulasMesAtual}
-          subtitle="Aulas realizadas"
-          icon={Calendar}
-          color="blue"
-          trend={{
-            value: Math.abs(crescimentoAulas),
-            direction: crescimentoAulas >= 0 ? 'up' : 'down',
-            label: 'vs mês anterior'
-          }}
-        />
+        <Card className="card-modern border-none shadow-lg bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Aulas do Mês</CardTitle>
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-full">
+              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue-800 dark:text-blue-200">{aulasMesAtual}</div>
+            <div className={`text-xs flex items-center mt-2 ${crescimentoAulas >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {crescimentoAulas >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+              {Math.abs(crescimentoAulas).toFixed(1)}% vs mês anterior
+            </div>
+          </CardContent>
+        </Card>
 
-        <StatsCard
-          title="Melhor Mês (Receita)"
-          value={melhorMesReceita.mes}
-          subtitle={`R$ ${melhorMesReceita.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          icon={TrendingUp}
-          color="purple"
-          badge={{
-            text: "Record",
-            variant: "success"
-          }}
-        />
+        <Card className="card-modern border-none shadow-lg bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Melhor Mês (Receita)</CardTitle>
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-full">
+              <DollarSign className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-800 dark:text-purple-200">{melhorMesReceita.mes}</div>
+            <div className="text-xs text-purple-600 dark:text-purple-400 mt-2">
+              R$ {melhorMesReceita.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+          </CardContent>
+        </Card>
 
-        <StatsCard
-          title="Melhor Mês (Aulas)"
-          value={melhorMesAulas.mes}
-          subtitle={`${melhorMesAulas.aulas} aulas realizadas`}
-          icon={ArrowUpRight}
-          color="yellow"
-          badge={{
-            text: "Top",
-            variant: "outline"
-          }}
-        />
+        <Card className="card-modern border-none shadow-lg bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">Melhor Mês (Aulas)</CardTitle>
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-full">
+              <ArrowUpRight className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-orange-800 dark:text-orange-200">{melhorMesAulas.mes}</div>
+            <div className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+              {melhorMesAulas.aulas} aulas realizadas
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts Section */}
