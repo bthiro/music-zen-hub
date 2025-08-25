@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GoogleEvent {
   id?: string;
@@ -33,38 +34,80 @@ export function useGoogleIntegration() {
   // Cor personalizada para eventos da plataforma (10 = verde claro)
   const PLATFORM_COLOR_ID = '10';
 
-  const initializeGAPI = useCallback(async () => {
-    return new Promise((resolve) => {
-      if (typeof window === 'undefined') {
-        resolve(false);
-        return;
-      }
-
-      // Simular carregamento da API do Google
-      // Em produção, usar: gapi.load('client:auth2', initClient);
-      setTimeout(() => {
-        resolve(true);
-      }, 1000);
-    });
-  }, []);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const signIn = useCallback(async () => {
     setIsLoading(true);
     try {
-      await initializeGAPI();
+      const redirectUri = `${window.location.origin}/google-oauth-callback.html`;
       
-      // Simular autenticação
-      // Em produção, usar: gapi.auth2.getAuthInstance().signIn()
+      const { data, error } = await supabase.functions.invoke('google-oauth', {
+        body: { action: 'getAuthUrl', redirectUri }
+      });
+
+      if (error) throw error;
+
+      // Abrir janela de autenticação do Google
+      const authWindow = window.open(data.authUrl, 'google-auth', 'width=500,height=600');
+      
+      // Aguardar código de autorização via postMessage
+      const handleMessage = async (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        
+        if (event.data.type === 'GOOGLE_AUTH_CODE' && event.data.code) {
+          window.removeEventListener('message', handleMessage);
+          authWindow?.close();
+          
+          try {
+            const { data: tokenData, error: tokenError } = await supabase.functions.invoke('google-oauth', {
+              body: { 
+                action: 'exchangeCode', 
+                code: event.data.code, 
+                redirectUri 
+              }
+            });
+
+            if (tokenError) throw tokenError;
+
+            setAccessToken(tokenData.accessToken);
+            setIsAuthenticated(true);
+            setUserEmail(tokenData.userEmail);
+            setIsLoading(false);
+            
+            toast({
+              title: 'Conectado com sucesso!',
+              description: 'Integração com Google ativada.'
+            });
+          } catch (error) {
+            console.error('Erro ao trocar código:', error);
+            setIsLoading(false);
+            toast({
+              title: 'Erro de conexão',
+              description: 'Falha ao conectar com Google.',
+              variant: 'destructive'
+            });
+          }
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+      
+      // Timeout para fechar a janela se demorar muito
       setTimeout(() => {
-        setIsAuthenticated(true);
-        setUserEmail('usuario@exemplo.com');
-        setIsLoading(false);
-        toast({
-          title: 'Conectado com sucesso!',
-          description: 'Integração com Google ativada.'
-        });
-      }, 1500);
+        window.removeEventListener('message', handleMessage);
+        if (authWindow && !authWindow.closed) {
+          authWindow.close();
+          setIsLoading(false);
+          toast({
+            title: 'Timeout',
+            description: 'Tempo limite para autenticação excedido.',
+            variant: 'destructive'
+          });
+        }
+      }, 60000); // 1 minuto
+
     } catch (error) {
+      console.error('Erro na autenticação:', error);
       setIsLoading(false);
       toast({
         title: 'Erro de conexão',
@@ -72,11 +115,12 @@ export function useGoogleIntegration() {
         variant: 'destructive'
       });
     }
-  }, [initializeGAPI, toast]);
+  }, [toast]);
 
   const signOut = useCallback(() => {
     setIsAuthenticated(false);
     setUserEmail(null);
+    setAccessToken(null);
     toast({
       title: 'Desconectado',
       description: 'Integração com Google desativada.'
@@ -90,7 +134,7 @@ export function useGoogleIntegration() {
     horarioFim: string,
     duracaoMinutos: number
   ) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !accessToken) {
       toast({
         title: 'Não autenticado',
         description: 'Faça login com Google primeiro.',
@@ -103,7 +147,7 @@ export function useGoogleIntegration() {
       const startDateTime = new Date(`${data}T${horarioInicio}:00`);
       const endDateTime = new Date(`${data}T${horarioFim}:00`);
 
-      const event: GoogleEvent = {
+      const eventData = {
         summary: `Aula de Música - ${alunoNome}`,
         start: {
           dateTime: startDateTime.toISOString(),
@@ -114,21 +158,17 @@ export function useGoogleIntegration() {
           timeZone: 'America/Sao_Paulo'
         },
         description: `Aula de música com duração de ${duracaoMinutos} minutos.\nAluno: ${alunoNome}`,
-        conferenceData: {
-          createRequest: {
-            requestId: `meet_${Date.now()}`,
-            conferenceSolutionKey: {
-              type: 'hangoutsMeet'
-            }
-          }
-        },
-        colorId: PLATFORM_COLOR_ID // Cor personalizada para identificar eventos da plataforma
       };
 
-      // Simular criação do evento
-      // Em produção, usar: gapi.client.calendar.events.insert()
-      const eventId = `event_${Date.now()}`;
-      const meetLink = `https://meet.google.com/abc-defg-${Date.now().toString().slice(-3)}`;
+      const { data: result, error } = await supabase.functions.invoke('google-calendar', {
+        body: { 
+          action: 'createEvent', 
+          accessToken, 
+          eventData 
+        }
+      });
+
+      if (error) throw error;
 
       toast({
         title: 'Evento criado!',
@@ -136,11 +176,12 @@ export function useGoogleIntegration() {
       });
 
       return {
-        eventId,
-        meetLink,
-        event
+        eventId: result.eventId,
+        meetLink: result.meetLink,
+        event: result.event
       };
     } catch (error) {
+      console.error('Erro ao criar evento:', error);
       toast({
         title: 'Erro ao criar evento',
         description: 'Falha ao criar evento na Google Agenda.',
@@ -148,7 +189,7 @@ export function useGoogleIntegration() {
       });
       return null;
     }
-  }, [isAuthenticated, toast]);
+  }, [isAuthenticated, accessToken, toast]);
 
   const updateCalendarEvent = useCallback(async (
     eventId: string,
@@ -157,11 +198,35 @@ export function useGoogleIntegration() {
     horarioInicio: string,
     horarioFim: string
   ) => {
-    if (!isAuthenticated) return false;
+    if (!isAuthenticated || !accessToken) return false;
 
     try {
-      // Simular atualização do evento
-      // Em produção, usar: gapi.client.calendar.events.update()
+      const startDateTime = new Date(`${data}T${horarioInicio}:00`);
+      const endDateTime = new Date(`${data}T${horarioFim}:00`);
+
+      const eventData = {
+        summary: `Aula de Música - ${alunoNome}`,
+        start: {
+          dateTime: startDateTime.toISOString(),
+          timeZone: 'America/Sao_Paulo'
+        },
+        end: {
+          dateTime: endDateTime.toISOString(),
+          timeZone: 'America/Sao_Paulo'
+        },
+        description: `Aula de música.\nAluno: ${alunoNome}`,
+      };
+
+      const { error } = await supabase.functions.invoke('google-calendar', {
+        body: { 
+          action: 'updateEvent', 
+          accessToken, 
+          eventId,
+          eventData 
+        }
+      });
+
+      if (error) throw error;
       
       toast({
         title: 'Evento atualizado!',
@@ -170,6 +235,7 @@ export function useGoogleIntegration() {
 
       return true;
     } catch (error) {
+      console.error('Erro ao atualizar evento:', error);
       toast({
         title: 'Erro ao atualizar evento',
         description: 'Falha ao atualizar evento na Google Agenda.',
@@ -177,14 +243,21 @@ export function useGoogleIntegration() {
       });
       return false;
     }
-  }, [isAuthenticated, toast]);
+  }, [isAuthenticated, accessToken, toast]);
 
   const deleteCalendarEvent = useCallback(async (eventId: string) => {
-    if (!isAuthenticated) return false;
+    if (!isAuthenticated || !accessToken) return false;
 
     try {
-      // Simular exclusão do evento
-      // Em produção, usar: gapi.client.calendar.events.delete()
+      const { error } = await supabase.functions.invoke('google-calendar', {
+        body: { 
+          action: 'deleteEvent', 
+          accessToken, 
+          eventId
+        }
+      });
+
+      if (error) throw error;
       
       toast({
         title: 'Evento removido!',
@@ -193,6 +266,7 @@ export function useGoogleIntegration() {
 
       return true;
     } catch (error) {
+      console.error('Erro ao remover evento:', error);
       toast({
         title: 'Erro ao remover evento',
         description: 'Falha ao remover evento da Google Agenda.',
@@ -200,7 +274,7 @@ export function useGoogleIntegration() {
       });
       return false;
     }
-  }, [isAuthenticated, toast]);
+  }, [isAuthenticated, accessToken, toast]);
 
   const testIntegration = useCallback(async () => {
     if (!isAuthenticated) {

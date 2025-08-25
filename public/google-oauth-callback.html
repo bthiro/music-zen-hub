@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google OAuth Callback</title>
+</head>
+<body>
+    <script>
+        // Extrair código de autorização da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+        
+        if (code) {
+            // Enviar código para a janela pai
+            window.opener.postMessage({
+                type: 'GOOGLE_AUTH_CODE',
+                code: code
+            }, window.location.origin);
+        } else if (error) {
+            // Enviar erro para a janela pai
+            window.opener.postMessage({
+                type: 'GOOGLE_AUTH_ERROR',
+                error: error
+            }, window.location.origin);
+        }
+        
+        // Fechar a janela
+        window.close();
+    </script>
+</body>
+</html>
