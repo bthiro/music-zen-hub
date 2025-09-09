@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+const groqApiKey = Deno.env.get('GROQ_API_KEY');
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const corsHeaders = {
@@ -15,8 +16,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OPENAI_API_KEY não configurada');
+    if (!groqApiKey) {
+      throw new Error('GROQ_API_KEY não configurada');
     }
 
     const { message, instrument, musicStyle } = await req.json();
@@ -44,63 +45,32 @@ Temas que você domina:
 
 Responda sempre em português, seja claro e use exemplos práticos quando possível.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${groqApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'llama-3.1-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        max_completion_tokens: 1000,
+        max_tokens: 1000,
+        temperature: 0.7,
         stream: false
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Erro da OpenAI:', errorData);
-      
-      // Se for erro de quota, retornar resposta específica
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ 
-          response: `⚠️ **Erro de Quota da OpenAI**
-
-Sua chave da OpenAI excedeu a quota ou está sem créditos. Para resolver:
-
-1. **Verifique sua conta**: Acesse https://platform.openai.com/usage
-2. **Adicione créditos**: Vá em https://platform.openai.com/account/billing
-3. **Verifique limites**: Confirme se sua conta tem limite suficiente
-
-**Resposta sobre Campo Harmônico Maior (modo offline):**
-
-🎵 **Campo Harmônico Maior** é a sequência de acordes formada sobre cada grau da escala maior:
-
-**I - ii - iii - IV - V - vi - vii°**
-
-Em **Dó Maior**:
-- **C** (I) - **Dm** (ii) - **Em** (iii) - **F** (IV) - **G** (V) - **Am** (vi) - **Bº** (vii°)
-
-**Funções:**
-- **Tônica** (I, iii, vi): estabilidade
-- **Subdominante** (ii, IV): preparação  
-- **Dominante** (V, vii°): tensão → resolução
-
-**Progressões comuns:** I-V-vi-IV / ii-V-I / I-vi-IV-V` 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('Erro da Groq:', errorData);
+      throw new Error(`Groq API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Resposta da OpenAI recebida');
+    console.log('Resposta da Groq recebida');
     
     const aiResponse = data.choices[0].message.content;
 
