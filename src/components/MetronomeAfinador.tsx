@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Volume2, VolumeX, Music } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Music, Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Tipos de compasso disponíveis
@@ -21,8 +21,19 @@ export function MetronomeAfinador() {
   const [isMuted, setIsMuted] = useState(false);
   const [timeSignature, setTimeSignature] = useState(timeSignatures[2]); // 4/4 por padrão
   const [currentBeat, setCurrentBeat] = useState(0);
+  
+  // Estados do afinador
+  const [isListening, setIsListening] = useState(false);
+  const [detectedNote, setDetectedNote] = useState<string>("");
+  const [detectedFrequency, setDetectedFrequency] = useState<number>(0);
+  const [cents, setCents] = useState<number>(0);
+  const [isInTune, setIsInTune] = useState<boolean>(false);
+  
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animationRef = useRef<number | null>(null);
   const { toast } = useToast();
 
   // Inicializar contexto de áudio
@@ -35,11 +46,176 @@ export function MetronomeAfinador() {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
     };
   }, []);
+
+  // Função para detectar a frequência fundamental usando autocorrelação
+  const detectPitch = (buffer: Float32Array): number => {
+    const sampleRate = audioContextRef.current?.sampleRate || 44100;
+    const minFreq = 80; // Frequência mínima (E2)
+    const maxFreq = 2000; // Frequência máxima
+    
+    const minPeriod = Math.floor(sampleRate / maxFreq);
+    const maxPeriod = Math.floor(sampleRate / minFreq);
+    
+    let bestCorrelation = 0;
+    let bestPeriod = 0;
+    
+    // Autocorrelação
+    for (let period = minPeriod; period <= maxPeriod; period++) {
+      let correlation = 0;
+      for (let i = 0; i < buffer.length - period; i++) {
+        correlation += buffer[i] * buffer[i + period];
+      }
+      
+      correlation = correlation / (buffer.length - period);
+      
+      if (correlation > bestCorrelation) {
+        bestCorrelation = correlation;
+        bestPeriod = period;
+      }
+    }
+    
+    if (bestCorrelation > 0.01 && bestPeriod > 0) {
+      return sampleRate / bestPeriod;
+    }
+    
+    return 0;
+  };
+
+  // Função para converter frequência em nome de nota e cents
+  const frequencyToNote = (frequency: number): { note: string; cents: number } => {
+    if (frequency <= 0) return { note: "", cents: 0 };
+    
+    const A4 = 440;
+    const semitonesFromA = 12 * Math.log2(frequency / A4);
+    const noteNumber = Math.round(semitonesFromA);
+    const cents = Math.round((semitonesFromA - noteNumber) * 100);
+    
+    const noteNames = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
+    const noteName = noteNames[((noteNumber % 12) + 12) % 12];
+    const octave = Math.floor((noteNumber + 57) / 12);
+    
+    return {
+      note: `${noteName}${octave}`,
+      cents
+    };
+  };
+
+  // Função para analisar o áudio do microfone
+  const analyzeAudio = () => {
+    if (!analyserRef.current || !isListening) return;
+    
+    const bufferLength = analyserRef.current.fftSize;
+    const buffer = new Float32Array(bufferLength);
+    analyserRef.current.getFloatTimeDomainData(buffer);
+    
+    // Calcular RMS para detectar se há som suficiente
+    let rms = 0;
+    for (let i = 0; i < buffer.length; i++) {
+      rms += buffer[i] * buffer[i];
+    }
+    rms = Math.sqrt(rms / buffer.length);
+    
+    if (rms > 0.01) { // Limiar de volume mínimo
+      const frequency = detectPitch(buffer);
+      
+      if (frequency > 0) {
+        const { note, cents } = frequencyToNote(frequency);
+        
+        setDetectedFrequency(frequency);
+        setDetectedNote(note);
+        setCents(cents);
+        setIsInTune(Math.abs(cents) < 10); // Considerado afinado se estiver dentro de ±10 cents
+      }
+    } else {
+      setDetectedNote("");
+      setDetectedFrequency(0);
+      setCents(0);
+      setIsInTune(false);
+    }
+    
+    animationRef.current = requestAnimationFrame(analyzeAudio);
+  };
+
+  // Iniciar/parar detecção de microfone
+  const toggleMicrophone = async () => {
+    if (isListening) {
+      // Parar
+      setIsListening(false);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      setDetectedNote("");
+      setDetectedFrequency(0);
+      setCents(0);
+      setIsInTune(false);
+      
+      toast({
+        title: "Microfone desligado",
+        description: "Detecção de afinação parada"
+      });
+    } else {
+      // Iniciar
+      try {
+        if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        
+        if (audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
+        }
+        
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            sampleRate: 44100,
+            channelCount: 1,
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+        
+        streamRef.current = stream;
+        
+        const source = audioContextRef.current.createMediaStreamSource(stream);
+        const analyser = audioContextRef.current.createAnalyser();
+        analyser.fftSize = 4096;
+        analyser.smoothingTimeConstant = 0.3;
+        
+        source.connect(analyser);
+        analyserRef.current = analyser;
+        
+        setIsListening(true);
+        analyzeAudio();
+        
+        toast({
+          title: "Microfone ativo",
+          description: "Toque uma nota para verificar a afinação"
+        });
+      } catch (error) {
+        console.error('Erro ao acessar microfone:', error);
+        toast({
+          title: "Erro no microfone",
+          description: "Verifique as permissões do navegador",
+          variant: "destructive"
+        });
+      }
+    }
+  };
 
   const playClick = (isAccent = false) => {
     if (!audioContextRef.current || isMuted) return;
@@ -273,30 +449,89 @@ export function MetronomeAfinador() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-2">
-            {notes.map((note) => (
-              <Button
-                key={note.name}
-                variant="outline"
-                size="sm"
-                onClick={() => playNote(note.frequency, note.name)}
-                disabled={isMuted}
-                className="aspect-square"
-              >
-                {note.name}
-              </Button>
-            ))}
+          {/* Detecção em tempo real */}
+          <div className="text-center">
+            <Button
+              onClick={toggleMicrophone}
+              className={`mb-4 ${isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+              size="lg"
+            >
+              {isListening ? <MicOff className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
+              {isListening ? "Parar Detecção" : "Iniciar Detecção"}
+            </Button>
+            
+            {isListening && (
+              <div className="bg-muted/50 rounded-lg p-6 mb-4">
+                <div className="text-center">
+                  {detectedNote ? (
+                    <>
+                      <div className={`text-6xl font-bold mb-2 ${isInTune ? 'text-green-500' : 'text-orange-500'}`}>
+                        {detectedNote}
+                      </div>
+                      <div className="text-lg text-muted-foreground mb-2">
+                        {detectedFrequency.toFixed(1)} Hz
+                      </div>
+                      <div className={`text-sm font-semibold ${isInTune ? 'text-green-500' : 'text-orange-500'}`}>
+                        {cents > 0 ? `+${cents}` : cents} cents
+                      </div>
+                      <div className="mt-3">
+                        <div className="flex justify-center items-center gap-2">
+                          <span className="text-xs">♭</span>
+                          <div className="w-48 h-3 bg-gray-200 rounded-full relative">
+                            <div 
+                              className={`absolute top-0 h-full w-1 rounded-full transform -translate-x-1/2 transition-all duration-200 ${
+                                isInTune ? 'bg-green-500' : Math.abs(cents) > 30 ? 'bg-red-500' : 'bg-orange-500'
+                              }`}
+                              style={{ 
+                                left: `${Math.max(0, Math.min(100, 50 + (cents / 50) * 50))}%` 
+                              }}
+                            />
+                            <div className="absolute top-0 left-1/2 h-full w-0.5 bg-gray-400 transform -translate-x-1/2" />
+                          </div>
+                          <span className="text-xs">♯</span>
+                        </div>
+                        <div className={`text-xs mt-1 font-medium ${
+                          isInTune ? 'text-green-500' : 'text-muted-foreground'
+                        }`}>
+                          {isInTune ? '✓ Afinado!' : cents < 0 ? 'Muito baixo' : 'Muito alto'}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-2xl text-muted-foreground">
+                      🎵 Toque uma nota...
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-sm text-muted-foreground">
-              Clique nas notas para ouvir a afinação de referência
+          {/* Referência de notas */}
+          <div className="space-y-3">
+            <h4 className="font-semibold text-sm">Notas de Referência:</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {notes.map((note) => (
+                <Button
+                  key={note.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => playNote(note.frequency, note.name)}
+                  disabled={isMuted}
+                  className="aspect-square"
+                >
+                  {note.name}
+                </Button>
+              ))}
             </div>
           </div>
 
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <div><strong>A4:</strong> 440 Hz (Padrão internacional)</div>
-            <div><strong>Dica:</strong> Use fones de ouvido para melhor precisão</div>
+          <div className="text-center p-3 bg-muted/30 rounded-lg">
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div><strong>A4:</strong> 440 Hz (Padrão internacional)</div>
+              <div><strong>Dica:</strong> Use fones para evitar feedback</div>
+              <div><strong>Precisão:</strong> ±10 cents = afinado</div>
+            </div>
           </div>
         </CardContent>
       </Card>
