@@ -16,7 +16,11 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Iniciando função ia-musical');
+    console.log('GROQ_API_KEY presente:', !!groqApiKey);
+    
     if (!groqApiKey) {
+      console.log('GROQ_API_KEY não encontrada');
       throw new Error('GROQ_API_KEY não configurada');
     }
 
@@ -45,6 +49,7 @@ Temas que você domina:
 
 Responda sempre em português, seja claro e use exemplos práticos quando possível.`;
 
+    console.log('Preparando chamada para Groq API...');
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -62,6 +67,8 @@ Responda sempre em português, seja claro e use exemplos práticos quando possí
         stream: false
       }),
     });
+
+    console.log('Resposta da Groq recebida. Status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -88,10 +95,12 @@ Responda sempre em português, seja claro e use exemplos práticos quando possí
       throw new Error(`Groq API error: ${response.status}`);
     }
 
+    console.log('Processando resposta da Groq...');
     const data = await response.json();
-    console.log('Resposta da Groq recebida');
+    console.log('Dados recebidos da Groq:', !!data.choices);
     
     const aiResponse = data.choices[0].message.content;
+    console.log('Resposta da IA extraída com sucesso');
 
     return new Response(JSON.stringify({ response: aiResponse }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
