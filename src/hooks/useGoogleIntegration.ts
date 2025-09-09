@@ -35,6 +35,7 @@ export function useGoogleIntegration() {
   const PLATFORM_COLOR_ID = '10';
 
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [events, setEvents] = useState<any[]>([]);
 
   const signIn = useCallback(async () => {
     setIsLoading(true);
@@ -276,6 +277,31 @@ export function useGoogleIntegration() {
     }
   }, [isAuthenticated, accessToken, toast]);
 
+  const listCalendarEvents = useCallback(async (timeMin?: string, timeMax?: string) => {
+    if (!isAuthenticated || !accessToken) return [];
+
+    try {
+      const { data: result, error } = await supabase.functions.invoke('google-calendar', {
+        body: { 
+          action: 'listEvents', 
+          accessToken,
+          eventData: {
+            timeMin: timeMin || new Date().toISOString(),
+            timeMax: timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      setEvents(result.events || []);
+      return result.events || [];
+    } catch (error) {
+      console.error('Erro ao listar eventos:', error);
+      return [];
+    }
+  }, [isAuthenticated, accessToken]);
+
   const testIntegration = useCallback(async () => {
     if (!isAuthenticated) {
       toast({
@@ -310,11 +336,13 @@ export function useGoogleIntegration() {
     isAuthenticated,
     userEmail,
     isLoading,
+    events,
     signIn,
     signOut,
     createCalendarEvent,
     updateCalendarEvent,
     deleteCalendarEvent,
+    listCalendarEvents,
     testIntegration
   };
 }
