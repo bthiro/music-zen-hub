@@ -236,7 +236,13 @@ export default function SessaoAoVivo() {
                     <Button asChild>
                       <a href={aulaAtiva.linkMeet} target="_blank" rel="noopener noreferrer">
                         <Video className="h-4 w-4 mr-2" />
-                        Abrir no Google Meet
+                        Abrir em nova aba
+                      </a>
+                    </Button>
+                    <Button variant="secondary" asChild>
+                      <a href={aulaAtiva.linkMeet} target="_top" rel="noopener noreferrer">
+                        <Video className="h-4 w-4 mr-2" />
+                        Abrir em tela cheia (sair do preview)
                       </a>
                     </Button>
                     <Button
