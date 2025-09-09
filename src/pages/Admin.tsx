@@ -174,38 +174,47 @@ export default function Admin() {
 
   const handleGoogleLogin = async () => {
     try {
+      // Usar a URL específica do projeto ao invés da genérica do Lovable
+      const projectUrl = window.location.origin;
+      const redirectTo = `${projectUrl}/`;
+      
+      console.log('Project URL:', projectUrl);
+      console.log('Redirect URL:', redirectTo);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo,
           skipBrowserRedirect: true
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('OAuth error:', error);
+        throw error;
+      }
 
       if (data?.url) {
-        // Detectar se está em iframe (preview do Lovable)
-        const isInIframe = window.top !== window.self;
+        console.log('OAuth URL gerada:', data.url);
         
-        if (isInIframe) {
-          // Abrir em nova aba quando em iframe
-          const popup = window.open(data.url, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
-          
-          if (!popup) {
-            toast({
-              title: 'Popup bloqueado',
-              description: 'Por favor, permita popups para fazer login com Google ou use o login direto.',
-              variant: 'destructive'
-            });
-            return;
-          }
+        // Sempre abrir em nova aba no preview do Lovable
+        const popup = window.open(data.url, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
+        
+        if (!popup) {
+          toast({
+            title: 'Popup bloqueado',
+            description: 'Por favor, permita popups para fazer login com Google.',
+            variant: 'destructive'
+          });
+          return;
+        }
 
-          // Monitorar quando a janela for fechada
-          const checkClosed = setInterval(() => {
-            if (popup.closed) {
-              clearInterval(checkClosed);
-              // Verificar se o login foi bem-sucedido
+        // Monitorar quando a janela for fechada
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            // Verificar se o login foi bem-sucedido
+            setTimeout(() => {
               supabase.auth.getSession().then(({ data: { session } }) => {
                 if (session) {
                   toast({
@@ -213,19 +222,23 @@ export default function Admin() {
                     description: 'Bem-vindo de volta!'
                   });
                   navigate('/');
+                } else {
+                  toast({
+                    title: 'Login cancelado',
+                    description: 'Tente novamente se necessário.',
+                    variant: 'destructive'
+                  });
                 }
               });
-            }
-          }, 1000);
-        } else {
-          // Redirecionar normalmente quando não está em iframe
-          window.location.href = data.url;
-        }
+            }, 1000);
+          }
+        }, 1000);
       }
     } catch (error: any) {
+      console.error('Google login error:', error);
       toast({
         title: 'Erro no login com Google',
-        description: error.message ?? 'Não foi possível iniciar o login com Google.',
+        description: error.message ?? 'Erro de configuração. Verifique as URLs no Supabase.',
         variant: 'destructive'
       });
     }
