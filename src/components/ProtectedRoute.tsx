@@ -15,6 +15,23 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setAuthenticated(!!session);
+      
+      // Update ultimo_acesso if authenticated
+      if (session?.user) {
+        const { data: professores } = await supabase
+          .from('professores')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .single();
+          
+        if (professores) {
+          await supabase
+            .from('professores')
+            .update({ ultimo_acesso: new Date().toISOString() })
+            .eq('id', professores.id);
+        }
+      }
+      
       setLoading(false);
     };
 
@@ -42,7 +59,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!authenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
