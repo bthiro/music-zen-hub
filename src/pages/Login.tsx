@@ -110,17 +110,28 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
+      // Usar o domínio atual (lovable preview) ao invés de localhost
+      const currentOrigin = window.location.origin;
+      const redirectTo = `${currentOrigin}/`;
+      
+      console.log('Redirect URL:', redirectTo); // Debug
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo,
           skipBrowserRedirect: true
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('OAuth error:', error);
+        throw error;
+      }
 
       if (data?.url) {
+        console.log('OAuth URL:', data.url); // Debug
+        
         // Detectar se está em iframe (preview do Lovable)
         const isInIframe = window.top !== window.self;
         
@@ -131,7 +142,7 @@ export default function Login() {
           if (!popup) {
             toast({
               title: 'Popup bloqueado',
-              description: 'Por favor, permita popups para fazer login com Google ou use o login direto.',
+              description: 'Por favor, permita popups para fazer login com Google.',
               variant: 'destructive'
             });
             return;
@@ -159,9 +170,10 @@ export default function Login() {
         }
       }
     } catch (error: any) {
+      console.error('Google login error:', error);
       toast({
         title: 'Erro no login com Google',
-        description: error.message ?? 'Não foi possível iniciar o login com Google.',
+        description: error.message ?? 'Erro de configuração. Verifique as configurações do Supabase.',
         variant: 'destructive'
       });
     }
