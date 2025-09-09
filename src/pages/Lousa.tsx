@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Canvas as FabricCanvas, Circle, Rect, PencilBrush } from "fabric";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Canvas as FabricCanvas, Circle, Rect, PencilBrush, FabricText, Line, Group } from "fabric";
 import { 
-  Palette, 
   Eraser, 
   Download, 
   Share, 
@@ -13,23 +14,21 @@ import {
   Type, 
   Circle as CircleIcon,
   Square,
-  Minus
+  Music,
+  Stamp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { MusicStamps } from "@/components/MusicStamps";
+import { ColorPicker } from "@/components/ColorPicker";
 
 export default function Lousa() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [activeColor, setActiveColor] = useState("#000000");
-  const [activeTool, setActiveTool] = useState<"select" | "draw" | "rectangle" | "circle" | "text" | "eraser">("draw");
+  const [activeTool, setActiveTool] = useState<"select" | "draw" | "rectangle" | "circle" | "text" | "eraser" | "stamps">("draw");
   const [brushSize, setBrushSize] = useState(2);
+  const [showStamps, setShowStamps] = useState(false);
   const { toast } = useToast();
-
-  const colors = [
-    "#000000", "#FF0000", "#00FF00", "#0000FF", 
-    "#FFFF00", "#FF00FF", "#00FFFF", "#FFA500",
-    "#800080", "#008000", "#800000", "#808080"
-  ];
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -95,7 +94,189 @@ export default function Lousa() {
       });
       fabricCanvas.add(circle);
       fabricCanvas.setActiveObject(circle);
+    } else if (tool === "text") {
+      const text = new FabricText("Digite aqui", {
+        left: 100,
+        top: 100,
+        fontFamily: "Arial",
+        fontSize: 20,
+        fill: activeColor,
+      });
+      fabricCanvas.add(text);
+      fabricCanvas.setActiveObject(text);
+    } else if (tool === "stamps") {
+      setShowStamps(!showStamps);
     }
+  };
+
+  // Função para criar pauta musical
+  const createStaff = (staffData: any) => {
+    const lines: Line[] = [];
+    const spacing = 15;
+    const startY = 100;
+    const width = staffData.width || 400;
+
+    // Criar 5 linhas da pauta
+    for (let i = 0; i < 5; i++) {
+      const line = new Line([50, startY + (i * spacing), 50 + width, startY + (i * spacing)], {
+        stroke: activeColor,
+        strokeWidth: 1,
+      });
+      lines.push(line);
+    }
+
+    // Linhas de compasso (divisórias)
+    const measureWidth = width / staffData.measures;
+    for (let i = 0; i <= staffData.measures; i++) {
+      const x = 50 + (i * measureWidth);
+      const line = new Line([x, startY, x, startY + (4 * spacing)], {
+        stroke: activeColor,
+        strokeWidth: i === 0 || i === staffData.measures ? 3 : 1,
+      });
+      lines.push(line);
+    }
+
+    const staff = new Group(lines, {
+      selectable: true,
+      left: 50,
+      top: startY,
+    });
+
+    fabricCanvas?.add(staff);
+  };
+
+  // Função para criar claves
+  const createClef = (clefData: any) => {
+    const clefSymbols = {
+      treble: "𝄞",
+      bass: "𝄢", 
+      alto: "𝄡"
+    };
+
+    const clef = new FabricText(clefSymbols[clefData.type as keyof typeof clefSymbols] || "𝄞", {
+      left: 60,
+      top: 85,
+      fontSize: 60,
+      fill: activeColor,
+      fontFamily: "Times New Roman"
+    });
+
+    fabricCanvas?.add(clef);
+  };
+
+  // Função para criar figuras musicais
+  const createNote = (noteData: any) => {
+    const noteSymbols = {
+      whole: "𝅝",
+      half: "𝅗𝅥",
+      quarter: "♩",
+      eighth: "♪",
+      sixteenth: "𝅘𝅥𝅯"
+    };
+
+    const note = new FabricText(noteSymbols[noteData.type as keyof typeof noteSymbols] || "♩", {
+      left: 150,
+      top: 100,
+      fontSize: 30,
+      fill: activeColor,
+      fontFamily: "Times New Roman"
+    });
+
+    fabricCanvas?.add(note);
+  };
+
+  // Função para criar braços de instrumentos
+  const createFretboard = (fretboardData: any) => {
+    const lines: Line[] = [];
+    const fretSpacing = 40;
+    const stringSpacing = 15;
+    const startX = 100;
+    const startY = 200;
+    const { strings, frets } = fretboardData;
+
+    // Cordas (linhas horizontais)
+    for (let i = 0; i < strings; i++) {
+      const line = new Line([startX, startY + (i * stringSpacing), startX + (frets * fretSpacing), startY + (i * stringSpacing)], {
+        stroke: activeColor,
+        strokeWidth: 2,
+      });
+      lines.push(line);
+    }
+
+    // Trastes (linhas verticais)
+    for (let i = 0; i <= frets; i++) {
+      const line = new Line([startX + (i * fretSpacing), startY, startX + (i * fretSpacing), startY + ((strings - 1) * stringSpacing)], {
+        stroke: activeColor,
+        strokeWidth: i === 0 ? 4 : 1,
+      });
+      lines.push(line);
+    }
+
+    const fretboard = new Group(lines, {
+      selectable: true,
+      left: startX,
+      top: startY,
+    });
+
+    fabricCanvas?.add(fretboard);
+  };
+
+  // Função para criar números de digitação
+  const createFingerNumber = (numberData: any) => {
+    const number = new FabricText(numberData.number.toString(), {
+      left: 200,
+      top: 300,
+      fontSize: 18,
+      fill: activeColor,
+      fontFamily: "Arial",
+      fontWeight: "bold",
+      backgroundColor: "white",
+      padding: 4
+    });
+
+    fabricCanvas?.add(number);
+  };
+
+  // Função para criar letras da mão direita
+  const createRightHandLetter = (letterData: any) => {
+    const letter = new FabricText(letterData.letter, {
+      left: 250,
+      top: 300,
+      fontSize: 18,
+      fill: activeColor,
+      fontFamily: "Arial",
+      fontStyle: "italic",
+      fontWeight: "bold"
+    });
+
+    fabricCanvas?.add(letter);
+  };
+
+  const handleStampSelect = (stampType: string, stampData: any) => {
+    if (!fabricCanvas) return;
+
+    switch (stampType) {
+      case 'staff':
+        createStaff(stampData);
+        break;
+      case 'clef':
+        createClef(stampData);
+        break;
+      case 'note':
+        createNote(stampData);
+        break;
+      case 'fretboard':
+        createFretboard(stampData);
+        break;
+      case 'fingerNumber':
+        createFingerNumber(stampData);
+        break;
+      case 'rightHand':
+        createRightHandLetter(stampData);
+        break;
+    }
+
+    setShowStamps(false);
   };
 
   const handleClear = () => {
@@ -150,7 +331,6 @@ export default function Lousa() {
         url: dataURL
       });
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(dataURL).then(() => {
         toast({
           title: "Link copiado!",
@@ -164,9 +344,9 @@ export default function Lousa() {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Lousa Digital</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Lousa Digital Musical</h2>
           <p className="text-muted-foreground">
-            Ferramenta interativa para aulas e anotações
+            Ferramenta interativa para aulas de música com carimbos musicais
           </p>
         </div>
 
@@ -192,6 +372,14 @@ export default function Lousa() {
                   Desenhar
                 </Button>
                 <Button
+                  variant={activeTool === "text" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleToolClick("text")}
+                >
+                  <Type className="h-4 w-4 mr-1" />
+                  Texto
+                </Button>
+                <Button
                   variant={activeTool === "eraser" ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleToolClick("eraser")}
@@ -212,27 +400,29 @@ export default function Lousa() {
                 >
                   <CircleIcon className="h-4 w-4" />
                 </Button>
+                
+                {/* Carimbos Musicais */}
+                <Popover open={showStamps} onOpenChange={setShowStamps}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={showStamps ? "default" : "outline"}
+                      size="sm"
+                    >
+                      <Music className="h-4 w-4 mr-1" />
+                      Carimbos
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="start">
+                    <MusicStamps onStampSelect={handleStampSelect} />
+                  </PopoverContent>
+                </Popover>
               </div>
 
-              {/* Color Palette */}
-              <div className="flex gap-2 flex-wrap">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    className={`w-8 h-8 rounded-full border-2 ${
-                      activeColor === color ? "border-gray-800" : "border-gray-300"
-                    }`}
-                    style={{ backgroundColor: color }}
-                    onClick={() => setActiveColor(color)}
-                  />
-                ))}
-                <input
-                  type="color"
-                  value={activeColor}
-                  onChange={(e) => setActiveColor(e.target.value)}
-                  className="w-8 h-8 rounded-full border-2 border-gray-300"
-                />
-              </div>
+              {/* Color Picker */}
+              <ColorPicker 
+                activeColor={activeColor} 
+                onColorChange={setActiveColor} 
+              />
 
               {/* Brush Size */}
               <div className="flex items-center gap-2">
@@ -283,29 +473,76 @@ export default function Lousa() {
         {/* Instructions */}
         <Card>
           <CardHeader>
-            <CardTitle>Como usar a Lousa Digital</CardTitle>
+            <CardTitle>Como usar a Lousa Digital Musical</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <h4 className="font-semibold mb-2">Ferramentas:</h4>
-                <ul className="space-y-1 text-muted-foreground">
-                  <li>• <strong>Selecionar:</strong> Mova e edite objetos</li>
-                  <li>• <strong>Desenhar:</strong> Desenhe à mão livre</li>
-                  <li>• <strong>Borracha:</strong> Apague partes do desenho</li>
-                  <li>• <strong>Formas:</strong> Adicione retângulos e círculos</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Ações:</h4>
-                <ul className="space-y-1 text-muted-foreground">
-                  <li>• <strong>Desfazer:</strong> Remove o último elemento</li>
-                  <li>• <strong>Limpar:</strong> Apaga toda a lousa</li>
-                  <li>• <strong>Salvar:</strong> Download em PNG</li>
-                  <li>• <strong>Compartilhar:</strong> Envie para outros apps</li>
-                </ul>
-              </div>
-            </div>
+            <Tabs defaultValue="tools" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="tools">Ferramentas</TabsTrigger>
+                <TabsTrigger value="music">Carimbos Musicais</TabsTrigger>
+                <TabsTrigger value="tips">Dicas</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tools" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <h4 className="font-semibold mb-2">Ferramentas Básicas:</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>• <strong>Selecionar:</strong> Mova e edite objetos</li>
+                      <li>• <strong>Desenhar:</strong> Desenhe à mão livre</li>
+                      <li>• <strong>Texto:</strong> Adicione textos editáveis</li>
+                      <li>• <strong>Borracha:</strong> Apague partes do desenho</li>
+                      <li>• <strong>Formas:</strong> Adicione retângulos e círculos</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Ações:</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>• <strong>Desfazer:</strong> Remove o último elemento</li>
+                      <li>• <strong>Limpar:</strong> Apaga toda a lousa</li>
+                      <li>• <strong>Salvar:</strong> Download em PNG</li>
+                      <li>• <strong>Compartilhar:</strong> Envie para outros apps</li>
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="music" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <h4 className="font-semibold mb-2">Elementos Musicais:</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>• <strong>Pauta:</strong> 5 linhas com 4 compassos</li>
+                      <li>• <strong>Claves:</strong> Sol, Fá e Dó</li>
+                      <li>• <strong>Figuras:</strong> Semibreve, mínima, semínima, etc.</li>
+                      <li>• <strong>Braços:</strong> Violão, viola, cavaquinho, bandolim</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Digitação:</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>• <strong>Números 1-4:</strong> Digitação mão esquerda</li>
+                      <li>• <strong>Letras p,i,m,a:</strong> Digitação mão direita</li>
+                      <li>• <strong>Posicionamento:</strong> Arraste para posicionar</li>
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="tips" className="space-y-4">
+                <div className="text-sm space-y-2">
+                  <h4 className="font-semibold">💡 Dicas de Uso:</h4>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• Use o seletor de cores organizado para escolher a cor ideal</li>
+                    <li>• Ajuste a espessura do pincel conforme necessário</li>
+                    <li>• Combine carimbos musicais com desenho livre para explicações completas</li>
+                    <li>• Use a ferramenta de texto para adicionar explicações e títulos</li>
+                    <li>• Salve seus trabalhos regularmente em PNG</li>
+                    <li>• Elementos podem ser movidos e redimensionados após serem criados</li>
+                  </ul>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
