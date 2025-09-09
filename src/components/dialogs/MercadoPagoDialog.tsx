@@ -39,6 +39,12 @@ export function MercadoPagoDialog({
     setLoading(true);
     
     try {
+      console.log("Chamando função mercado-pago...", {
+        aluno_id: alunoId,
+        valor: parseFloat(valor),
+        tipo_pagamento: tipoPagamento
+      });
+      
       const { data, error } = await supabase.functions.invoke('mercado-pago', {
         body: {
           action: 'create_payment',
@@ -50,9 +56,11 @@ export function MercadoPagoDialog({
         }
       });
 
+      console.log("Resposta da função:", { data, error });
+
       if (error) {
         console.error("Erro ao criar pagamento:", error);
-        toast.error("Erro ao criar pagamento");
+        toast.error(`Erro ao criar pagamento: ${error.message}`);
         return;
       }
 
@@ -70,11 +78,12 @@ export function MercadoPagoDialog({
         setDescricao("");
         setTipoPagamento("mensal");
       } else {
+        console.error("Resposta inválida:", data);
         toast.error("Erro ao gerar link de pagamento");
       }
     } catch (error) {
-      console.error("Erro:", error);
-      toast.error("Erro interno. Tente novamente.");
+      console.error("Erro no handleSubmit:", error);
+      toast.error(`Erro interno: ${error.message}`);
     } finally {
       setLoading(false);
     }
