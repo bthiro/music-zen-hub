@@ -22,13 +22,13 @@ export function useUserRole() {
           .from('user_roles')
           .select('role')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
-          console.error('Error fetching user role:', error);
-          setUserRole(null);
+          console.warn('Error fetching user role:', error);
+          setUserRole('teacher'); // fallback to teacher for users without explicit role
         } else {
-          setUserRole(data.role as UserRole);
+          setUserRole((data?.role as UserRole) ?? 'teacher');
         }
       } catch (error) {
         console.error('Error checking user role:', error);
@@ -41,7 +41,9 @@ export function useUserRole() {
     checkUserRole();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      checkUserRole();
+      setTimeout(() => {
+        checkUserRole();
+      }, 0);
     });
 
     return () => subscription.unsubscribe();

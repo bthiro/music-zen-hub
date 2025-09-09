@@ -108,20 +108,22 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`
-        }
-      });
+      const supabaseUrl = 'https://hnftxautmxviwrfuaosu.supabase.co';
+      const redirectTo = `${window.location.origin}/`;
+      const authorizeUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
 
-      if (error) throw error;
+      if (window.top && window.top !== window.self) {
+        // Break out of iframe (Lovable preview) to avoid Google refusing connection
+        (window.top as Window).location.href = authorizeUrl;
+      } else {
+        window.location.href = authorizeUrl;
+      }
     } catch (error: any) {
       toast({
         title: 'Erro no login com Google',
-        description: error.message,
+        description: error.message ?? 'Não foi possível iniciar o login com Google.',
         variant: 'destructive'
       });
     }
