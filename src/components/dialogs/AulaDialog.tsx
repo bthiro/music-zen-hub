@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar } from "lucide-react";
+import { Calendar, Clock, Users, Repeat } from "lucide-react";
 
 interface AulaDialogProps {
   open: boolean;
@@ -25,7 +26,9 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     data: "",
     horario: "",
     horarioFim: "",
-    observacoes: ""
+    observacoes: "",
+    quantidadeAulas: 4,
+    intervaloAulas: "semanal" // diario, semanal, quinzenal, unica
   });
 
   // Atualiza o aluno quando props mudam
@@ -43,7 +46,9 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         data: "",
         horario: "",
         horarioFim: "",
-        observacoes: ""
+        observacoes: "",
+        quantidadeAulas: 4,
+        intervaloAulas: "semanal"
       });
     }
   }, [open]);
@@ -64,16 +69,50 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     return dataInicio.toTimeString().slice(0, 5);
   };
 
-  const gerarAulasMensais = (primeiraData: string, horario: string, alunoId: string, alunoNome: string) => {
+  const calcularIntervalo = (intervalo: string) => {
+    switch (intervalo) {
+      case 'diario': return 1;
+      case 'semanal': return 7;
+      case 'quinzenal': return 14;
+      case 'unica': return 0;
+      default: return 7;
+    }
+  };
+
+  const getIntervaloTexto = (intervalo: string) => {
+    switch (intervalo) {
+      case 'diario': return 'diária';
+      case 'semanal': return 'semanal';
+      case 'quinzenal': return 'quinzenal';
+      case 'unica': return 'única';
+      default: return 'semanal';
+    }
+  };
+
+  const gerarAulas = (primeiraData: string, horario: string, alunoId: string, alunoNome: string) => {
     const aulas = [];
     const dataInicial = new Date(primeiraData);
     const aluno = alunos.find(a => a.id === alunoId);
     const duracaoMinutos = aluno?.duracaoAula || 50;
     const horarioFim = calcularHorarioFim(horario, duracaoMinutos);
+    const intervaloDias = calcularIntervalo(formData.intervaloAulas);
+    const quantidade = formData.intervaloAulas === 'unica' ? 1 : formData.quantidadeAulas;
     
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < quantidade; i++) {
       const dataAula = new Date(dataInicial);
-      dataAula.setDate(dataInicial.getDate() + (i * 7)); // Adiciona 7 dias para cada aula
+      if (intervaloDias > 0) {
+        dataAula.setDate(dataInicial.getDate() + (i * intervaloDias));
+      }
+      
+      let observacaoAula = formData.observacoes;
+      if (quantidade > 1) {
+        observacaoAula = `Aula ${i + 1}/${quantidade} - ${getIntervaloTexto(formData.intervaloAulas)} - ${duracaoMinutos}min`;
+        if (formData.observacoes) {
+          observacaoAula += ` | ${formData.observacoes}`;
+        }
+      } else {
+        observacaoAula = `Aula única - ${duracaoMinutos}min${formData.observacoes ? ` | ${formData.observacoes}` : ''}`;
+      }
       
       aulas.push({
         alunoId,
@@ -84,7 +123,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         duracaoMinutos,
         status: "agendada" as const,
         linkMeet: gerarLinkMeet(),
-        observacoes: formData.observacoes || `Aula ${i + 1}/4 do mês - ${duracaoMinutos}min`
+        observacoes: observacaoAula
       });
     }
     
@@ -103,6 +142,15 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
       return;
     }
 
+    if (formData.quantidadeAulas < 1) {
+      toast({
+        title: "Erro",
+        description: "Quantidade de aulas deve ser pelo menos 1",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const aluno = alunos.find(a => a.id === formData.alunoId);
     if (!aluno) {
       toast({
@@ -114,16 +162,16 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     }
 
     try {
-      // Gerar 4 aulas do mês
-      const aulasGeradas = gerarAulasMensais(formData.data, formData.horario, formData.alunoId, aluno.nome);
+      const aulasGeradas = gerarAulas(formData.data, formData.horario, formData.alunoId, aluno.nome);
       
       aulasGeradas.forEach(aula => {
         addAula(aula);
       });
 
+      const quantidade = formData.intervaloAulas === 'unica' ? 1 : formData.quantidadeAulas;
       toast({
         title: "Sucesso",
-        description: `4 aulas agendadas para ${aluno.nome}!`
+        description: `${quantidade} aula${quantidade > 1 ? 's' : ''} ${getIntervaloTexto(formData.intervaloAulas)}${quantidade > 1 ? 's' : ''} agendada${quantidade > 1 ? 's' : ''} para ${aluno.nome}!`
       });
       
       // Reset form
@@ -132,7 +180,9 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         data: "",
         horario: "",
         horarioFim: "",
-        observacoes: ""
+        observacoes: "",
+        quantidadeAulas: 4,
+        intervaloAulas: "semanal"
       });
       
       onOpenChange(false);
@@ -159,17 +209,38 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         }
       }
       
+      // Se mudou para aula única, definir quantidade como 1
+      if (field === 'intervaloAulas' && value === 'unica') {
+        newData.quantidadeAulas = 1;
+      }
+      
       return newData;
     });
   };
 
+  const previewAulas = () => {
+    if (!formData.data || formData.intervaloAulas === 'unica') return null;
+    
+    const dataInicial = new Date(formData.data);
+    const intervaloDias = calcularIntervalo(formData.intervaloAulas);
+    const previews = [];
+    
+    for (let i = 0; i < formData.quantidadeAulas && i < 5; i++) {
+      const dataAula = new Date(dataInicial);
+      dataAula.setDate(dataInicial.getDate() + (i * intervaloDias));
+      previews.push(dataAula.toLocaleDateString('pt-BR'));
+    }
+    
+    return previews;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Agendar Aulas do Mês
+            Agendar Aulas
           </DialogTitle>
         </DialogHeader>
         
@@ -194,8 +265,62 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
             </Select>
           </div>
           
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="intervalo">Tipo de Agendamento *</Label>
+              <Select 
+                value={formData.intervaloAulas} 
+                onValueChange={(value) => handleChange("intervaloAulas", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unica">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Aula Única
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="diario">
+                    <div className="flex items-center gap-2">
+                      <Repeat className="h-4 w-4" />
+                      Diário
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="semanal">
+                    <div className="flex items-center gap-2">
+                      <Repeat className="h-4 w-4" />
+                      Semanal
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="quinzenal">
+                    <div className="flex items-center gap-2">
+                      <Repeat className="h-4 w-4" />
+                      Quinzenal
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="quantidade">Quantidade de Aulas</Label>
+              <Input
+                id="quantidade"
+                type="number"
+                min="1"
+                max="20"
+                value={formData.quantidadeAulas}
+                onChange={(e) => handleChange("quantidadeAulas", parseInt(e.target.value) || 1)}
+                disabled={formData.intervaloAulas === 'unica'}
+                className={formData.intervaloAulas === 'unica' ? 'bg-muted' : ''}
+              />
+            </div>
+          </div>
+          
           <div>
-            <Label htmlFor="data">Data da 1ª Aula *</Label>
+            <Label htmlFor="data">Data da {formData.intervaloAulas === 'unica' ? 'Aula' : '1ª Aula'} *</Label>
             <Input
               id="data"
               type="date"
@@ -239,12 +364,41 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
             />
           </div>
           
+          {/* Preview das datas */}
+          {previewAulas() && (
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-medium">Preview das Aulas:</Label>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {previewAulas()?.map((date, index) => (
+                    <div key={index} className="bg-muted/50 rounded px-2 py-1">
+                      Aula {index + 1}: {date}
+                    </div>
+                  ))}
+                  {formData.quantidadeAulas > 5 && (
+                    <div className="text-muted-foreground col-span-2 text-center">
+                      ... e mais {formData.quantidadeAulas - 5} aulas
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           <div className="text-sm text-muted-foreground bg-muted p-3 rounded">
-            💡 Serão criadas 4 aulas semanais a partir da data selecionada, cada uma com link do Google Meet único.
+            💡 {formData.intervaloAulas === 'unica' 
+              ? 'Será criada 1 aula única com link do Google Meet.'
+              : `Serão criadas ${formData.quantidadeAulas} aulas ${getIntervaloTexto(formData.intervaloAulas)}s a partir da data selecionada, cada uma com link do Google Meet único.`
+            }
           </div>
           
           <div className="flex gap-2 pt-4">
-            <Button type="submit">Agendar Aulas</Button>
+            <Button type="submit">
+              Agendar {formData.intervaloAulas === 'unica' ? 'Aula' : 'Aulas'}
+            </Button>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
