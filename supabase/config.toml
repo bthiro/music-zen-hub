@@ -2,3 +2,6 @@ project_id = "hnftxautmxviwrfuaosu"
 
 [functions.mercado-pago]
 verify_jwt = false
+
+[functions.ia-musical]
+verify_jwt = false
