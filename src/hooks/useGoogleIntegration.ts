@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,13 +29,24 @@ export function useGoogleIntegration() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [events, setEvents] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Cor personalizada para eventos da plataforma (10 = verde claro)
   const PLATFORM_COLOR_ID = '10';
 
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [events, setEvents] = useState<any[]>([]);
+  // Carregar dados salvos no localStorage na inicialização
+  useEffect(() => {
+    const savedToken = localStorage.getItem('google_access_token');
+    const savedEmail = localStorage.getItem('google_user_email');
+    
+    if (savedToken && savedEmail) {
+      setAccessToken(savedToken);
+      setUserEmail(savedEmail);
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   const signIn = useCallback(async () => {
     setIsLoading(true);
@@ -74,6 +85,10 @@ export function useGoogleIntegration() {
             setIsAuthenticated(true);
             setUserEmail(tokenData.userEmail);
             setIsLoading(false);
+            
+            // Salvar no localStorage para persistir sessão
+            localStorage.setItem('google_access_token', tokenData.accessToken);
+            localStorage.setItem('google_user_email', tokenData.userEmail);
             
             toast({
               title: 'Conectado com sucesso!',
@@ -122,6 +137,12 @@ export function useGoogleIntegration() {
     setIsAuthenticated(false);
     setUserEmail(null);
     setAccessToken(null);
+    setEvents([]);
+    
+    // Limpar localStorage
+    localStorage.removeItem('google_access_token');
+    localStorage.removeItem('google_user_email');
+    
     toast({
       title: 'Desconectado',
       description: 'Integração com Google desativada.'
@@ -194,7 +215,7 @@ export function useGoogleIntegration() {
 
   const updateCalendarEvent = useCallback(async (
     eventId: string,
-    alunoNome: string,
+    title: string,
     data: string,
     horarioInicio: string,
     horarioFim: string
@@ -206,7 +227,7 @@ export function useGoogleIntegration() {
       const endDateTime = new Date(`${data}T${horarioFim}:00`);
 
       const eventData = {
-        summary: `Aula de Música - ${alunoNome}`,
+        summary: title,
         start: {
           dateTime: startDateTime.toISOString(),
           timeZone: 'America/Sao_Paulo'
@@ -215,7 +236,6 @@ export function useGoogleIntegration() {
           dateTime: endDateTime.toISOString(),
           timeZone: 'America/Sao_Paulo'
         },
-        description: `Aula de música.\nAluno: ${alunoNome}`,
       };
 
       const { error } = await supabase.functions.invoke('google-calendar', {

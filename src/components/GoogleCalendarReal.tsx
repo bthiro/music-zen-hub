@@ -4,16 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
 import { useApp } from "@/contexts/AppContext";
-import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Plus, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { EventModal } from "@/components/EventModal";
+import { Calendar as CalendarIcon, RefreshCw, ExternalLink, Plus, ChevronLeft, ChevronRight, Edit } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function GoogleCalendarReal() {
-  const { isAuthenticated, userEmail, isLoading, events, signIn, signOut, createCalendarEvent, listCalendarEvents } = useGoogleIntegration();
+  const { isAuthenticated, userEmail, isLoading, events, signIn, signOut, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, listCalendarEvents } = useGoogleIntegration();
   const { aulas, alunos, updateAula } = useApp();
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const proximasAulas = aulas
     .filter((a) => a.status === "agendada")
@@ -59,6 +63,61 @@ export function GoogleCalendarReal() {
       }
       return false;
     });
+  };
+
+  const openCreateEventModal = (date: Date) => {
+    setSelectedDate(date);
+    setSelectedEvent(null);
+    setEventModalOpen(true);
+  };
+
+  const openEditEventModal = (event: any) => {
+    setSelectedEvent(event);
+    setSelectedDate(null);
+    setEventModalOpen(true);
+  };
+
+  const handleSaveEvent = async (eventData: any) => {
+    try {
+      if (selectedEvent) {
+        // Atualizando evento existente
+        const startDate = new Date(eventData.start.dateTime);
+        const endDate = new Date(eventData.end.dateTime);
+        await updateCalendarEvent(
+          selectedEvent.id, 
+          eventData.summary, 
+          startDate.toISOString().split('T')[0], 
+          startDate.toTimeString().slice(0, 5), 
+          endDate.toTimeString().slice(0, 5)
+        );
+      } else {
+        // Criando novo evento
+        const startDate = new Date(eventData.start.dateTime);
+        const endDate = new Date(eventData.end.dateTime);
+        
+        await createCalendarEvent(
+          eventData.summary,
+          startDate.toISOString().split('T')[0],
+          startDate.toTimeString().slice(0, 5),
+          endDate.toTimeString().slice(0, 5),
+          Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60))
+        );
+      }
+      
+      // Recarregar eventos
+      await loadEvents();
+    } catch (error) {
+      console.error('Erro ao salvar evento:', error);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await deleteCalendarEvent(eventId);
+      await loadEvents();
+    } catch (error) {
+      console.error('Erro ao deletar evento:', error);
+    }
   };
 
   const syncAula = async (aula: any) => {
@@ -114,9 +173,15 @@ export function GoogleCalendarReal() {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={loadEvents} disabled={loadingEvents}>
-            <RefreshCw className={`h-4 w-4 ${loadingEvents ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => openCreateEventModal(new Date())}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Evento
+            </Button>
+            <Button variant="outline" size="sm" onClick={loadEvents} disabled={loadingEvents}>
+              <RefreshCw className={`h-4 w-4 ${loadingEvents ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-7 gap-1">
@@ -137,24 +202,35 @@ export function GoogleCalendarReal() {
                 key={day.toISOString()}
                 className={`min-h-20 p-1 border border-border ${
                   isToday ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
-                }`}
+                } cursor-pointer group`}
+                onClick={() => openCreateEventModal(day)}
               >
-                <div className={`text-sm font-medium ${isToday ? 'text-primary' : ''}`}>
+                <div className={`text-sm font-medium ${isToday ? 'text-primary' : ''} flex items-center justify-between`}>
                   {format(day, 'd')}
+                  {dayEvents.length === 0 && (
+                    <Plus className="h-3 w-3 opacity-0 group-hover:opacity-100 text-muted-foreground" />
+                  )}
                 </div>
                 <div className="space-y-1 mt-1">
                   {dayEvents.slice(0, 2).map(event => (
                     <div
                       key={event.id}
-                      className="text-xs p-1 bg-green-100 text-green-800 rounded truncate"
+                      className="text-xs p-1 bg-green-100 text-green-800 rounded truncate hover:bg-green-200 cursor-pointer flex items-center justify-between group"
                       title={event.summary}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditEventModal(event);
+                      }}
                     >
-                      {event.summary}
-                      {event.start?.dateTime && (
-                        <div className="text-xs text-green-600">
-                          {format(new Date(event.start.dateTime), 'HH:mm')}
-                        </div>
-                      )}
+                      <div>
+                        {event.summary}
+                        {event.start?.dateTime && (
+                          <div className="text-xs text-green-600">
+                            {format(new Date(event.start.dateTime), 'HH:mm')}
+                          </div>
+                        )}
+                      </div>
+                      <Edit className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                     </div>
                   ))}
                   {dayEvents.length > 2 && (
@@ -264,6 +340,15 @@ export function GoogleCalendarReal() {
           )}
         </>
       )}
+      
+      <EventModal
+        open={eventModalOpen}
+        onOpenChange={setEventModalOpen}
+        event={selectedEvent}
+        selectedDate={selectedDate}
+        onSave={handleSaveEvent}
+        onDelete={handleDeleteEvent}
+      />
     </div>
   );
 }
