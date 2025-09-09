@@ -33,12 +33,12 @@ export default function Lousa() {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Get container dimensions
+    // Get container dimensions - use full available width
     const container = canvasRef.current.parentElement;
     if (!container) return;
 
-    const containerWidth = container.clientWidth - 32; // Account for padding
-    const containerHeight = Math.max(600, window.innerHeight - 400); // Minimum 600px, or full height minus headers
+    const containerWidth = container.clientWidth - 4; // Minimal padding for border
+    const containerHeight = Math.max(600, window.innerHeight - 350); // More canvas space
 
     const canvas = new FabricCanvas(canvasRef.current, {
       width: containerWidth,
@@ -466,12 +466,12 @@ export default function Lousa() {
 
         {/* Canvas */}
         <Card className="flex-1">
-          <CardContent className="pt-6 h-full">
-            <div className="border border-gray-200 rounded-lg shadow-lg overflow-hidden bg-white w-full h-full">
+          <CardContent className="p-1 h-full">
+            <div className="border border-gray-200 rounded-lg overflow-hidden bg-white w-full h-full">
               <canvas 
                 ref={canvasRef} 
                 className="w-full h-full cursor-crosshair block"
-                style={{ touchAction: 'none' }}
+                style={{ touchAction: 'none', display: 'block' }}
               />
             </div>
           </CardContent>
