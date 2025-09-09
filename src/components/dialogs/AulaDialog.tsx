@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent } from "@/components/ui/card";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
+import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
 import { Calendar, Clock, Users, Repeat } from "lucide-react";
 
 interface AulaDialogProps {
@@ -20,6 +21,7 @@ interface AulaDialogProps {
 export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialogProps) {
   const { alunos, addAula } = useApp();
   const { toast } = useToast();
+  const { createCalendarEvent, isAuthenticated } = useGoogleIntegration();
   
   const [formData, setFormData] = useState({
     alunoId: "",
@@ -53,12 +55,6 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     }
   }, [open]);
 
-  const gerarLinkMeet = () => {
-    // Simula geração de link do Google Meet
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    const gerarCodigo = () => Array.from({length: 3}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    return `https://meet.google.com/${gerarCodigo()}-${gerarCodigo()}-${gerarCodigo()}`;
-  };
 
   const calcularHorarioFim = (horarioInicio: string, duracaoMinutos: number) => {
     const [horas, minutos] = horarioInicio.split(':').map(Number);
@@ -89,7 +85,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     }
   };
 
-  const gerarAulas = (primeiraData: string, horario: string, alunoId: string, alunoNome: string) => {
+  const gerarAulas = async (primeiraData: string, horario: string, alunoId: string, alunoNome: string) => {
     const aulas = [];
     const dataInicial = new Date(primeiraData);
     const aluno = alunos.find(a => a.id === alunoId);
@@ -113,8 +109,36 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
       } else {
         observacaoAula = `Aula única - ${duracaoMinutos}min${formData.observacoes ? ` | ${formData.observacoes}` : ''}`;
       }
+
+      let linkMeet = '';
+      
+      // Tentar criar evento no Google Calendar se autenticado
+      if (isAuthenticated) {
+        try {
+          const resultado = await createCalendarEvent(
+            alunoNome,
+            dataAula.toISOString().split('T')[0],
+            horario,
+            horarioFim,
+            duracaoMinutos
+          );
+          if (resultado?.meetLink) {
+            linkMeet = resultado.meetLink;
+          }
+        } catch (error) {
+          console.error('Erro ao criar evento no Google Calendar:', error);
+        }
+      }
+
+      // Se não conseguiu criar no Google, gerar link simulado
+      if (!linkMeet) {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        const gerarCodigo = () => Array.from({length: 3}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        linkMeet = `https://meet.google.com/${gerarCodigo()}-${gerarCodigo()}-${gerarCodigo()}`;
+      }
       
       aulas.push({
+        id: `${Date.now()}_${i}`,
         alunoId,
         aluno: alunoNome,
         data: dataAula.toISOString().split('T')[0],
@@ -122,7 +146,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         horarioFim,
         duracaoMinutos,
         status: "agendada" as const,
-        linkMeet: gerarLinkMeet(),
+        linkMeet,
         observacoes: observacaoAula
       });
     }
@@ -130,7 +154,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     return aulas;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.alunoId || !formData.data || !formData.horario) {
@@ -162,16 +186,18 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     }
 
     try {
-      const aulasGeradas = gerarAulas(formData.data, formData.horario, formData.alunoId, aluno.nome);
+      const aulasGeradas = await gerarAulas(formData.data, formData.horario, formData.alunoId, aluno.nome);
       
       aulasGeradas.forEach(aula => {
         addAula(aula);
       });
 
       const quantidade = formData.intervaloAulas === 'unica' ? 1 : formData.quantidadeAulas;
+      const comGoogle = isAuthenticated ? " e sincronizadas com Google Calendar" : "";
+      
       toast({
         title: "Sucesso",
-        description: `${quantidade} aula${quantidade > 1 ? 's' : ''} ${getIntervaloTexto(formData.intervaloAulas)}${quantidade > 1 ? 's' : ''} agendada${quantidade > 1 ? 's' : ''} para ${aluno.nome}!`
+        description: `${quantidade} aula${quantidade > 1 ? 's' : ''} ${getIntervaloTexto(formData.intervaloAulas)}${quantidade > 1 ? 's' : ''} agendada${quantidade > 1 ? 's' : ''} para ${aluno.nome}${comGoogle}!`
       });
       
       // Reset form

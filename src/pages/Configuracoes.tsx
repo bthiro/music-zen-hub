@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
+import { GoogleIntegrationTest } from "@/components/GoogleIntegrationTest";
 import { 
   Settings, 
   Clock, 
@@ -177,101 +178,7 @@ Obrigado(a) pela confiança! 🎵`,
           </Card>
 
           {/* Integrações Google */}
-          <Card className="card-modern">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Chrome className="h-5 w-5 text-primary" />
-                Integrações Google
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-base font-medium">Google Agenda & Meet</Label>
-                      {isAuthenticated ? (
-                        <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Conectado
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-destructive/10 text-destructive border-destructive/20">
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Desconectado
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Sincronização automática de aulas e criação de links do Meet
-                    </p>
-                    {isAuthenticated && userEmail && (
-                      <p className="text-xs text-primary font-medium">
-                        Conectado como: {userEmail}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {isAuthenticated ? (
-                      <Button variant="outline" onClick={signOut} size="sm">
-                        Desconectar
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={signIn} 
-                        disabled={isLoading}
-                        size="sm"
-                        className="btn-primary"
-                      >
-                        {isLoading ? "Conectando..." : "Conectar"}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {isAuthenticated && (
-                <div className="space-y-4 pt-4 border-t">
-                  <h4 className="text-sm font-medium">Configurações da Integração</h4>
-                  
-                  <div className="grid gap-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Cor Personalizada</Label>
-                        <p className="text-xs text-muted-foreground">
-                          Eventos da plataforma em verde claro
-                        </p>
-                      </div>
-                      <div className="w-6 h-6 bg-green-400 rounded border"></div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Notificações Automáticas</Label>
-                        <p className="text-xs text-muted-foreground">
-                          Lembretes pelo Google Agenda
-                        </p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2 pt-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={testIntegration}
-                      size="sm"
-                      className="flex items-center gap-1"
-                    >
-                      <TestTube className="h-4 w-4" />
-                      Testar Integração
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <GoogleIntegrationTest />
 
           <div className="flex justify-end">
             <Button onClick={salvarConfiguracoes}>

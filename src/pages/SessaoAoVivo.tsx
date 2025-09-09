@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
+import { GoogleIntegrationTest } from "@/components/GoogleIntegrationTest";
 import { 
   Video, 
   Users, 
@@ -149,6 +150,8 @@ export default function SessaoAoVivo() {
           </Card>
 
           {/* Status do Sistema */}
+          <GoogleIntegrationTest />
+          
           <Card>
             <CardHeader>
               <CardTitle>Status do Sistema</CardTitle>
