@@ -15,24 +15,43 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔧 Iniciando função ia-musical');
-    console.log('🔑 GROQ_API_KEY presente:', !!groqApiKey);
-    console.log('🔑 Chave começa com gsk_:', groqApiKey?.startsWith('gsk_'));
+    console.log('🔧 Iniciando IA Musical');
     
     if (!groqApiKey) {
-      console.log('❌ GROQ_API_KEY não encontrada');
+      console.log('❌ GROQ_API_KEY não configurada');
       return new Response(JSON.stringify({
-        response: `❌ GROQ_API_KEY não configurada no Supabase. Configure sua chave em: console.groq.com/keys`
+        response: `❌ **GROQ_API_KEY não configurada**\n\n**Para resolver:**\n1. Acesse: https://console.groq.com/keys\n2. Gere uma nova API key\n3. Configure no Supabase\n\n🎵 **Modo Offline - Campo Harmônico Maior:**\nI - ii - iii - IV - V - vi - vii°\n\nEm **Dó Maior**: C - Dm - Em - F - G - Am - Bº\n\n**Funções:**\n- **Tônica** (I, iii, vi): estabilidade\n- **Subdominante** (ii, IV): preparação\n- **Dominante** (V, vii°): tensão → resolução`
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const { message, instrument, musicStyle } = await req.json();
-    console.log('📝 Mensagem recebida:', message?.substring(0, 50) + '...');
+    console.log('📝 Pergunta recebida:', message?.substring(0, 100));
 
-    // Teste simples primeiro
-    console.log('🚀 Fazendo chamada para Groq...');
+    const systemPrompt = `Você é um assistente especializado em teoria musical e educação musical. Suas respostas devem ser:
+
+1. **PRECISAS** e baseadas em teoria musical estabelecida
+2. **DIDÁTICAS** e adaptadas ao nível do estudante  
+3. **PRÁTICAS** com exemplos musicais concretos
+4. **REFERENCIADAS** quando apropriado (Bohumil Med, Osvaldo Lacerda, etc.)
+
+**Contexto do usuário:**
+- Instrumento: ${instrument || 'não especificado'}
+- Estilo musical: ${musicStyle || 'não especificado'}
+
+**Temas que você domina:**
+- Escalas, modos e intervalos
+- Harmonia funcional e análise harmônica
+- Ritmo, métrica e subdivisões
+- Formas musicais e análise estrutural
+- Técnica instrumental e interpretação
+- História da música e estilo
+- Composição e arranjo
+
+**Responda sempre em português**, seja claro e use exemplos práticos quando possível. Use formatação markdown para melhor legibilidade.`;
+
+    console.log('🚀 Chamando Groq API...');
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -40,23 +59,41 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.1-70b-versatile',
         messages: [
-          { role: 'user', content: 'Responda apenas: Olá! Estou funcionando!' }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message }
         ],
-        max_tokens: 50,
-        temperature: 0.1
+        max_tokens: 1000,
+        temperature: 0.7,
+        stream: false
       }),
     });
 
-    console.log('📡 Status da resposta:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Erro da Groq:', response.status, errorText);
+      console.error('❌ Erro Groq:', response.status, errorText);
       
+      // 401 - Chave inválida
+      if (response.status === 401) {
+        return new Response(JSON.stringify({
+          response: `❌ **Erro de Autenticação Groq (401)**\n\nSua GROQ_API_KEY está inválida ou ausente.\n\n**Para resolver:**\n1. Acesse: https://console.groq.com/keys\n2. Gere uma nova chave (formato: gsk_...)\n3. Atualize o segredo no Supabase\n\n🎵 **Modo Offline - Campo Harmônico Maior:**\nI - ii - iii - IV - V - vi - vii°\n\nEm **Dó Maior**: C - Dm - Em - F - G - Am - Bº`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // 429 - Limite atingido
+      if (response.status === 429) {
+        return new Response(JSON.stringify({
+          response: `⏳ **Limite de uso da Groq atingido (429)**\n\nAguarde alguns minutos e tente novamente.\n\n🎵 **Modo Offline - Campo Harmônico Maior:**\nI - ii - iii - IV - V - vi - vii°\n\nEm **Dó Maior**: C - Dm - Em - F - G - Am - Bº\n\n**Progressões populares:** I-V-vi-IV / ii-V-I`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       return new Response(JSON.stringify({
-        response: `❌ Erro Groq ${response.status}: ${errorText}\n\n🔧 Verifique se sua chave GROQ_API_KEY está correta em console.groq.com/keys`
+        response: `❌ **Erro da API Groq (${response.status})**\n\n${errorText}\n\n🎵 **Modo Offline disponível** - faça perguntas básicas sobre teoria musical!`
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -71,13 +108,11 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('💥 Erro geral:', error.message);
-    console.error('💥 Stack:', error.stack);
+    console.error('💥 Erro na IA Musical:', error.message);
     
     return new Response(JSON.stringify({ 
-      response: `💥 Erro interno: ${error.message}` 
+      response: `💥 **Erro interno**: ${error.message}\n\n🎵 **Modo Offline disponível** - Pergunte sobre escalas, acordes, ritmo, etc.` 
     }), {
-      status: 200, // Mudando para 200 para ver a mensagem
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
