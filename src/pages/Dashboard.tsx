@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
 import { Users, DollarSign, Calendar, AlertCircle, ExternalLink, CalendarDays } from "lucide-react";
-import { GoogleCalendarIntegration } from "@/components/GoogleCalendarIntegration";
+import { GoogleCalendarReal } from "@/components/GoogleCalendarReal";
 import { StatsCard } from "@/components/ui/stats-card";
 import { useState } from "react";
 
@@ -131,7 +131,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6">
-              <GoogleCalendarIntegration />
+              <GoogleCalendarReal />
             </CardContent>
           </Card>
 
