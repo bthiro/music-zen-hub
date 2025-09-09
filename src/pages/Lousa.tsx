@@ -119,10 +119,13 @@ export default function Lousa() {
 
   // Função para criar pauta musical
   const createStaff = (staffData: any) => {
+    if (!fabricCanvas) return;
+    
     const lines: Line[] = [];
     const spacing = 15;
     const startY = 100;
-    const width = staffData.width || 400;
+    // Use full canvas width minus margins
+    const width = fabricCanvas.getWidth() - 100;
 
     // Criar 5 linhas da pauta
     for (let i = 0; i < 5; i++) {
@@ -133,13 +136,14 @@ export default function Lousa() {
       lines.push(line);
     }
 
-    // Linhas de compasso (divisórias)
-    const measureWidth = width / staffData.measures;
-    for (let i = 0; i <= staffData.measures; i++) {
+    // Linhas de compasso (divisórias) - ajustar para mais compassos se houver espaço
+    const measures = Math.max(staffData.measures || 4, Math.floor(width / 120)); // Mais compassos em telas grandes
+    const measureWidth = width / measures;
+    for (let i = 0; i <= measures; i++) {
       const x = 50 + (i * measureWidth);
       const line = new Line([x, startY, x, startY + (4 * spacing)], {
         stroke: activeColor,
-        strokeWidth: i === 0 || i === staffData.measures ? 3 : 1,
+        strokeWidth: i === 0 || i === measures ? 3 : 1,
       });
       lines.push(line);
     }
@@ -150,7 +154,7 @@ export default function Lousa() {
       top: startY,
     });
 
-    fabricCanvas?.add(staff);
+    fabricCanvas.add(staff);
   };
 
   // Função para criar claves
@@ -231,18 +235,36 @@ export default function Lousa() {
 
   // Função para criar números de digitação
   const createFingerNumber = (numberData: any) => {
+    // Criar círculo de fundo
+    const circle = new Circle({
+      left: 200,
+      top: 300,
+      radius: 12,
+      fill: "white",
+      stroke: activeColor,
+      strokeWidth: 2,
+    });
+
+    // Criar número
     const number = new FabricText(numberData.number.toString(), {
       left: 200,
       top: 300,
-      fontSize: 18,
+      fontSize: 16,
       fill: activeColor,
       fontFamily: "Arial",
       fontWeight: "bold",
-      backgroundColor: "white",
-      padding: 4
+      originX: "center",
+      originY: "center"
     });
 
-    fabricCanvas?.add(number);
+    // Agrupar círculo e número
+    const fingerGroup = new Group([circle, number], {
+      left: 200,
+      top: 300,
+      selectable: true
+    });
+
+    fabricCanvas?.add(fingerGroup);
   };
 
   // Função para criar letras da mão direita
