@@ -108,17 +108,55 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     try {
-      const supabaseUrl = 'https://hnftxautmxviwrfuaosu.supabase.co';
-      const redirectTo = `${window.location.origin}/`;
-      const authorizeUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          skipBrowserRedirect: true
+        }
+      });
 
-      if (window.top && window.top !== window.self) {
-        // Break out of iframe (Lovable preview) to avoid Google refusing connection
-        (window.top as Window).location.href = authorizeUrl;
-      } else {
-        window.location.href = authorizeUrl;
+      if (error) throw error;
+
+      if (data?.url) {
+        // Detectar se está em iframe (preview do Lovable)
+        const isInIframe = window.top !== window.self;
+        
+        if (isInIframe) {
+          // Abrir em nova aba quando em iframe
+          const popup = window.open(data.url, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
+          
+          if (!popup) {
+            toast({
+              title: 'Popup bloqueado',
+              description: 'Por favor, permita popups para fazer login com Google ou use o login direto.',
+              variant: 'destructive'
+            });
+            return;
+          }
+
+          // Monitorar quando a janela for fechada
+          const checkClosed = setInterval(() => {
+            if (popup.closed) {
+              clearInterval(checkClosed);
+              // Verificar se o login foi bem-sucedido
+              supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                  toast({
+                    title: 'Login realizado com sucesso!',
+                    description: 'Bem-vindo de volta!'
+                  });
+                  navigate('/');
+                }
+              });
+            }
+          }, 1000);
+        } else {
+          // Redirecionar normalmente quando não está em iframe
+          window.location.href = data.url;
+        }
       }
     } catch (error: any) {
       toast({
