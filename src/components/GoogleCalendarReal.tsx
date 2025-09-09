@@ -127,7 +127,7 @@ export function GoogleCalendarReal() {
     // Calcular horário fim se não existir
     const [h, m] = aula.horario.split(":").map((n: string) => parseInt(n, 10));
     const inicio = new Date(`${aula.data}T${aula.horario}:00`);
-    const duracao = aluno.duracaoAula ?? aula.duracaoMinutos ?? 50;
+    const duracao = aluno.duracao_aula ?? aula.duracaoMinutos ?? 50;
     const fimDate = new Date(inicio);
     fimDate.setMinutes(fimDate.getMinutes() + duracao);
     const horarioFim = `${String(fimDate.getHours()).padStart(2, "0")}:${String(fimDate.getMinutes()).padStart(2, "0")}`;

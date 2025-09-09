@@ -38,7 +38,7 @@ export function GoogleCalendarIntegration() {
     startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     
     const endDate = new Date(startDate);
-    endDate.setMinutes(endDate.getMinutes() + aluno.duracaoAula);
+    endDate.setMinutes(endDate.getMinutes() + aluno.duracao_aula);
 
     await createEvent({
       title: `Aula de Música - ${aula.aluno}`,
