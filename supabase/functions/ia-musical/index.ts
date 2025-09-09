@@ -64,8 +64,27 @@ Responda sempre em português, seja claro e use exemplos práticos quando possí
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Erro da Groq:', errorData);
+      const errorText = await response.text();
+      console.error('Erro da Groq:', response.status, errorText);
+
+      // 401 - Key ausente/ inválida
+      if (response.status === 401) {
+        return new Response(JSON.stringify({
+          response: `⚠️ Autenticação Groq falhou (401)\n\nSua GROQ_API_KEY está ausente ou inválida. Para resolver:\n1) Gere/visualize sua chave em https://console.groq.com/keys\n2) Atualize o segredo \'GROQ_API_KEY\' nas Funções do Supabase\n3) Tente novamente\n\n🎵 Modo offline – Campo Harmônico Maior:\nI - ii - iii - IV - V - vi - vii°\nEm Dó Maior: C - Dm - Em - F - G - Am - Bº\nFunções: Tônica (I, iii, vi), Subdominante (ii, IV), Dominante (V, vii°).\nProgressões: I–V–vi–IV, ii–V–I, I–vi–IV–V.`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // 429 - Quota/limite
+      if (response.status === 429) {
+        return new Response(JSON.stringify({
+          response: `⚠️ Limite de uso da Groq atingido (429). Aguarde um pouco e tente novamente.\n\n🎵 Modo offline – Campo Harmônico Maior:\nI - ii - iii - IV - V - vi - vii°\nEm Dó Maior: C - Dm - Em - F - G - Am - Bº\nFunções: Tônica (I, iii, vi), Subdominante (ii, IV), Dominante (V, vii°).\nProgressões: I–V–vi–IV, ii–V–I, I–vi–IV–V.`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       throw new Error(`Groq API error: ${response.status}`);
     }
 
