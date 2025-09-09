@@ -33,9 +33,16 @@ export default function Lousa() {
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    // Get container dimensions
+    const container = canvasRef.current.parentElement;
+    if (!container) return;
+
+    const containerWidth = container.clientWidth - 32; // Account for padding
+    const containerHeight = Math.max(600, window.innerHeight - 400); // Minimum 600px, or full height minus headers
+
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 600,
+      width: containerWidth,
+      height: containerHeight,
       backgroundColor: "#ffffff",
     });
 
@@ -342,7 +349,7 @@ export default function Lousa() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-6 h-full flex flex-col">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Lousa Digital Musical</h2>
           <p className="text-muted-foreground">
@@ -458,12 +465,12 @@ export default function Lousa() {
         </Card>
 
         {/* Canvas */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="border border-gray-200 rounded-lg shadow-lg overflow-hidden bg-white">
+        <Card className="flex-1">
+          <CardContent className="pt-6 h-full">
+            <div className="border border-gray-200 rounded-lg shadow-lg overflow-hidden bg-white w-full h-full">
               <canvas 
                 ref={canvasRef} 
-                className="max-w-full cursor-crosshair"
+                className="w-full h-full cursor-crosshair block"
                 style={{ touchAction: 'none' }}
               />
             </div>
