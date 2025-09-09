@@ -64,6 +64,38 @@ Responda sempre em português, seja claro e use exemplos práticos quando possí
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Erro da OpenAI:', errorData);
+      
+      // Se for erro de quota, retornar resposta específica
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ 
+          response: `⚠️ **Erro de Quota da OpenAI**
+
+Sua chave da OpenAI excedeu a quota ou está sem créditos. Para resolver:
+
+1. **Verifique sua conta**: Acesse https://platform.openai.com/usage
+2. **Adicione créditos**: Vá em https://platform.openai.com/account/billing
+3. **Verifique limites**: Confirme se sua conta tem limite suficiente
+
+**Resposta sobre Campo Harmônico Maior (modo offline):**
+
+🎵 **Campo Harmônico Maior** é a sequência de acordes formada sobre cada grau da escala maior:
+
+**I - ii - iii - IV - V - vi - vii°**
+
+Em **Dó Maior**:
+- **C** (I) - **Dm** (ii) - **Em** (iii) - **F** (IV) - **G** (V) - **Am** (vi) - **Bº** (vii°)
+
+**Funções:**
+- **Tônica** (I, iii, vi): estabilidade
+- **Subdominante** (ii, IV): preparação  
+- **Dominante** (V, vii°): tensão → resolução
+
+**Progressões comuns:** I-V-vi-IV / ii-V-I / I-vi-IV-V` 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
