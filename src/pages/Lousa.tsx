@@ -136,8 +136,8 @@ export default function Lousa() {
       lines.push(line);
     }
 
-    // Linhas de compasso (divisórias) - ajustar para mais compassos se houver espaço
-    const measures = Math.max(staffData.measures || 4, Math.floor(width / 120)); // Mais compassos em telas grandes
+    // Linhas de compasso (divisórias) - sempre 4 compassos
+    const measures = 4;
     const measureWidth = width / measures;
     for (let i = 0; i <= measures; i++) {
       const x = 50 + (i * measureWidth);
