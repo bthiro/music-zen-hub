@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { AulaDialog } from "@/components/dialogs/AulaDialog";
 import { PagamentoDialog } from "@/components/dialogs/PagamentoDialog";
 import { CobrancaDialog } from "@/components/dialogs/CobrancaDialog";
+import { MercadoPagoDialog } from "@/components/dialogs/MercadoPagoDialog";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, DollarSign, CheckCircle, XCircle, Clock, MessageCircle, CreditCard, TrendingUp } from "lucide-react";
@@ -18,6 +19,7 @@ export default function Pagamentos() {
   const [aulaDialogOpen, setAulaDialogOpen] = useState(false);
   const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
   const [cobrancaDialogOpen, setCobrancaDialogOpen] = useState(false);
+  const [mercadoPagoDialogOpen, setMercadoPagoDialogOpen] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<{id: string, nome: string} | null>(null);
   const [pagamentoSelecionado, setPagamentoSelecionado] = useState<any>(null);
 
@@ -31,7 +33,24 @@ export default function Pagamentos() {
     setPagamentoDialogOpen(true);
   };
 
-  const handleCobrarAluno = (pagamento: any) => {
+  const handleCobrarMercadoPago = (pagamento: any) => {
+    const aluno = alunos.find(a => a.id === pagamento.alunoId);
+    if (!aluno) {
+      toast({
+        title: "Erro",
+        description: "Aluno não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAlunoSelecionado({
+      id: aluno.id,
+      nome: aluno.nome
+    });
+    setPagamentoSelecionado(pagamento);
+    setMercadoPagoDialogOpen(true);
+  };
     const aluno = alunos.find(a => a.id === pagamento.alunoId);
     if (!aluno) {
       toast({
@@ -216,44 +235,53 @@ export default function Pagamentos() {
                       )}
                     </div>
                   </div>
-                  {/* Ações em layout vertical para mobile */}
-                  <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0 sm:ml-4 w-full sm:w-auto">
-                    {pagamento.status !== "pago" && (
-                      <>
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCobrarAluno(pagamento)}
-                          className="w-full sm:w-auto text-xs"
-                        >
-                          <MessageCircle className="h-4 w-4 mr-2" />
-                          Cobrar WhatsApp
-                        </Button>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleMarcarPago(pagamento)}
-                          className="w-full sm:w-auto text-xs"
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Marcar como Pago
-                        </Button>
-                      </>
-                    )}
-                    {pagamento.status === "pago" && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setAlunoSelecionado({ id: pagamento.alunoId, nome: pagamento.aluno });
-                          setAulaDialogOpen(true);
-                        }}
-                        className="w-full sm:w-auto text-xs"
-                      >
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Agendar Aulas
-                      </Button>
-                    )}
-                  </div>
+                   {/* Ações em layout vertical para mobile */}
+                   <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0 sm:ml-4 w-full sm:w-auto">
+                     {pagamento.status !== "pago" && (
+                       <>
+                         <Button 
+                           variant="outline"
+                           size="sm"
+                           onClick={() => handleCobrarMercadoPago(pagamento)}
+                           className="w-full sm:w-auto text-xs bg-[#009EE3] hover:bg-[#0080B8] text-white border-0"
+                         >
+                           <CreditCard className="h-4 w-4 mr-2" />
+                           Mercado Pago
+                         </Button>
+                         <Button 
+                           variant="outline"
+                           size="sm"
+                           onClick={() => handleCobrarAluno(pagamento)}
+                           className="w-full sm:w-auto text-xs"
+                         >
+                           <MessageCircle className="h-4 w-4 mr-2" />
+                           Cobrar WhatsApp
+                         </Button>
+                         <Button 
+                           size="sm"
+                           onClick={() => handleMarcarPago(pagamento)}
+                           className="w-full sm:w-auto text-xs"
+                         >
+                           <CreditCard className="h-4 w-4 mr-2" />
+                           Marcar como Pago
+                         </Button>
+                       </>
+                     )}
+                     {pagamento.status === "pago" && (
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={() => {
+                           setAlunoSelecionado({ id: pagamento.alunoId, nome: pagamento.aluno });
+                           setAulaDialogOpen(true);
+                         }}
+                         className="w-full sm:w-auto text-xs"
+                       >
+                         <Calendar className="h-4 w-4 mr-2" />
+                         Agendar Aulas
+                       </Button>
+                     )}
+                   </div>
                 </div>
               </CardContent>
             </Card>
@@ -284,6 +312,16 @@ export default function Pagamentos() {
           onOpenChange={setCobrancaDialogOpen}
           aluno={pagamentoSelecionado.aluno}
           pagamento={pagamentoSelecionado.pagamento}
+        />
+      )}
+
+      {alunoSelecionado && pagamentoSelecionado && (
+        <MercadoPagoDialog
+          open={mercadoPagoDialogOpen}
+          onOpenChange={setMercadoPagoDialogOpen}
+          alunoId={alunoSelecionado.id}
+          alunoNome={alunoSelecionado.nome}
+          valorSugerido={pagamentoSelecionado.valor}
         />
       )}
     </Layout>
