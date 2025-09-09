@@ -15,7 +15,8 @@ import {
   Circle as CircleIcon,
   Square,
   Music,
-  Stamp
+  Stamp,
+  Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MusicStamps } from "@/components/MusicStamps";
@@ -306,6 +307,44 @@ export default function Lousa() {
     }
   };
 
+  const handleDuplicate = async () => {
+    if (!fabricCanvas) return;
+    
+    const activeObject = fabricCanvas.getActiveObject();
+    if (!activeObject) {
+      toast({
+        title: "Nenhum objeto selecionado",
+        description: "Selecione um objeto para duplicar",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Clone the object using Fabric v6 async syntax
+      const cloned = await activeObject.clone();
+      cloned.set({
+        left: (cloned.left || 0) + 20,
+        top: (cloned.top || 0) + 20,
+      });
+      fabricCanvas.add(cloned);
+      fabricCanvas.setActiveObject(cloned);
+      fabricCanvas.renderAll();
+      
+      toast({
+        title: "Item duplicado!",
+        description: "Objeto duplicado com sucesso"
+      });
+    } catch (error) {
+      console.error('Erro ao duplicar objeto:', error);
+      toast({
+        title: "Erro ao duplicar",
+        description: "Não foi possível duplicar o objeto",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleDownload = () => {
     if (!fabricCanvas) return;
     
@@ -447,6 +486,9 @@ export default function Lousa() {
 
               {/* Actions */}
               <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleDuplicate}>
+                  <Copy className="h-4 w-4" />
+                </Button>
                 <Button variant="outline" size="sm" onClick={handleUndo}>
                   <Undo2 className="h-4 w-4" />
                 </Button>
