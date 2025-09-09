@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AlunoForm } from "@/components/forms/AlunoForm";
+import { MercadoPagoButton } from "@/components/MercadoPagoButton";
 import { useApp } from "@/contexts/AppContext";
 import { Plus, Search, Edit, Trash2, Clock, UserCheck, UserX, UserPlus } from "lucide-react";
 import { useState } from "react";
@@ -202,6 +203,13 @@ export default function Alunos() {
                   </div>
                   {/* Ações em layout vertical para mobile */}
                   <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0 sm:ml-4">
+                    <MercadoPagoButton
+                      alunoId={aluno.id}
+                      alunoNome={aluno.nome}
+                      valorSugerido={aluno.mensalidade}
+                      size="sm"
+                      className="w-full sm:w-auto text-xs"
+                    />
                     <Button 
                       variant="outline" 
                       size="sm" 

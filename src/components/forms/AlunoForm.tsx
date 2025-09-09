@@ -31,7 +31,8 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
     mensalidade: aluno?.mensalidade || 0,
     duracaoAula: aluno?.duracaoAula || 50,
     status: aluno?.status || "ativo",
-    observacoes: aluno?.observacoes || ""
+    observacoes: aluno?.observacoes || "",
+    tipoCobranca: aluno?.tipoCobranca || "mensal"
   });
 
   const [availableStates, setAvailableStates] = useState(getStatesByCountry(formData.pais));
@@ -260,6 +261,19 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
                   <SelectItem value="ativo">Ativo</SelectItem>
                   <SelectItem value="pendente">Pendente</SelectItem>
                   <SelectItem value="inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="tipoCobranca">Tipo de Cobrança</Label>
+              <Select value={formData.tipoCobranca} onValueChange={(value) => handleChange("tipoCobranca", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mensal">Mensalidade</SelectItem>
+                  <SelectItem value="aula_unica">Por Aula</SelectItem>
                 </SelectContent>
               </Select>
             </div>

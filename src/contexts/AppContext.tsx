@@ -14,6 +14,7 @@ export interface Aluno {
   observacoes?: string;
   status: "ativo" | "inativo" | "pendente";
   dataCadastro: string;
+  tipoCobranca?: "mensal" | "aula_unica";
 }
 
 export interface Pagamento {

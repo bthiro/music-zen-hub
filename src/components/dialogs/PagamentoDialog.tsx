@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
+import { MercadoPagoDialog } from "./MercadoPagoDialog";
 
 interface PagamentoDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
   const { toast } = useToast();
   const [formaPagamento, setFormaPagamento] = useState<string>("");
   const [metodoPagamento, setMetodoPagamento] = useState("");
+  const [showMercadoPago, setShowMercadoPago] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +32,11 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
         description: "Selecione uma forma de pagamento",
         variant: "destructive"
       });
+      return;
+    }
+
+    if (formaPagamento === "mercado_pago") {
+      setShowMercadoPago(true);
       return;
     }
 
@@ -83,6 +90,7 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
                 <SelectItem value="pix">PIX</SelectItem>
                 <SelectItem value="cartao">Cartão de Crédito</SelectItem>
                 <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                <SelectItem value="mercado_pago">Mercado Pago</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -109,6 +117,14 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
           </div>
         </form>
       </DialogContent>
+      
+      <MercadoPagoDialog
+        open={showMercadoPago}
+        onOpenChange={setShowMercadoPago}
+        alunoId={pagamentoId} // Aqui seria melhor ter o alunoId diretamente
+        alunoNome={alunoNome}
+        valorSugerido={valor}
+      />
     </Dialog>
   );
 }
