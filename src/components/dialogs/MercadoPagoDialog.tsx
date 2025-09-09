@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Copy, Monitor, Smartphone } from "lucide-react";
+import { PaymentStatusChecker } from "@/components/PaymentStatusChecker";
 
 interface MercadoPagoDialogProps {
   open: boolean;
@@ -272,6 +273,23 @@ Qualquer dúvida, estou à disposição! 😊`;
                 WhatsApp Mobile
               </Button>
             </div>
+
+            {/* Status do Pagamento */}
+            <Card>
+              <CardContent className="pt-4">
+                <h4 className="font-medium mb-3">Status do Pagamento</h4>
+                <PaymentStatusChecker
+                  preferenceId={paymentData.preference_id}
+                  currentStatus="pending"
+                  onStatusUpdate={(status, details) => {
+                    console.log("Status atualizado:", status, details);
+                    if (status === 'approved') {
+                      toast.success("🎉 Pagamento confirmado! O aluno já pode acessar as aulas.");
+                    }
+                  }}
+                />
+              </CardContent>
+            </Card>
 
             <div className="flex justify-end space-x-2">
               <Button 

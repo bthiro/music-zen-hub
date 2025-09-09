@@ -21,6 +21,11 @@ interface WebhookRequest {
   status: string;
 }
 
+interface CheckPaymentRequest {
+  action: 'check_payment';
+  preference_id: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -135,6 +140,8 @@ serve(async (req) => {
       // Webhook do Mercado Pago
       const { payment_id, status } = requestData as WebhookRequest;
 
+      console.log("Webhook recebido:", { payment_id, status });
+
       // Buscar detalhes do pagamento no Mercado Pago
       const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${payment_id}`, {
         headers: {
@@ -149,40 +156,63 @@ serve(async (req) => {
       const paymentData = await paymentResponse.json();
       console.log("Dados do pagamento recebido via webhook:", paymentData);
 
-      // Atualizar status no banco de dados
-      const supabaseService = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-        { auth: { persistSession: false } }
-      );
-
-      let dbStatus = 'pendente';
-      if (paymentData.status === 'approved') {
-        dbStatus = 'pago';
-      } else if (paymentData.status === 'rejected' || paymentData.status === 'cancelled') {
-        dbStatus = 'cancelado';
-      }
-
-      const { error: updateError } = await supabaseService
-        .from('pagamentos')
-        .update({
-          mercado_pago_payment_id: payment_id,
-          mercado_pago_status: paymentData.status,
-          status: dbStatus,
-          data_pagamento: paymentData.status === 'approved' ? new Date().toISOString().split('T')[0] : null,
-          forma_pagamento: 'mercado_pago'
-        })
-        .eq('referencia_externa', paymentData.external_reference);
-
-      if (updateError) {
-        console.error("Erro ao atualizar pagamento:", updateError);
-        throw new Error("Erro ao atualizar status do pagamento");
-      }
+      // Por enquanto só logamos, quando integrar com banco real vamos salvar
+      console.log("Pagamento atualizado:", {
+        id: payment_id,
+        status: paymentData.status,
+        payment_method: paymentData.payment_method_id,
+        transaction_amount: paymentData.transaction_amount
+      });
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
+
+    } else if (requestData.action === 'check_payment') {
+      // Verificar status de um pagamento específico
+      const { preference_id } = requestData;
+      
+      console.log("Verificando pagamento:", preference_id);
+
+      // Buscar pagamentos por external_reference
+      const searchResponse = await fetch(`https://api.mercadopago.com/v1/payments/search?external_reference=${preference_id}`, {
+        headers: {
+          "Authorization": `Bearer ${accessToken}`
+        }
+      });
+
+      if (!searchResponse.ok) {
+        throw new Error("Erro ao verificar pagamento");
+      }
+
+      const searchData = await searchResponse.json();
+      console.log("Resultado da busca:", searchData);
+
+      if (searchData.results && searchData.results.length > 0) {
+        const payment = searchData.results[0];
+        return new Response(JSON.stringify({
+          success: true,
+          payment_found: true,
+          status: payment.status,
+          payment_method: payment.payment_method_id,
+          amount: payment.transaction_amount,
+          date_approved: payment.date_approved,
+          external_reference: payment.external_reference
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      } else {
+        return new Response(JSON.stringify({
+          success: true,
+          payment_found: false,
+          status: 'pending'
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
 
     } else {
       throw new Error("Ação não suportada");
