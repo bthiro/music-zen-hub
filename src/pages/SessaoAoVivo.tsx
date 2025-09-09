@@ -233,9 +233,11 @@ export default function SessaoAoVivo() {
                     O Google Meet bloqueia a incorporação via iframe em sites externos. Abra a chamada em uma nova aba.
                   </p>
                   <div className="flex gap-2">
-                    <Button onClick={() => window.open(aulaAtiva.linkMeet, '_blank', 'noopener,noreferrer')}>
-                      <Video className="h-4 w-4 mr-2" />
-                      Abrir no Google Meet
+                    <Button asChild>
+                      <a href={aulaAtiva.linkMeet} target="_blank" rel="noopener noreferrer">
+                        <Video className="h-4 w-4 mr-2" />
+                        Abrir no Google Meet
+                      </a>
                     </Button>
                     <Button
                       variant="outline"
