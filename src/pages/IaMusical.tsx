@@ -188,7 +188,7 @@ export default function IaMusical() {
         <div className="grid gap-6 lg:grid-cols-4">
           {/* Chat Interface */}
           <div className="lg:col-span-3">
-            <Card className="h-[70vh] flex flex-col">
+            <Card className="flex flex-col">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <Brain className="h-5 w-5 text-primary" />
@@ -196,13 +196,13 @@ export default function IaMusical() {
                 </CardTitle>
               </CardHeader>
               
-              <CardContent className="flex-1 flex flex-col gap-4">
+              <CardContent className="flex flex-col gap-4">
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto space-y-4 pr-4">
+                <div className="min-h-[400px] max-h-[70vh] overflow-y-auto space-y-4 pr-4">
                   {messages.map((message) => (
                     <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[80%] ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'} rounded-lg p-4`}>
-                        <div className="text-sm mb-2">
+                        <div className="text-sm mb-2 whitespace-pre-wrap">
                           {message.content}
                         </div>
                         
