@@ -228,36 +228,25 @@ export default function SessaoAoVivo() {
           <Card className="lg:col-span-3">
             <CardContent className="p-0">
               <div className="relative">
-                <iframe
-                  src={aulaAtiva.linkMeet}
-                  className={`w-full border-0 rounded-lg ${isFullscreen ? 'h-screen' : 'h-96'}`}
-                  title="Google Meet"
-                  allow="camera; microphone; fullscreen"
-                />
-                
-                {/* Controles de vídeo */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={isMuted ? "destructive" : "secondary"}
-                    onClick={() => setIsMuted(!isMuted)}
-                  >
-                    {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={isCameraOff ? "destructive" : "secondary"}
-                    onClick={() => setIsCameraOff(!isCameraOff)}
-                  >
-                    {isCameraOff ? <CameraOff className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setIsFullscreen(!isFullscreen)}
-                  >
-                    {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                  </Button>
+                <div className={`w-full rounded-lg bg-muted flex flex-col items-center justify-center ${isFullscreen ? 'h-screen' : 'h-96'} p-6 text-center`}>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    O Google Meet bloqueia a incorporação via iframe em sites externos. Abra a chamada em uma nova aba.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => window.open(aulaAtiva.linkMeet, '_blank', 'noopener,noreferrer')}>
+                      <Video className="h-4 w-4 mr-2" />
+                      Abrir no Google Meet
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(aulaAtiva.linkMeet);
+                        toast({ title: 'Link copiado', description: 'O link do Meet foi copiado para a área de transferência.' });
+                      }}
+                    >
+                      Copiar link
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
