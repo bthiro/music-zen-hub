@@ -1,5 +1,6 @@
 import { Music } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Header() {
   return (
@@ -17,6 +18,10 @@ export function Header() {
           <div className="hidden md:block text-sm text-muted-foreground truncate">
             Sistema de Gestão de Aulas Particulares
           </div>
+        </div>
+        
+        <div className="flex-shrink-0">
+          <ThemeToggle />
         </div>
       </div>
     </header>
