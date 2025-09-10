@@ -75,7 +75,13 @@ export default function AdminDashboard() {
   });
 
   const handleCreateProfessor = async (data: ProfessorFormData) => {
-    const { error } = await createProfessor(data);
+    const { error } = await createProfessor({
+      nome: data.nome,
+      email: data.email,
+      telefone: data.telefone,
+      plano: data.plano,
+      limite_alunos: data.limite_alunos
+    });
     if (!error) {
       setCreateDialogOpen(false);
       form.reset();

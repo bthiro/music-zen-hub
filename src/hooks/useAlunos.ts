@@ -17,6 +17,11 @@ export interface Aluno {
   dataCadastro: string;
   tipoCobranca?: "mensal" | "aula_unica";
   professor_id?: string;
+  // Additional fields for the new system
+  instrumento?: string;
+  nivel?: string;
+  valor_mensalidade?: number;
+  ativo: boolean;
 }
 
 export function useAlunos() {
@@ -57,7 +62,11 @@ export function useAlunos() {
         status: (aluno.ativo ? "ativo" : "inativo") as "ativo" | "inativo" | "pendente",
         dataCadastro: new Date(aluno.created_at).toISOString().split('T')[0],
         tipoCobranca: (aluno.tipo_cobranca as "mensal" | "aula_unica") || "mensal",
-        professor_id: aluno.professor_id
+        professor_id: aluno.professor_id,
+        instrumento: aluno.instrumento,
+        nivel: aluno.nivel,
+        valor_mensalidade: Number(aluno.valor_mensalidade) || 0,
+        ativo: aluno.ativo
       })) || [];
 
       setAlunos(alunosFormatados);

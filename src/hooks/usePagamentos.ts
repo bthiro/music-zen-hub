@@ -14,6 +14,10 @@ export interface Pagamento {
   formaPagamento?: "pix" | "cartao" | "dinheiro";
   metodoPagamento?: string;
   professor_id?: string;
+  // Additional fields for compatibility
+  data_vencimento?: string;
+  data_pagamento?: string;
+  dataPagamento?: string;
 }
 
 export function usePagamentos() {

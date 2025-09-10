@@ -32,7 +32,11 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
     duracaoAula: aluno?.duracaoAula || 50,
     status: aluno?.status || "ativo",
     observacoes: aluno?.observacoes || "",
-    tipoCobranca: aluno?.tipoCobranca || "mensal"
+    tipoCobranca: aluno?.tipoCobranca || "mensal",
+    ativo: aluno?.ativo !== undefined ? aluno.ativo : true,
+    instrumento: aluno?.instrumento || "",
+    nivel: aluno?.nivel || "",
+    valor_mensalidade: aluno?.valor_mensalidade || aluno?.mensalidade || 0
   });
 
   const [availableStates, setAvailableStates] = useState(getStatesByCountry(formData.pais));

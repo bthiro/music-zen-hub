@@ -397,8 +397,8 @@ export default function ProfessorApp() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium">{aluno.nome}</h4>
-                      <Badge variant={aluno.ativo ? "default" : "secondary"}>
-                        {aluno.ativo ? "Ativo" : "Inativo"}
+                      <Badge variant={aluno.status === "ativo" ? "default" : "secondary"}>
+                        {aluno.status === "ativo" ? "Ativo" : "Inativo"}
                       </Badge>
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
@@ -406,8 +406,8 @@ export default function ProfessorApp() {
                       {aluno.telefone && <p>📱 {aluno.telefone}</p>}
                       {aluno.instrumento && <p>🎵 {aluno.instrumento}</p>}
                       {aluno.nivel && <p>📚 {aluno.nivel}</p>}
-                      {aluno.valor_mensalidade && (
-                        <p>💰 {formatCurrency(aluno.valor_mensalidade)}/mês</p>
+                      {aluno.mensalidade && (
+                        <p>💰 {formatCurrency(aluno.mensalidade)}/mês</p>
                       )}
                     </div>
                   </CardContent>
@@ -432,9 +432,9 @@ export default function ProfessorApp() {
                           <p className="text-sm text-muted-foreground">
                             Vencimento: {formatDate(pagamento.vencimento)}
                           </p>
-                          {pagamento.dataPagamento && (
+                          {pagamento.pagamento && (
                             <p className="text-sm text-green-600">
-                              Pago em: {formatDate(pagamento.dataPagamento)}
+                              Pago em: {formatDate(pagamento.pagamento)}
                             </p>
                           )}
                         </div>
