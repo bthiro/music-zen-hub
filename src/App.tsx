@@ -2,46 +2,50 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AppProvider } from "@/contexts/AppContext";
-import Dashboard from "./pages/Dashboard";
-import Alunos from "./pages/Alunos";
-import Pagamentos from "./pages/Pagamentos";
-import Aulas from "./pages/Aulas";
-import Relatorios from "./pages/Relatorios";
-import Configuracoes from "./pages/Configuracoes";
-import IaMusical from "./pages/IaMusical";
-import Lousa from "./pages/Lousa";
-import Ferramentas from "./pages/Ferramentas";
-import SessaoAoVivo from "./pages/SessaoAoVivo";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Gate } from "@/components/Gate";
+import AuthPage from "./pages/AuthPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import ProfessorApp from "./pages/ProfessorApp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AppProvider>
+    <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/aulas" element={<Aulas />} />
-            <Route path="/sessao-ao-vivo" element={<SessaoAoVivo />} />
-            <Route path="/alunos" element={<Alunos />} />
-            <Route path="/pagamentos" element={<Pagamentos />} />
-            <Route path="/relatorios" element={<Relatorios />} />
-            <Route path="/lousa" element={<Lousa />} />
-            <Route path="/ferramentas" element={<Ferramentas />} />
-            <Route path="/ia-musical" element={<IaMusical />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Public routes */}
+            <Route path="/auth" element={<AuthPage />} />
+            
+            {/* Protected admin routes */}
+            <Route path="/admin/*" element={
+              <Gate allowedRoles={['admin']}>
+                <AdminDashboard />
+              </Gate>
+            } />
+            
+            {/* Protected professor routes */}
+            <Route path="/app/*" element={
+              <Gate allowedRoles={['professor']} requireActiveStatus>
+                <ProfessorApp />
+              </Gate>
+            } />
+            
+            {/* Root redirect based on auth */}
+            <Route path="/" element={<Navigate to="/auth" replace />} />
+            
+            {/* Catch all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
-    </AppProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
