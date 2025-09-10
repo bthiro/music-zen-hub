@@ -8,6 +8,7 @@ import { Gate } from "@/components/Gate";
 import AuthPage from "./pages/AuthPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProfessorApp from "./pages/ProfessorApp";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/google/callback" element={<AuthCallback />} />
             
             {/* Protected admin routes */}
             <Route path="/admin/*" element={

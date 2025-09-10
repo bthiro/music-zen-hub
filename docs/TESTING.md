@@ -476,3 +476,30 @@ chmod +x scripts/tests/test-complete-flow.sh
 - [ ] ✅ UI responsiva
 
 📞 **Em caso de falha**: Consulte logs no Supabase Dashboard e console do browser.
+
+---
+
+## 🔐 11. Teste OAuth (Google) com domínio dinâmico (ngrok)
+
+### Passo a passo
+1. Atualize URLs com a PUBLIC_URL atual (ex.: https://<id>.ngrok-free.app):
+   - Google Console → OAuth consent + Credentials:
+     - Authorized JavaScript origins = PUBLIC_URL
+     - Authorized redirect URIs = PUBLIC_URL/auth/google/callback
+   - Supabase → Authentication → URL Configuration:
+     - Site URL = PUBLIC_URL
+     - Redirect URLs = PUBLIC_URL/*
+2. Limpe sessões anteriores no navegador (cookies/localStorage) e no Supabase (se necessário).
+3. Acesse PUBLIC_URL/auth → clique em “Entrar com Google”.
+4. Após o retorno, verifique que a URL é PUBLIC_URL/auth/google/callback.
+5. Confirme no console:
+   - Logs iniciando sign-in e callback
+   - Resultado de exchangeCodeForSession sem erros
+6. Redirecionamento esperado:
+   - admin → /admin
+   - professor (status=ativo) → /app
+
+### Validações
+- A tela /auth NÃO deve disparar consultas de aulas (sem toasts de erro).
+- Em /app, as aulas só carregam após user + role + status prontos.
+- Erro “redirect_uri_mismatch” deve mostrar mensagem amigável e logar window.location.href.

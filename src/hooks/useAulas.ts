@@ -20,13 +20,46 @@ export interface Aula {
 
 export function useAulas() {
   const [aulas, setAulas] = useState<Aula[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const loadAulas = async () => {
     try {
+      console.log('[Aulas] loadAulas called at', new Date().toISOString());
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('[Aulas] No user session. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
+      // Check role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!roleData?.role || roleData.role !== 'professor') {
+        console.log('[Aulas] User role is not professor. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
+      // Check professor status
+      const { data: profile } = await supabase
+        .from('professores')
+        .select('status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!profile || profile.status !== 'ativo') {
+        console.log('[Aulas] Professor status is not ativo. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      
       const { data, error } = await supabase
         .from('aulas')
         .select(`

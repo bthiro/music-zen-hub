@@ -17,83 +17,92 @@ export function useAuth() {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!isMounted) return;
+        console.log('[Auth] onAuthStateChange event:', event, 'session?', !!session);
 
         if (session?.user) {
-          try {
-            // Get user role
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .single();
+          // Set basic session immediately and show loading while we resolve role/profile
+          setAuthState(prev => ({
+            ...prev,
+            session,
+            loading: true,
+          }));
 
-            if (!roleData?.role) {
-              // If no role found, sign out
-              await supabase.auth.signOut();
+          // Defer DB calls to avoid deadlocks in callback
+          setTimeout(async () => {
+            try {
+              console.log('[Auth] Fetching role/profile for user', session.user.id);
+              const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
+
+              if (!roleData?.role) {
+                console.warn('[Auth] No role found. Signing out.');
+                await supabase.auth.signOut();
+                setAuthState({
+                  user: null,
+                  session: null,
+                  loading: false,
+                  initialized: true,
+                });
+                return;
+              }
+
+              let profile: UserProfile | undefined;
+              if (roleData.role === 'professor') {
+                const { data: profileData } = await supabase
+                  .from('professores')
+                  .select('*')
+                  .eq('user_id', session.user.id)
+                  .maybeSingle();
+
+                if (profileData) {
+                  profile = profileData;
+                  if (profileData.status !== 'ativo') {
+                    console.warn('[Auth] Professor inactive. Signing out.');
+                    await supabase.auth.signOut();
+                    toast({
+                      title: "Acesso Bloqueado",
+                      description: "Conta indisponível. Contate o administrador.",
+                      variant: "destructive",
+                    });
+                    setAuthState({
+                      user: null,
+                      session: null,
+                      loading: false,
+                      initialized: true,
+                    });
+                    return;
+                  }
+                }
+              }
+
+              const authUser: AuthUser = {
+                id: session.user.id,
+                email: session.user.email!,
+                role: roleData.role as UserRole,
+                profile,
+              };
+
+              setAuthState({
+                user: authUser,
+                session,
+                loading: false,
+                initialized: true,
+              });
+            } catch (error) {
+              console.error('[Auth] Error completing auth:', error, 'location:', window.location.href);
               setAuthState({
                 user: null,
                 session: null,
                 loading: false,
                 initialized: true,
               });
-              return;
             }
-
-            // Get profile data if professor
-            let profile: UserProfile | undefined;
-            if (roleData.role === 'professor') {
-              const { data: profileData } = await supabase
-                .from('professores')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .single();
-
-              if (profileData) {
-                profile = profileData;
-                
-                // Check if professor is active
-                if (profileData.status !== 'ativo') {
-                  await supabase.auth.signOut();
-                  toast({
-                    title: "Acesso Bloqueado",
-                    description: "Conta indisponível. Contate o administrador.",
-                    variant: "destructive",
-                  });
-                  setAuthState({
-                    user: null,
-                    session: null,
-                    loading: false,
-                    initialized: true,
-                  });
-                  return;
-                }
-              }
-            }
-
-            const authUser: AuthUser = {
-              id: session.user.id,
-              email: session.user.email!,
-              role: roleData.role as UserRole,
-              profile,
-            };
-
-            setAuthState({
-              user: authUser,
-              session,
-              loading: false,
-              initialized: true,
-            });
-          } catch (error) {
-            console.error('Auth error:', error);
-            setAuthState({
-              user: null,
-              session: null,
-              loading: false,
-              initialized: true,
-            });
-          }
+          }, 0);
         } else {
           setAuthState({
             user: null,
@@ -174,18 +183,25 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
+    const redirectTo = `${window.location.origin}/auth/google/callback`;
+    console.log('[Auth] Google sign-in start', { redirectTo, href: window.location.href });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`
+        redirectTo,
+        queryParams: { prompt: 'consent', access_type: 'offline' }
       }
     });
 
     if (error) {
+      console.error('[Auth] Google sign-in error:', error, { redirectTo, href: window.location.href });
+      const friendly = error.message?.includes('redirect_uri_mismatch')
+        ? 'Configuração inválida do OAuth (redirect URI). Verifique Google Console e Supabase.'
+        : error.message;
       toast({
-        title: "Erro no Login",
-        description: error.message,
-        variant: "destructive",
+        title: 'Erro no Login com Google',
+        description: friendly,
+        variant: 'destructive',
       });
     }
   };
