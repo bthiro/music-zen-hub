@@ -39,6 +39,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { GlobalPaymentsView } from "@/components/GlobalPaymentsView";
 
 const professorSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -388,16 +389,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="pagamentos">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pagamentos Globais</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Visualização global de pagamentos em desenvolvimento...
-                </p>
-              </CardContent>
-            </Card>
+            <GlobalPaymentsView />
           </TabsContent>
 
           <TabsContent value="integracoes">

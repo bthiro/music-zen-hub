@@ -20,6 +20,7 @@ export interface Pagamento {
   dataPagamento?: string;
   mercado_pago_payment_id?: string;
   eligible_to_schedule?: boolean;
+  professorNome?: string;
 }
 
 export function usePagamentos() {

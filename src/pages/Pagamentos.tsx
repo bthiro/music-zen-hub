@@ -3,21 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AulaDialog } from "@/components/dialogs/AulaDialog";
-import { PagamentoDialog } from "@/components/dialogs/PagamentoDialog";
 import { CobrancaDialog } from "@/components/dialogs/CobrancaDialog";
 import { MercadoPagoDialog } from "@/components/dialogs/MercadoPagoDialog";
-import { useApp } from "@/contexts/AppContext";
+import { PaymentStatusDisplay } from "@/components/PaymentStatusDisplay";
+import { usePagamentos } from "@/hooks/usePagamentos";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, DollarSign, CheckCircle, XCircle, Clock, MessageCircle, CreditCard, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { StatsCard } from "@/components/ui/stats-card";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Pagamentos() {
-  const { pagamentos, alunos } = useApp();
+  const { pagamentos, loading, refetch } = usePagamentos();
   const { toast } = useToast();
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [aulaDialogOpen, setAulaDialogOpen] = useState(false);
-  const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
   const [cobrancaDialogOpen, setCobrancaDialogOpen] = useState(false);
   const [mercadoPagoDialogOpen, setMercadoPagoDialogOpen] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<{id: string, nome: string} | null>(null);
@@ -28,54 +28,33 @@ export default function Pagamentos() {
     return pagamento.status === filtroStatus;
   });
 
-  const handleMarcarPago = (pagamento: any) => {
-    setPagamentoSelecionado(pagamento);
-    setPagamentoDialogOpen(true);
+  const handleScheduleClass = (alunoId: string, alunoName: string) => {
+    setAlunoSelecionado({ id: alunoId, nome: alunoName });
+    setAulaDialogOpen(true);
   };
 
-  const handleCobrarMercadoPago = (pagamento: any) => {
-    const aluno = alunos.find(a => a.id === pagamento.alunoId);
-    if (!aluno) {
+  const handleReprocessPayment = async (paymentId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('mercado-pago-reprocess', {
+        body: { payment_id: paymentId }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Status do pagamento atualizado!"
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error('Erro ao reprocessar pagamento:', error);
       toast({
         title: "Erro",
-        description: "Aluno não encontrado",
+        description: "Falha ao verificar status do pagamento",
         variant: "destructive"
       });
-      return;
     }
-    
-    setAlunoSelecionado({
-      id: aluno.id,
-      nome: aluno.nome
-    });
-    setPagamentoSelecionado(pagamento);
-    setMercadoPagoDialogOpen(true);
-  };
-
-  const handleCobrarAluno = (pagamento: any) => {
-    const aluno = alunos.find(a => a.id === pagamento.alunoId);
-    if (!aluno) {
-      toast({
-        title: "Erro",
-        description: "Aluno não encontrado",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setPagamentoSelecionado({
-      aluno: {
-        nome: aluno.nome,
-        telefone: aluno.telefone,
-        email: aluno.email
-      },
-      pagamento: {
-        valor: pagamento.valor,
-        vencimento: pagamento.vencimento,
-        mes: pagamento.mes
-      }
-    });
-    setCobrancaDialogOpen(true);
   };
 
   const getStatusIcon = (status: string) => {
@@ -203,87 +182,33 @@ export default function Pagamentos() {
             <Card key={pagamento.id}>
               <CardContent className="pt-6">
                 <div className="flex flex-col space-y-4">
-                  {/* Header com status */}
+                  {/* Header com nome do aluno */}
                   <div className="flex items-center gap-3">
-                    {getStatusIcon(pagamento.status)}
                     <h3 className="text-lg font-semibold flex-1">{pagamento.aluno}</h3>
-                    <Badge className={getStatusColor(pagamento.status)}>
-                      {pagamento.status}
-                    </Badge>
                   </div>
                   
                   {/* Grid responsivo de informações */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
                     <div>
                       <p className="font-medium text-foreground">Período:</p>
                       <p>{pagamento.mes}</p>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">Valor:</p>
-                      <p className="text-lg font-semibold text-foreground">R$ {pagamento.valor}</p>
-                    </div>
-                    <div>
                       <p className="font-medium text-foreground">Vencimento:</p>
-                      <p>{pagamento.vencimento}</p>
+                      <p>{new Date(pagamento.vencimento).toLocaleDateString('pt-BR')}</p>
                     </div>
                     <div>
                       <p className="font-medium text-foreground">Pagamento:</p>
-                      <p>{pagamento.pagamento || "Não realizado"}</p>
-                      {pagamento.formaPagamento && (
-                        <p className="text-xs text-muted-foreground">
-                          via {pagamento.formaPagamento.toUpperCase()}
-                          {pagamento.metodoPagamento && ` (${pagamento.metodoPagamento})`}
-                        </p>
-                      )}
+                      <p>{pagamento.pagamento ? new Date(pagamento.pagamento).toLocaleDateString('pt-BR') : "Não realizado"}</p>
                     </div>
                   </div>
-                  {/* Ações em layout vertical para mobile */}
-                  <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:mt-0 sm:ml-4 w-full sm:w-auto">
-                    {pagamento.status !== "pago" && (
-                      <>
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCobrarMercadoPago(pagamento)}
-                          className="w-full sm:w-auto text-xs bg-[#009EE3] hover:bg-[#0080B8] text-white border-0"
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Mercado Pago
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCobrarAluno(pagamento)}
-                          className="w-full sm:w-auto text-xs"
-                        >
-                          <MessageCircle className="h-4 w-4 mr-2" />
-                          Cobrar WhatsApp
-                        </Button>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleMarcarPago(pagamento)}
-                          className="w-full sm:w-auto text-xs"
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Marcar como Pago
-                        </Button>
-                      </>
-                    )}
-                    {pagamento.status === "pago" && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setAlunoSelecionado({ id: pagamento.alunoId, nome: pagamento.aluno });
-                          setAulaDialogOpen(true);
-                        }}
-                        className="w-full sm:w-auto text-xs"
-                      >
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Agendar Aulas
-                      </Button>
-                    )}
-                  </div>
+                  
+                  {/* Status display com ações automáticas */}
+                  <PaymentStatusDisplay 
+                    pagamento={pagamento}
+                    onScheduleClass={handleScheduleClass}
+                    onReprocessPayment={handleReprocessPayment}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -297,17 +222,6 @@ export default function Pagamentos() {
         alunoId={alunoSelecionado?.id}
         alunoNome={alunoSelecionado?.nome}
       />
-
-      {pagamentoSelecionado && (
-        <PagamentoDialog
-          open={pagamentoDialogOpen}
-          onOpenChange={setPagamentoDialogOpen}
-          pagamentoId={pagamentoSelecionado.id}
-          alunoId={pagamentoSelecionado.alunoId}
-          alunoNome={pagamentoSelecionado.aluno}
-          valor={pagamentoSelecionado.valor}
-        />
-      )}
 
       {pagamentoSelecionado && (
         <CobrancaDialog
