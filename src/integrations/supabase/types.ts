@@ -88,6 +88,36 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string | null
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string | null
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string | null
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       aulas: {
         Row: {
           aluno_id: string
@@ -366,6 +396,7 @@ export type Database = {
           especialidades: string | null
           id: string
           limite_alunos: number | null
+          modules: Json
           nome: string
           plano: string | null
           senha_temporaria: boolean | null
@@ -387,6 +418,7 @@ export type Database = {
           especialidades?: string | null
           id?: string
           limite_alunos?: number | null
+          modules?: Json
           nome: string
           plano?: string | null
           senha_temporaria?: boolean | null
@@ -408,6 +440,7 @@ export type Database = {
           especialidades?: string | null
           id?: string
           limite_alunos?: number | null
+          modules?: Json
           nome?: string
           plano?: string | null
           senha_temporaria?: boolean | null
@@ -455,6 +488,15 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_audit: {
+        Args: {
+          p_action: string
+          p_entity: string
+          p_entity_id?: string
+          p_metadata?: Json
+        }
+        Returns: undefined
       }
     }
     Enums: {
