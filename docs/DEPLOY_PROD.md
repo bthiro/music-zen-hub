@@ -14,7 +14,7 @@ npm run build
 npm run preview
 ```
 
-### 2. **Configuração das Variáveis de Ambiente**
+### **2. Configuração das Variáveis de Ambiente**
 
 **CRÍTICO**: Configure no ambiente de produção:
 ```bash
@@ -23,6 +23,15 @@ VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 VITE_AUTH_MODE="locked"  # SEMPRE locked em produção
 VITE_DEFAULT_TIMEZONE="America/Sao_Paulo"
 ```
+
+### **3. URLs de Produção (CRÍTICO)**
+
+⚠️ **Configure URLs corretas antes do deploy para evitar erro "requested path is invalid"**:
+
+**Supabase Auth URLs**:
+1. **Acesse**: [Authentication → URL Configuration](https://supabase.com/dashboard/project/hnftxautmxviwrfuaosu/auth/url-configuration)
+2. **Site URL**: `https://seudominio.com`
+3. **Redirect URLs**: `https://seudominio.com/**`
 
 ---
 

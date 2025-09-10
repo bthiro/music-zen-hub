@@ -117,7 +117,7 @@ No painel do Mercado Pago:
 
 ---
 
-## 🗄️ 4. Banco de Dados (Supabase)
+## 🗄️4. Banco de Dados (Supabase)
 
 ### O banco já está configurado! Mas se precisar das migrações:
 
@@ -139,6 +139,15 @@ supabase link --project-ref hnftxautmxviwrfuaosu
 - ✅ `audit_log` - Log de auditoria
 - ✅ `webhook_events` - Controle de idempotência
 
+### Configure URLs do Supabase Auth:
+⚠️ **IMPORTANTE**: Configure URLs corretas no Supabase para evitar erro "requested path is invalid"
+
+1. **Acesse**: [Supabase Authentication → URL Configuration](https://supabase.com/dashboard/project/hnftxautmxviwrfuaosu/auth/url-configuration)
+
+2. **Configure**:
+   - **Site URL**: `http://localhost:5173` (desenvolvimento)
+   - **Redirect URLs**: `http://localhost:5173/**`
+
 ---
 
 ## 🚀 5. Iniciar o Projeto
@@ -152,61 +161,116 @@ npm run dev
 
 ### Verificar se está funcionando:
 
-1. **Página inicial**: http://localhost:5173 → deve carregar
-2. **Login**: `/auth` → deve mostrar formulário
-3. **Admin** (se `VITE_AUTH_MODE=open`): `/admin` → deve mostrar dashboard
-4. **Professor**: `/app` → deve mostrar painel do professor
+1. **Página inicial**: http://localhost:5173 → deve carregar sem erros
+2. **Modo desenvolvimento**: Se `VITE_AUTH_MODE=open`, acesso direto às funcionalidades
+3. **Login** (se necessário): `/auth` → deve mostrar formulário
+4. **Admin**: `/admin` → deve mostrar dashboard de administração
+5. **Professor**: `/app` → deve mostrar painel do professor
 
 ---
 
 ## ✅ 6. Checklist Pós-Instalação
 
 ### Funcionalidades básicas:
-- [ ] ✅ Interface carregando sem erros
-- [ ] ✅ Login/logout funcionando
-- [ ] ✅ Navegação entre páginas
-- [ ] ✅ Cadastro de alunos
-- [ ] ✅ Criação de aulas
+- [ ] ✅ Interface carregando sem erros no console (F12)
+- [ ] ✅ Login/logout funcionando (se auth=locked)
+- [ ] ✅ Navegação entre páginas sem quebras
+- [ ] ✅ Cadastro de alunos salvando no banco
+- [ ] ✅ Criação de aulas aparecendo na lista
 
-### Integrações:
-- [ ] 🔗 Google Calendar: teste conectar/desconectar
-- [ ] 💳 Mercado Pago: criar pagamento teste
-- [ ] 📧 Webhook: simular evento de pagamento
+### Integrações (teste básico):
+- [ ] 🔗 **Google Calendar**: 
+  - Navegue para `/app/configuracoes`
+  - Teste conectar Google (deve abrir popup OAuth)
+- [ ] 💳 **Mercado Pago**: 
+  - Crie um pagamento de teste
+  - Deve abrir checkout sandbox
+- [ ] 📧 **Webhook**: 
+  - Teste: `curl https://hnftxautmxviwrfuaosu.supabase.co/functions/v1/mercado-pago-webhook`
+  - Deve retornar resposta HTTP (não erro de DNS)
 
-### Dados:
-- [ ] 📊 Dashboard mostrando métricas
-- [ ] 👥 Lista de alunos aparecendo
-- [ ] 💰 Pagamentos sendo listados
-- [ ] 📅 Aulas no calendário
+### Dados básicos:
+- [ ] 📊 Dashboard mostrando métricas sem erros
+- [ ] 👥 Lista de alunos carregando corretamente
+- [ ] 💰 Seção pagamentos acessível
+- [ ] 📅 Calendário de aulas visível
 
 ---
 
 ## 🐛 Solução de Problemas Comuns
 
-### **Erro: "Cannot connect to Supabase"**
-- Verifique `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
-- Confirme que o projeto Supabase está ativo
+### **❌ Erro: "Cannot connect to Supabase"**
+```bash
+# Verifique as variáveis:
+echo $VITE_SUPABASE_URL
+echo $VITE_SUPABASE_ANON_KEY
 
-### **Erro: "Google OAuth não funciona"**
-- Verifique as URLs de redirect no Google Console
-- Confirme `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` no Supabase
+# Devem mostrar valores válidos, não "undefined"
+# Se estão vazias, verifique .env.local e reinicie npm run dev
+```
 
-### **Erro: "Webhook Mercado Pago falha"**
-- Teste a URL: `https://hnftxautmxviwrfuaosu.supabase.co/functions/v1/mercado-pago-webhook`
-- Verifique `MERCADOPAGO_ACCESS_TOKEN` no Supabase
+### **❌ Erro: "requested path is invalid" (Google Auth)**
+**Causa**: URLs não configuradas no Supabase Auth
+```bash
+# Solução:
+# 1. Supabase Dashboard → Authentication → URL Configuration
+# 2. Site URL: http://localhost:5173
+# 3. Redirect URLs: http://localhost:5173/**
+```
 
-### **Erro: "Cannot create user"**
-- Se `VITE_AUTH_MODE=locked`, o primeiro usuário vira admin automaticamente
-- Para desenvolvimento, use `VITE_AUTH_MODE=open`
+### **❌ Erro: "Google OAuth não funciona"**
+```bash
+# Verifique no Google Console:
+# - JavaScript origins: http://localhost:5173
+# - Redirect URIs: http://localhost:5173/auth/google/callback
+# - Credenciais configuradas no Supabase Edge Functions
+```
+
+### **❌ Erro: "Webhook Mercado Pago falha"**
+```bash
+# Teste a URL:
+curl -I https://hnftxautmxviwrfuaosu.supabase.co/functions/v1/mercado-pago-webhook
+# Deve retornar 200 ou 405 (Method Not Allowed), não 404
+
+# Verifique MERCADOPAGO_ACCESS_TOKEN no Supabase Secrets
+```
+
+### **❌ Erro: "Cannot create user" ou "Access denied"**
+```bash
+# Se VITE_AUTH_MODE=locked:
+# - O primeiro usuário criado vira admin automaticamente
+# - Usuários subsequentes precisam ser criados pelo admin
+
+# Para desenvolvimento, use:
+VITE_AUTH_MODE="open"
+```
+
+### **❌ Erro: Build falha ou componentes não carregam**
+```bash
+# Limpe cache e reinstale:
+rm -rf node_modules package-lock.json
+npm install
+
+# Verifique versões:
+node --version  # Deve ser 18+
+npm --version   # Deve ser 8+
+```
 
 ---
 
-## 📞 Suporte
+## 📞 Próximos Passos
 
+1. **✅ Instalação concluída** → Continue para [docs/ENV.md](./ENV.md) para configurar todas as variáveis
+2. **🧪 Depois configure** → [docs/TESTING.md](./TESTING.md) para testar todas as funcionalidades
+3. **🚀 Para produção** → [docs/DEPLOY_PROD.md](./DEPLOY_PROD.md) quando estiver pronto
+
+### **Suporte**
 - **Logs do Supabase**: [Dashboard → Edge Functions → Logs](https://supabase.com/dashboard/project/hnftxautmxviwrfuaosu/functions)
-- **Documentação**: Veja outros arquivos em `/docs/`
+- **Documentação completa**: Pasta `/docs/`
 - **Console do Browser**: F12 → Console (para erros frontend)
 
 ---
 
-🎉 **Pronto!** O ClassPro deve estar funcionando localmente.
+🎉 **ClassPro instalado com sucesso!** 
+
+Próximo passo: **[Configure todas as variáveis de ambiente](./ENV.md)**

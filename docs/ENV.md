@@ -95,23 +95,34 @@ GROQ_API_KEY="gsk_abcdefghijklmnopqrstuvwxyz"
 
 ---
 
-## ⚠️ Observações Importantes
+### ⚠️ Observações Importantes
 
 ### **URLs de Redirecionamento**
 
 #### Desenvolvimento:
 - Google OAuth: `http://localhost:5173/auth/google/callback`
-- Mercado Pago Webhook: `http://localhost:5173/webhooks/mercado-pago`
+- Mercado Pago Webhook: `https://hnftxautmxviwrfuaosu.supabase.co/functions/v1/mercado-pago-webhook`
 
 #### Produção:
 - Google OAuth: `https://seudominio.com/auth/google/callback`
-- Mercado Pago Webhook: `https://seudominio.com/webhooks/mercado-pago`
+- Mercado Pago Webhook: `https://hnftxautmxviwrfuaosu.supabase.co/functions/v1/mercado-pago-webhook`
 
 ### **Notification URL (Mercado Pago)**
 
 Configure no painel do Mercado Pago:
 - **Sandbox**: `https://hnftxautmxviwrfuaosu.supabase.co/functions/v1/mercado-pago-webhook`
 - **Produção**: `https://hnftxautmxviwrfuaosu.supabase.co/functions/v1/mercado-pago-webhook`
+
+### **Supabase Auth URLs (CRÍTICO)**
+
+⚠️ **Para evitar erro "requested path is invalid"**, configure no Supabase:
+1. **Acesse**: [Authentication → URL Configuration](https://supabase.com/dashboard/project/hnftxautmxviwrfuaosu/auth/url-configuration)
+2. **Site URL**: 
+   - DEV: `http://localhost:5173`
+   - PROD: `https://seudominio.com`
+3. **Redirect URLs**: 
+   - DEV: `http://localhost:5173/**`
+   - PROD: `https://seudominio.com/**`
 
 ### **Segurança**
 

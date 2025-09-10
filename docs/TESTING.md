@@ -435,37 +435,44 @@ GET /api/alunos?professor_id=PROFESSOR2_ID
 ### **Script completo de validação:**
 ```bash
 #!/bin/bash
-# test-complete.sh
+# Validador automático - execute antes dos testes manuais
+chmod +x scripts/validate-install.sh
+./scripts/validate-install.sh
 
-echo "🧪 Iniciando testes do ClassPro..."
-
-# 1. Teste de conectividade
-echo "1. Testando conectividade..."
-curl -f http://localhost:5173 || exit 1
-
-# 2. Teste Supabase
-echo "2. Testando Supabase..."
-curl -f https://hnftxautmxviwrfuaosu.supabase.co/rest/v1/ \
-  -H "apikey: $VITE_SUPABASE_ANON_KEY" || exit 1
-
-# 3. Teste webhook
-echo "3. Testando webhook MP..."
-curl -f https://hnftxautmxviwrfuaosu.supabase.co/functions/v1/mercado-pago-webhook \
-  -X POST -H "Content-Type: application/json" -d '{"test": true}' || exit 1
-
-echo "✅ Todos os testes básicos passaram!"
+# Teste E2E automático
+chmod +x scripts/tests/test-complete-flow.sh  
+./scripts/tests/test-complete-flow.sh
 ```
 
-**Execute:**
-```bash
-chmod +x test-complete.sh
-./test-complete.sh
-```
+**Execute os scripts acima antes dos testes manuais para garantir que o ambiente está correto.**
 
 ---
 
 🎯 **Resultado Final Esperado:**
 Após todos os testes, o sistema deve processar automaticamente:
 `Pagamento Criado → Webhook MP → Status "Pago" → Botão "Agendar" → Aula Criada → Google Calendar Sincronizado`
+
+## 🔍 Scripts de Teste Automatizado
+
+### **Validação de Instalação:**
+```bash
+# Execute para validar instalação antes dos testes
+chmod +x scripts/validate-install.sh
+./scripts/validate-install.sh
+```
+
+### **Teste E2E Automático:**
+```bash
+# Execute para testar conectividade básica
+chmod +x scripts/tests/test-complete-flow.sh  
+./scripts/tests/test-complete-flow.sh
+```
+
+### **Checklist Final:**
+- [ ] ✅ Todos os testes passaram
+- [ ] ✅ Fluxo E2E funcionando
+- [ ] ✅ Integrações conectadas
+- [ ] ✅ RLS funcionando
+- [ ] ✅ UI responsiva
 
 📞 **Em caso de falha**: Consulte logs no Supabase Dashboard e console do browser.
