@@ -303,6 +303,7 @@ export default function Pagamentos() {
           open={pagamentoDialogOpen}
           onOpenChange={setPagamentoDialogOpen}
           pagamentoId={pagamentoSelecionado.id}
+          alunoId={pagamentoSelecionado.alunoId}
           alunoNome={pagamentoSelecionado.aluno}
           valor={pagamentoSelecionado.valor}
         />

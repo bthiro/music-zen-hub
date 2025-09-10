@@ -133,6 +133,14 @@ export function useAlunos() {
         description: "Aluno adicionado com sucesso!"
       });
 
+      // Gera automaticamente o pagamento do mês atual para alunos ativos
+      try {
+        await supabase.rpc('criar_pagamento_mensal');
+        console.log('Pagamentos do mês atual verificados/criados');
+      } catch (e) {
+        console.warn('Falha ao criar pagamento mensal via RPC:', e);
+      }
+
       await loadAlunos();
     } catch (error) {
       console.error('Erro ao adicionar aluno:', error);

@@ -12,11 +12,12 @@ interface PagamentoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pagamentoId: string;
+  alunoId: string;
   alunoNome: string;
   valor: number;
 }
 
-export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, valor }: PagamentoDialogProps) {
+export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoId, alunoNome, valor }: PagamentoDialogProps) {
   const { marcarPagamento } = useApp();
   const { toast } = useToast();
   const [formaPagamento, setFormaPagamento] = useState<string>("");
@@ -121,7 +122,7 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoNome, va
       <MercadoPagoDialog
         open={showMercadoPago}
         onOpenChange={setShowMercadoPago}
-        alunoId={pagamentoId} // Aqui seria melhor ter o alunoId diretamente
+        alunoId={alunoId}
         alunoNome={alunoNome}
         valorSugerido={valor}
       />
