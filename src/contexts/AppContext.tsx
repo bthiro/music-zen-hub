@@ -1,52 +1,33 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { createContext, useContext, useState, ReactNode } from "react";
 
-// Interfaces mantidas iguais
+// Interfaces
 export interface Aluno {
   id: string;
   nome: string;
   email: string;
   telefone?: string;
-  endereco?: string;
   cidade?: string;
   estado?: string;
   pais?: string;
-  nivel?: string;
-  instrumento?: string;
-  valor_mensalidade?: number;
-  mensalidade?: number; // Alias para compatibilidade
-  dia_vencimento?: number;
-  duracao_aula?: number;
-  duracaoAula?: number; // Alias para compatibilidade
-  tipo_cobranca?: string;
-  tipoCobranca?: string; // Alias para compatibilidade
+  mensalidade: number;
+  duracaoAula: 30 | 50; // Duração da aula em minutos
   observacoes?: string;
   status: "ativo" | "inativo" | "pendente";
-  data_nascimento?: string;
-  dataCadastro?: string; // Alias para compatibilidade
-  responsavel_nome?: string;
-  responsavel_telefone?: string;
-  professor_id?: string;
+  dataCadastro: string;
+  tipoCobranca?: "mensal" | "aula_unica";
 }
 
 export interface Pagamento {
   id: string;
   alunoId: string;
-  aluno?: string;
+  aluno: string;
   valor: number;
-  dataVencimento: string;
-  vencimento?: string; // Alias para compatibilidade
-  dataPagamento?: string;
-  pagamento?: string | null; // Alias para compatibilidade
-  status: "pendente" | "pago" | "atrasado";
-  formaPagamento?: string;
+  vencimento: string;
+  pagamento: string | null;
+  status: "pago" | "pendente" | "atrasado";
+  mes: string;
+  formaPagamento?: "pix" | "cartao" | "dinheiro";
   metodoPagamento?: string;
-  linkPagamento?: string;
-  referencia?: string;
-  descricao?: string;
-  mes?: string; // Para compatibilidade
-  professor_id?: string;
 }
 
 export interface Aula {
@@ -55,478 +36,211 @@ export interface Aula {
   aluno: string;
   data: string;
   horario: string;
-  horarioFim?: string;
-  duracaoMinutos?: number;
+  horarioFim?: string; // Horário de término da aula
+  duracaoMinutos?: number; // Duração da aula em minutos
   status: "agendada" | "realizada" | "cancelada";
   linkMeet?: string;
   observacoes?: string;
   observacoesAula?: string;
   materiaisPdf?: string[];
-  professor_id?: string;
-}
-
-interface Professor {
-  id: string;
-  user_id: string;
-  nome: string;
-  email: string;
-  telefone?: string;
-  bio?: string;
-  especialidades?: string;
-  plano?: string;
-  limite_alunos?: number;
 }
 
 interface AppContextType {
-  // Auth
-  professor: Professor | null;
-  loading: boolean;
-  
   // Alunos
   alunos: Aluno[];
-  addAluno: (aluno: Omit<Aluno, "id">) => Promise<void>;
-  updateAluno: (id: string, aluno: Partial<Aluno>) => Promise<void>;
-  deleteAluno: (id: string) => Promise<void>;
+  addAluno: (aluno: Omit<Aluno, "id" | "dataCadastro">) => void;
+  updateAluno: (id: string, aluno: Partial<Aluno>) => void;
+  deleteAluno: (id: string) => void;
   
   // Pagamentos
   pagamentos: Pagamento[];
-  marcarPagamento: (id: string, dataPagamento: string, formaPagamento?: string, metodoPagamento?: string) => Promise<void>;
-  addPagamento: (pagamento: Omit<Pagamento, "id">) => Promise<void>;
+  marcarPagamento: (id: string, dataPagamento: string, formaPagamento?: string, metodoPagamento?: string) => void;
+  addPagamento: (pagamento: Omit<Pagamento, "id">) => void;
   
   // Aulas
   aulas: Aula[];
-  addAula: (aula: Omit<Aula, "id">) => Promise<void>;
-  updateAula: (id: string, aula: Partial<Aula>) => Promise<void>;
+  addAula: (aula: Omit<Aula, "id">) => void;
+  updateAula: (id: string, aula: Partial<Aula>) => void;
   
   // Utility
   getAlunoById: (id: string) => Aluno | undefined;
-  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Dados iniciais
+const alunosIniciais: Aluno[] = [
+  {
+    id: "1",
+    nome: "João Silva",
+    email: "joao@email.com",
+    telefone: "(11) 99999-9999",
+    mensalidade: 200,
+    duracaoAula: 50,
+    status: "ativo",
+    dataCadastro: "2024-01-15",
+    observacoes: "Prefere aulas de manhã"
+  },
+  {
+    id: "2",
+    nome: "Maria Santos",
+    email: "maria@email.com",
+    telefone: "(11) 88888-8888",
+    mensalidade: 180,
+    duracaoAula: 30,
+    status: "ativo",
+    dataCadastro: "2024-01-10",
+    observacoes: "Iniciante, muito dedicada"
+  },
+  {
+    id: "3",
+    nome: "Pedro Costa",
+    email: "pedro@email.com",
+    telefone: "(11) 77777-7777",
+    mensalidade: 220,
+    duracaoAula: 50,
+    status: "pendente",
+    dataCadastro: "2024-01-05",
+    observacoes: "Falta há 2 semanas"
+  }
+];
+
+const pagamentosIniciais: Pagamento[] = [
+  {
+    id: "1",
+    alunoId: "1",
+    aluno: "João Silva",
+    valor: 200,
+    vencimento: "2024-02-01",
+    pagamento: "2024-01-30",
+    status: "pago",
+    mes: "Fevereiro 2024"
+  },
+  {
+    id: "2",
+    alunoId: "2",
+    aluno: "Maria Santos",
+    valor: 180,
+    vencimento: "2024-02-01",
+    pagamento: null,
+    status: "pendente",
+    mes: "Fevereiro 2024"
+  },
+  {
+    id: "3",
+    alunoId: "3",
+    aluno: "Pedro Costa",
+    valor: 220,
+    vencimento: "2024-01-01",
+    pagamento: null,
+    status: "atrasado",
+    mes: "Janeiro 2024"
+  }
+];
+
+const aulasIniciais: Aula[] = [
+  {
+    id: "1",
+    alunoId: "1",
+    aluno: "João Silva",
+    data: "2024-02-05",
+    horario: "14:00",
+    status: "realizada",
+    linkMeet: "https://meet.google.com/abc-defg-hij",
+    observacoesAula: "Aula muito produtiva! João está progredindo bem nos acordes básicos. Revisamos Dó maior e Sol maior, e começamos a praticar as transições entre eles.",
+    materiaisPdf: ["Exercícios de Acordes Básicos.pdf", "Partitura - Imagine - John Lennon.pdf"]
+  },
+  {
+    id: "2",
+    alunoId: "2",
+    aluno: "Maria Santos",
+    data: "2024-02-05",
+    horario: "15:30",
+    status: "agendada",
+    linkMeet: "https://meet.google.com/xyz-1234-567"
+  }
+];
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [professor, setProfessor] = useState<Professor | null>(null);
-  const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
-  const [aulas, setAulas] = useState<Aula[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-
-  // Inicializar dados quando professor logar
-  useEffect(() => {
-    const initializeData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await loadProfessorData();
-        await loadAllData();
-      }
-      setLoading(false);
-    };
-
-    initializeData();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          await loadProfessorData();
-          await loadAllData();
-        } else if (event === 'SIGNED_OUT') {
-          setProfessor(null);
-          setAlunos([]);
-          setPagamentos([]);
-          setAulas([]);
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadProfessorData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: professorData, error } = await supabase
-        .from('professores')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Erro ao carregar professor:', error);
-        return;
-      }
-
-      if (professorData) {
-        setProfessor(professorData);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar dados do professor:', error);
-    }
-  };
-
-  const loadAllData = async () => {
-    await Promise.all([
-      loadAlunos(),
-      loadPagamentos(),
-      loadAulas()
-    ]);
-  };
-
-  const loadAlunos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('alunos')
-        .select('*')
-        .order('nome');
-
-      if (error) throw error;
-
-      const formattedAlunos = data?.map(aluno => ({
-        id: aluno.id,
-        nome: aluno.nome,
-        email: aluno.email || '',
-        telefone: aluno.telefone,
-        endereco: aluno.endereco,
-        nivel: aluno.nivel,
-        instrumento: aluno.instrumento,
-        valor_mensalidade: aluno.valor_mensalidade,
-        dia_vencimento: aluno.dia_vencimento,
-        duracao_aula: aluno.duracao_aula || 50,
-        tipo_cobranca: aluno.tipo_cobranca,
-        observacoes: aluno.observacoes,
-        status: aluno.ativo ? "ativo" : "inativo" as "ativo" | "inativo",
-        data_nascimento: aluno.data_nascimento,
-        responsavel_nome: aluno.responsavel_nome,
-        responsavel_telefone: aluno.responsavel_telefone,
-        professor_id: aluno.professor_id
-      })) || [];
-
-      setAlunos(formattedAlunos);
-    } catch (error) {
-      console.error('Erro ao carregar alunos:', error);
-    }
-  };
-
-  const loadPagamentos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('pagamentos')
-        .select(`
-          *,
-          alunos!inner(nome)
-        `)
-        .order('data_vencimento', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedPagamentos = data?.map(pagamento => ({
-        id: pagamento.id,
-        alunoId: pagamento.aluno_id,
-        aluno: pagamento.alunos?.nome,
-        valor: Number(pagamento.valor),
-        dataVencimento: pagamento.data_vencimento,
-        dataPagamento: pagamento.data_pagamento,
-        status: pagamento.status as "pendente" | "pago" | "atrasado",
-        formaPagamento: pagamento.forma_pagamento,
-        metodoPagamento: pagamento.tipo_pagamento,
-        linkPagamento: pagamento.link_pagamento,
-        referencia: pagamento.referencia_externa,
-        descricao: pagamento.descricao,
-        professor_id: pagamento.professor_id
-      })) || [];
-
-      setPagamentos(formattedPagamentos);
-    } catch (error) {
-      console.error('Erro ao carregar pagamentos:', error);
-    }
-  };
-
-  const loadAulas = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('aulas')
-        .select(`
-          *,
-          alunos!inner(nome)
-        `)
-        .order('data_hora', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedAulas = data?.map(aula => {
-        const dataHora = new Date(aula.data_hora);
-        return {
-          id: aula.id,
-          alunoId: aula.aluno_id,
-          aluno: aula.alunos?.nome || '',
-          data: dataHora.toISOString().split('T')[0],
-          horario: dataHora.toTimeString().slice(0, 5),
-          duracaoMinutos: aula.duracao_minutos,
-          status: aula.status as "agendada" | "realizada" | "cancelada",
-          linkMeet: aula.link_meet,
-          observacoes: aula.tema,
-          observacoesAula: aula.feedback,
-          materiaisPdf: aula.materiais ? JSON.parse(aula.materiais as string) : [],
-          professor_id: aula.professor_id
-        };
-      }) || [];
-
-      setAulas(formattedAulas);
-    } catch (error) {
-      console.error('Erro ao carregar aulas:', error);
-    }
-  };
+  const [alunos, setAlunos] = useState<Aluno[]>(alunosIniciais);
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>(pagamentosIniciais);
+  const [aulas, setAulas] = useState<Aula[]>(aulasIniciais);
 
   // Funções para alunos
-  const addAluno = async (novoAluno: Omit<Aluno, "id">) => {
-    try {
-      if (!professor) throw new Error('Professor não encontrado');
-
-      const { data, error } = await supabase
-        .from('alunos')
-        .insert({
-          nome: novoAluno.nome,
-          email: novoAluno.email,
-          telefone: novoAluno.telefone,
-          endereco: novoAluno.endereco,
-          nivel: novoAluno.nivel,
-          instrumento: novoAluno.instrumento,
-          valor_mensalidade: novoAluno.valor_mensalidade,
-          dia_vencimento: novoAluno.dia_vencimento,
-          duracao_aula: novoAluno.duracao_aula,
-          tipo_cobranca: novoAluno.tipo_cobranca,
-          observacoes: novoAluno.observacoes,
-          ativo: novoAluno.status === "ativo",
-          data_nascimento: novoAluno.data_nascimento,
-          responsavel_nome: novoAluno.responsavel_nome,
-          responsavel_telefone: novoAluno.responsavel_telefone,
-          professor_id: professor.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      await loadAlunos(); // Recarregar lista
-      toast({
-        title: 'Sucesso',
-        description: 'Aluno adicionado com sucesso!'
-      });
-    } catch (error: any) {
-      console.error('Erro ao adicionar aluno:', error);
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
+  const addAluno = (novoAluno: Omit<Aluno, "id" | "dataCadastro">) => {
+    const aluno: Aluno = {
+      ...novoAluno,
+      id: Date.now().toString(),
+      dataCadastro: new Date().toISOString().split('T')[0]
+    };
+    setAlunos(prev => [...prev, aluno]);
+    
+    // Criar pagamento para o mês atual
+    const hoje = new Date();
+    const proximoVencimento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 5);
+    
+    const novoPagamento: Pagamento = {
+      id: Date.now().toString() + "_pag",
+      alunoId: aluno.id,
+      aluno: aluno.nome,
+      valor: aluno.mensalidade,
+      vencimento: proximoVencimento.toISOString().split('T')[0],
+      pagamento: null,
+      status: "pendente",
+      mes: `${proximoVencimento.toLocaleString('pt-BR', { month: 'long' })} ${proximoVencimento.getFullYear()}`
+    };
+    
+    setPagamentos(prev => [...prev, novoPagamento]);
   };
 
-  const updateAluno = async (id: string, alunoAtualizado: Partial<Aluno>) => {
-    try {
-      const { error } = await supabase
-        .from('alunos')
-        .update({
-          nome: alunoAtualizado.nome,
-          email: alunoAtualizado.email,
-          telefone: alunoAtualizado.telefone,
-          endereco: alunoAtualizado.endereco,
-          nivel: alunoAtualizado.nivel,
-          instrumento: alunoAtualizado.instrumento,
-          valor_mensalidade: alunoAtualizado.valor_mensalidade,
-          dia_vencimento: alunoAtualizado.dia_vencimento,
-          duracao_aula: alunoAtualizado.duracao_aula,
-          tipo_cobranca: alunoAtualizado.tipo_cobranca,
-          observacoes: alunoAtualizado.observacoes,
-          ativo: alunoAtualizado.status === "ativo",
-          data_nascimento: alunoAtualizado.data_nascimento,
-          responsavel_nome: alunoAtualizado.responsavel_nome,
-          responsavel_telefone: alunoAtualizado.responsavel_telefone
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await loadAlunos(); // Recarregar lista
-      toast({
-        title: 'Sucesso',
-        description: 'Aluno atualizado com sucesso!'
-      });
-    } catch (error: any) {
-      console.error('Erro ao atualizar aluno:', error);
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
+  const updateAluno = (id: string, alunoAtualizado: Partial<Aluno>) => {
+    setAlunos(prev => prev.map(aluno => 
+      aluno.id === id ? { ...aluno, ...alunoAtualizado } : aluno
+    ));
   };
 
-  const deleteAluno = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('alunos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await loadAlunos(); // Recarregar lista
-      toast({
-        title: 'Sucesso',
-        description: 'Aluno removido com sucesso!'
-      });
-    } catch (error: any) {
-      console.error('Erro ao deletar aluno:', error);
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
+  const deleteAluno = (id: string) => {
+    setAlunos(prev => prev.filter(aluno => aluno.id !== id));
+    setPagamentos(prev => prev.filter(pagamento => pagamento.alunoId !== id));
+    setAulas(prev => prev.filter(aula => aula.alunoId !== id));
   };
 
   // Funções para pagamentos
-  const marcarPagamento = async (id: string, dataPagamento: string, formaPagamento?: string, metodoPagamento?: string) => {
-    try {
-      const { error } = await supabase
-        .from('pagamentos')
-        .update({
-          data_pagamento: dataPagamento,
-          forma_pagamento: formaPagamento,
-          tipo_pagamento: metodoPagamento,
-          status: 'pago'
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await loadPagamentos(); // Recarregar lista
-      toast({
-        title: 'Sucesso',
-        description: 'Pagamento marcado como pago!'
-      });
-    } catch (error: any) {
-      console.error('Erro ao marcar pagamento:', error);
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
+  const marcarPagamento = (id: string, dataPagamento: string, formaPagamento?: string, metodoPagamento?: string) => {
+    setPagamentos(prev => prev.map(pagamento => 
+      pagamento.id === id 
+        ? { 
+            ...pagamento, 
+            pagamento: dataPagamento, 
+            status: "pago" as const,
+            formaPagamento: formaPagamento as "pix" | "cartao" | "dinheiro" | undefined,
+            metodoPagamento 
+          }
+        : pagamento
+    ));
   };
 
-  const addPagamento = async (novoPagamento: Omit<Pagamento, "id">) => {
-    try {
-      if (!professor) throw new Error('Professor não encontrado');
-
-      const { error } = await supabase
-        .from('pagamentos')
-        .insert({
-          aluno_id: novoPagamento.alunoId,
-          valor: novoPagamento.valor,
-          data_vencimento: novoPagamento.dataVencimento,
-          data_pagamento: novoPagamento.dataPagamento,
-          status: novoPagamento.status,
-          forma_pagamento: novoPagamento.formaPagamento,
-          tipo_pagamento: novoPagamento.metodoPagamento,
-          link_pagamento: novoPagamento.linkPagamento,
-          referencia_externa: novoPagamento.referencia,
-          descricao: novoPagamento.descricao,
-          professor_id: professor.id
-        });
-
-      if (error) throw error;
-
-      await loadPagamentos(); // Recarregar lista
-      toast({
-        title: 'Sucesso',
-        description: 'Pagamento adicionado com sucesso!'
-      });
-    } catch (error: any) {
-      console.error('Erro ao adicionar pagamento:', error);
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
+  const addPagamento = (novoPagamento: Omit<Pagamento, "id">) => {
+    const pagamento: Pagamento = {
+      ...novoPagamento,
+      id: Date.now().toString()
+    };
+    setPagamentos(prev => [...prev, pagamento]);
   };
 
   // Funções para aulas
-  const addAula = async (novaAula: Omit<Aula, "id">) => {
-    try {
-      if (!professor) throw new Error('Professor não encontrado');
-
-      const dataHora = new Date(`${novaAula.data}T${novaAula.horario}:00`);
-
-      const { error } = await supabase
-        .from('aulas')
-        .insert({
-          aluno_id: novaAula.alunoId,
-          professor_id: professor.id,
-          data_hora: dataHora.toISOString(),
-          duracao_minutos: novaAula.duracaoMinutos || 50,
-          status: novaAula.status,
-          link_meet: novaAula.linkMeet,
-          tema: novaAula.observacoes,
-          feedback: novaAula.observacoesAula,
-          materiais: JSON.stringify(novaAula.materiaisPdf || [])
-        });
-
-      if (error) throw error;
-
-      await loadAulas(); // Recarregar lista
-      toast({
-        title: 'Sucesso',
-        description: 'Aula agendada com sucesso!'
-      });
-    } catch (error: any) {
-      console.error('Erro ao adicionar aula:', error);
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
+  const addAula = (novaAula: Omit<Aula, "id">) => {
+    const aula: Aula = {
+      ...novaAula,
+      id: Date.now().toString()
+    };
+    setAulas(prev => [...prev, aula]);
   };
 
-  const updateAula = async (id: string, aulaAtualizada: Partial<Aula>) => {
-    try {
-      const updateData: any = {};
-
-      if (aulaAtualizada.data && aulaAtualizada.horario) {
-        const dataHora = new Date(`${aulaAtualizada.data}T${aulaAtualizada.horario}:00`);
-        updateData.data_hora = dataHora.toISOString();
-      }
-
-      if (aulaAtualizada.duracaoMinutos !== undefined) updateData.duracao_minutos = aulaAtualizada.duracaoMinutos;
-      if (aulaAtualizada.status !== undefined) updateData.status = aulaAtualizada.status;
-      if (aulaAtualizada.linkMeet !== undefined) updateData.link_meet = aulaAtualizada.linkMeet;
-      if (aulaAtualizada.observacoes !== undefined) updateData.tema = aulaAtualizada.observacoes;
-      if (aulaAtualizada.observacoesAula !== undefined) updateData.feedback = aulaAtualizada.observacoesAula;
-      if (aulaAtualizada.materiaisPdf !== undefined) updateData.materiais = JSON.stringify(aulaAtualizada.materiaisPdf);
-
-      const { error } = await supabase
-        .from('aulas')
-        .update(updateData)
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await loadAulas(); // Recarregar lista
-    } catch (error: any) {
-      console.error('Erro ao atualizar aula:', error);
-      toast({
-        title: 'Erro',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
+  const updateAula = (id: string, aulaAtualizada: Partial<Aula>) => {
+    setAulas(prev => prev.map(aula => 
+      aula.id === id ? { ...aula, ...aulaAtualizada } : aula
+    ));
   };
 
   // Utility functions
@@ -534,16 +248,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return alunos.find(aluno => aluno.id === id);
   };
 
-  const refreshData = async () => {
-    setLoading(true);
-    await loadAllData();
-    setLoading(false);
-  };
-
   return (
     <AppContext.Provider value={{
-      professor,
-      loading,
       alunos,
       addAluno,
       updateAluno,
@@ -554,8 +260,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       aulas,
       addAula,
       updateAula,
-      getAlunoById,
-      refreshData
+      getAlunoById
     }}>
       {children}
     </AppContext.Provider>

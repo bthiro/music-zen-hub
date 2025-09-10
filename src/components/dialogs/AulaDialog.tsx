@@ -89,7 +89,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
     const aulas = [];
     const dataInicial = new Date(primeiraData);
     const aluno = alunos.find(a => a.id === alunoId);
-    const duracaoMinutos = aluno?.duracao_aula || 50;
+    const duracaoMinutos = aluno?.duracaoAula || 50;
     const horarioFim = calcularHorarioFim(horario, duracaoMinutos);
     const intervaloDias = calcularIntervalo(formData.intervaloAulas);
     const quantidade = formData.intervaloAulas === 'unica' ? 1 : formData.quantidadeAulas;
@@ -230,7 +230,7 @@ export function AulaDialog({ open, onOpenChange, alunoId, alunoNome }: AulaDialo
         if (newData.alunoId && newData.horario) {
           const aluno = alunos.find(a => a.id === newData.alunoId);
           if (aluno) {
-            newData.horarioFim = calcularHorarioFim(newData.horario, aluno.duracao_aula);
+            newData.horarioFim = calcularHorarioFim(newData.horario, aluno.duracaoAula);
           }
         }
       }
