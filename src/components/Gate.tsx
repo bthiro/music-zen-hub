@@ -7,6 +7,8 @@ interface GateProps {
   children: ReactNode;
   requireAuth?: boolean;
   requiredRole?: string;
+  allowedRoles?: Array<'admin' | 'professor'>;
+  requireActiveStatus?: boolean;
   redirectTo?: string;
 }
 
@@ -14,6 +16,8 @@ export function Gate({
   children, 
   requireAuth = true, 
   requiredRole,
+  allowedRoles = [],
+  requireActiveStatus = false,
   redirectTo = '/auth' 
 }: GateProps) {
   const { user, loading, initialized } = useAuth();
@@ -43,7 +47,7 @@ export function Gate({
     return <Navigate to={redirectTo} replace />;
   }
 
-  // Check role requirement
+  // Check role requirement (single role)
   if (requiredRole && user?.role !== requiredRole) {
     // Redirect based on user role
     if (user?.role === 'admin') {
@@ -53,6 +57,24 @@ export function Gate({
     } else {
       return <Navigate to={redirectTo} replace />;
     }
+  }
+
+  // Check role requirement (multiple allowed roles)
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role as any)) {
+    // Redirect based on user role
+    if (user?.role === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else if (user?.role === 'professor') {
+      return <Navigate to="/app" replace />;
+    } else {
+      return <Navigate to={redirectTo} replace />;
+    }
+  }
+
+  // Check active status for professors (placeholder for now)
+  if (requireActiveStatus && user?.role === 'professor') {
+    // TODO: Implement professor status check from database
+    // For now, we allow access but this should verify professor.status = 'ativo'
   }
 
   return <>{children}</>;

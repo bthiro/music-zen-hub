@@ -3,6 +3,12 @@ project_id = "hnftxautmxviwrfuaosu"
 [functions.mercado-pago]
 verify_jwt = false
 
+[functions.mercado-pago-webhook]
+verify_jwt = false
+
+[functions.mercado-pago-reprocess]
+verify_jwt = true
+
 [functions.ia-musical]
 verify_jwt = false
 

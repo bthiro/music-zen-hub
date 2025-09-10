@@ -35,6 +35,10 @@ import {
 import { useProfessorData } from "@/hooks/useProfessorData";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { StatsCard } from "@/components/ui/stats-card";
+import { MercadoPagoButton } from "@/components/MercadoPagoButton";
+import { PaymentStatusDisplay } from "@/components/PaymentStatusDisplay";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -58,7 +62,8 @@ type AlunoFormData = z.infer<typeof alunoSchema>;
 
 export default function ProfessorApp() {
   const { user } = useAuthContext();
-  const { 
+  const { toast } = useToast();
+  const {
     stats, 
     alunos, 
     pagamentos, 
@@ -96,6 +101,48 @@ export default function ProfessorApp() {
     if (!error) {
       setAddAlunoDialogOpen(false);
       alunoForm.reset();
+    }
+  };
+
+  const handleScheduleClass = (alunoId: string, alunoName: string) => {
+    toast({
+      title: "Agendar Aula",
+      description: `Pagamento confirmado! Você pode agendar aulas para ${alunoName}`,
+    });
+    // TODO: Navigate to scheduling interface or open scheduling modal
+  };
+
+  const handleReprocessPayment = async (paymentId: string) => {
+    try {
+      toast({
+        title: "Verificando pagamento",
+        description: "Consultando status no Mercado Pago...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('mercado-pago-reprocess', {
+        body: { payment_id: paymentId }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.success) {
+        toast({
+          title: "Status atualizado",
+          description: `Pagamento ${data.payment_id}: ${data.old_status} → ${data.new_status}`,
+        });
+        
+        // Reload data to show updated status
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Erro ao reprocessar pagamento:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao verificar status do pagamento",
+        variant: "destructive"
+      });
     }
   };
 
@@ -438,24 +485,11 @@ export default function ProfessorApp() {
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className={`${getStatusColor(pagamento.status)} text-white`}>
-                            {pagamento.status}
-                          </Badge>
-                          <span className="font-medium">{formatCurrency(pagamento.valor)}</span>
-                          {pagamento.status === 'pendente' && (
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedPagamento(pagamento);
-                                setPagamentoDialogOpen(true);
-                              }}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Marcar como Pago
-                            </Button>
-                          )}
-                        </div>
+                        <PaymentStatusDisplay
+                          pagamento={pagamento}
+                          onScheduleClass={handleScheduleClass}
+                          onReprocessPayment={handleReprocessPayment}
+                        />
                       </div>
                     </CardContent>
                   </Card>

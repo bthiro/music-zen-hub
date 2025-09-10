@@ -9,15 +9,17 @@ export interface Pagamento {
   valor: number;
   vencimento: string;
   pagamento: string | null;
-  status: "pago" | "pendente" | "atrasado";
+  status: "pago" | "pendente" | "atrasado" | "cancelado" | "reembolsado";
   mes: string;
-  formaPagamento?: "pix" | "cartao" | "dinheiro";
+  formaPagamento?: "pix" | "cartao" | "dinheiro" | "mercado_pago";
   metodoPagamento?: string;
   professor_id?: string;
   // Additional fields for compatibility
   data_vencimento?: string;
   data_pagamento?: string;
   dataPagamento?: string;
+  mercado_pago_payment_id?: string;
+  eligible_to_schedule?: boolean;
 }
 
 export function usePagamentos() {
@@ -54,8 +56,8 @@ export function usePagamentos() {
           year: 'numeric' 
         });
 
-        // Determinar status baseado na data de vencimento
-        let status: "pago" | "pendente" | "atrasado" = pagamento.status;
+        // Determinar status baseado na data de vencimento e status do banco
+        let status: "pago" | "pendente" | "atrasado" | "cancelado" | "reembolsado" = pagamento.status as any;
         if (status === 'pendente' && vencimento < new Date()) {
           status = 'atrasado';
         }
@@ -69,9 +71,11 @@ export function usePagamentos() {
           pagamento: pagamento.data_pagamento,
           status,
           mes: mes.charAt(0).toUpperCase() + mes.slice(1),
-          formaPagamento: pagamento.forma_pagamento as "pix" | "cartao" | "dinheiro" | undefined,
+          formaPagamento: pagamento.forma_pagamento as "pix" | "cartao" | "dinheiro" | "mercado_pago" | undefined,
           metodoPagamento: pagamento.referencia_externa,
-          professor_id: pagamento.professor_id
+          professor_id: pagamento.professor_id,
+          mercado_pago_payment_id: pagamento.mercado_pago_payment_id,
+          eligible_to_schedule: pagamento.eligible_to_schedule
         };
       }) || [];
 

@@ -309,6 +309,7 @@ export type Database = {
           data_pagamento: string | null
           data_vencimento: string
           descricao: string | null
+          eligible_to_schedule: boolean | null
           forma_pagamento: string | null
           id: string
           link_pagamento: string | null
@@ -328,6 +329,7 @@ export type Database = {
           data_pagamento?: string | null
           data_vencimento: string
           descricao?: string | null
+          eligible_to_schedule?: boolean | null
           forma_pagamento?: string | null
           id?: string
           link_pagamento?: string | null
@@ -347,6 +349,7 @@ export type Database = {
           data_pagamento?: string | null
           data_vencimento?: string
           descricao?: string | null
+          eligible_to_schedule?: boolean | null
           forma_pagamento?: string | null
           id?: string
           link_pagamento?: string | null
@@ -470,6 +473,36 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          created_at: string
+          id: string
+          id_evento: string
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_evento: string
+          payload: Json
+          processed_at?: string | null
+          received_at?: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_evento?: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          tipo?: string
         }
         Relationships: []
       }
