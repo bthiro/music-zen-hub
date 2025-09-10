@@ -6,8 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Gate } from "@/components/Gate";
 import AuthPage from "./pages/AuthPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import ProfessorApp from "./pages/ProfessorApp";
+import { AdminRouter } from "@/components/AdminRouter";
+import { ProfessorRouter } from "@/components/ProfessorRouter";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
@@ -27,14 +27,14 @@ const App = () => (
             {/* Protected admin routes */}
             <Route path="/admin/*" element={
               <Gate allowedRoles={['admin']}>
-                <AdminDashboard />
+                <AdminRouter />
               </Gate>
             } />
             
             {/* Protected professor routes */}
             <Route path="/app/*" element={
               <Gate allowedRoles={['professor']} requireActiveStatus>
-                <ProfessorApp />
+                <ProfessorRouter />
               </Gate>
             } />
             

@@ -198,50 +198,52 @@ export function useAdmin() {
     modules?: Record<string, boolean>;
   }) => {
     try {
-      // First create auth user (this would need to be done via admin API)
-      // For now, just create the professor record
-      const { data, error } = await supabase
-        .from('professores')
-        .insert([{
-          ...professorData,
-          status: 'ativo',
+      console.log('[useAdmin] Creating professor via edge function:', professorData);
+      
+      // Call edge function to create professor with admin privileges
+      const { data: result, error } = await supabase.functions.invoke('admin-create-professor', {
+        body: {
+          nome: professorData.nome,
+          email: professorData.email,
+          telefone: professorData.telefone,
           plano: professorData.plano || 'basico',
-          limite_alunos: professorData.limite_alunos || 50,
-          modules: professorData.modules || {
-            dashboard: true,
-            ia: false,
-            ferramentas: true,
-            agenda: true,
-            pagamentos: true,
-            materiais: true,
-            lousa: true
-          }
-        }])
-        .select()
-        .single();
+          limite_alunos: professorData.limite_alunos || 50
+        }
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useAdmin] Edge function error:', error);
+        throw new Error(error.message || 'Erro na função de criação');
+      }
 
-      setProfessores(prev => [data, ...prev]);
+      if (!result.success) {
+        console.error('[useAdmin] Edge function returned error:', result.error);
+        throw new Error(result.error || result.message || 'Erro desconhecido');
+      }
+
+      console.log('[useAdmin] Professor created successfully:', result.professor);
+
+      // Update local state
+      setProfessores(prev => [result.professor, ...prev]);
 
       await logAction(
         'professor_created',
         'professores',
-        data.id,
-        { nome: professorData.nome, email: professorData.email }
+        result.professor.id,
+        { nome: professorData.nome, email: professorData.email, auth_user_id: result.auth_user_id }
       );
 
       toast({
         title: "Sucesso",
-        description: "Professor criado com sucesso",
+        description: `Professor criado com sucesso! Email: ${professorData.email}`,
       });
 
-      return { data, error: null };
-    } catch (error) {
-      console.error('Error creating professor:', error);
+      return { data: result.professor, error: null };
+    } catch (error: any) {
+      console.error('[useAdmin] Error creating professor:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar o professor",
+        description: error?.message || "Não foi possível criar o professor",
         variant: "destructive",
       });
       return { data: null, error };
