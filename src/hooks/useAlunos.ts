@@ -31,6 +31,40 @@ export function useAlunos() {
 
   const loadAlunos = async () => {
     try {
+      console.log('[Alunos] loadAlunos called at', new Date().toISOString());
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('[Alunos] No user session. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
+      // Check role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!roleData?.role || roleData.role !== 'professor') {
+        console.log('[Alunos] User role is not professor. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
+      // Check professor status
+      const { data: profile } = await supabase
+        .from('professores')
+        .select('status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!profile || profile.status !== 'ativo') {
+        console.log('[Alunos] Professor status is not ativo. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       const { data, error } = await supabase
         .from('alunos')
@@ -41,9 +75,9 @@ export function useAlunos() {
       if (error) {
         console.error('Erro ao carregar alunos:', error);
         toast({
-          title: "Erro ao carregar alunos",
-          description: "Verifique sua conexão e tente novamente.",
-          variant: "destructive"
+          title: 'Erro ao carregar alunos',
+          description: 'Verifique sua conexão e tente novamente.',
+          variant: 'destructive'
         });
         return;
       }
@@ -59,9 +93,9 @@ export function useAlunos() {
         mensalidade: Number(aluno.valor_mensalidade) || 0,
         duracaoAula: (aluno.duracao_aula as 30 | 50) || 50,
         observacoes: aluno.observacoes,
-        status: (aluno.ativo ? "ativo" : "inativo") as "ativo" | "inativo" | "pendente",
+        status: (aluno.ativo ? 'ativo' : 'inativo') as 'ativo' | 'inativo' | 'pendente',
         dataCadastro: new Date(aluno.created_at).toISOString().split('T')[0],
-        tipoCobranca: (aluno.tipo_cobranca as "mensal" | "aula_unica") || "mensal",
+        tipoCobranca: (aluno.tipo_cobranca as 'mensal' | 'aula_unica') || 'mensal',
         professor_id: aluno.professor_id,
         instrumento: aluno.instrumento,
         nivel: aluno.nivel,
@@ -73,9 +107,9 @@ export function useAlunos() {
     } catch (error) {
       console.error('Erro ao carregar alunos:', error);
       toast({
-        title: "Erro ao carregar alunos",
-        description: "Erro interno da aplicação.",
-        variant: "destructive"
+        title: 'Erro ao carregar alunos',
+        description: 'Erro interno da aplicação.',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
