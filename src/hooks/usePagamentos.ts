@@ -30,6 +30,40 @@ export function usePagamentos() {
 
   const loadPagamentos = async () => {
     try {
+      console.log('[Pagamentos] loadPagamentos called at', new Date().toISOString());
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('[Pagamentos] No user session. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
+      // Check role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!roleData?.role || roleData.role !== 'professor') {
+        console.log('[Pagamentos] User role is not professor. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
+      // Check professor status
+      const { data: profile } = await supabase
+        .from('professores')
+        .select('status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!profile || profile.status !== 'ativo') {
+        console.log('[Pagamentos] Professor status is not ativo. Skipping fetch.');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       
       const { data, error } = await supabase
