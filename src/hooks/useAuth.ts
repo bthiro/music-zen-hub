@@ -158,12 +158,18 @@ export function useAuth() {
     });
 
     if (error) {
+      const desc = error.message?.includes('Cadastro direto não permitido')
+        ? 'Cadastro direto está desativado. Peça a um administrador para criar sua conta.'
+        : error.message === 'User already registered'
+          ? 'Este email já está cadastrado'
+          : error.message?.includes('duplicate key value')
+            ? 'Conta já existe. Tente fazer login com sua senha ou Google.'
+            : error.message;
+      console.error('[Auth] SignUp error:', error);
       toast({
-        title: "Erro no Cadastro",
-        description: error.message === 'User already registered'
-          ? "Este email já está cadastrado"
-          : error.message,
-        variant: "destructive",
+        title: 'Erro no Cadastro',
+        description: desc,
+        variant: 'destructive',
       });
       return { error };
     }
@@ -184,25 +190,42 @@ export function useAuth() {
 
   const signInWithGoogle = async () => {
     const redirectTo = `${window.location.origin}/auth/google/callback`;
-    console.log('[Auth] Google sign-in start', { redirectTo, href: window.location.href });
-    const { error } = await supabase.auth.signInWithOAuth({
+    const inIframe = window.top !== window;
+    console.log('[Auth] Google sign-in start', { redirectTo, href: window.location.href, inIframe });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo,
-        queryParams: { prompt: 'consent', access_type: 'offline' }
-      }
+        queryParams: { prompt: 'consent', access_type: 'offline' },
+        skipBrowserRedirect: true,
+      },
     });
 
     if (error) {
       console.error('[Auth] Google sign-in error:', error, { redirectTo, href: window.location.href });
       const friendly = error.message?.includes('redirect_uri_mismatch')
-        ? 'Configuração inválida do OAuth (redirect URI). Verifique Google Console e Supabase.'
-        : error.message;
-      toast({
-        title: 'Erro no Login com Google',
-        description: friendly,
-        variant: 'destructive',
-      });
+        ? 'Redirect URI não corresponde. Atualize Google Console e Supabase com a URL atual.'
+        : error.message || 'Falha ao iniciar login com Google.';
+      toast({ title: 'Erro no Login com Google', description: friendly, variant: 'destructive' });
+      return;
+    }
+
+    if (data?.url) {
+      // Abrir fora do iframe para evitar bloqueio do Google
+      try {
+        if (window.top && inIframe) {
+          (window.top as Window).location.href = data.url;
+        } else {
+          window.location.href = data.url;
+        }
+      } catch (e) {
+        console.warn('[Auth] Top navigation blocked, falling back to same window', e);
+        window.location.href = data.url;
+      }
+    } else {
+      console.error('[Auth] No OAuth URL returned', { redirectTo });
+      toast({ title: 'Erro no Login com Google', description: 'URL de autenticação não retornada.', variant: 'destructive' });
     }
   };
 
