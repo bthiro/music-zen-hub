@@ -8,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useProfessorProfile } from "@/hooks/useProfessorProfile";
 import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
 import { supabase } from "@/integrations/supabase/client";
+import { MercadoPagoIntegration } from "@/components/MercadoPagoIntegration";
 import { 
   User, 
   Mail, 
@@ -29,7 +31,9 @@ import {
   DollarSign,
   Save,
   Eye,
-  EyeOff
+  EyeOff,
+  Crown,
+  FileText
 } from "lucide-react";
 
 export default function Perfil() {
@@ -44,16 +48,17 @@ export default function Perfil() {
   } = useProfessorProfile();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [profileData, setProfileData] = useState({
     nome: '',
     email: '',
     telefone: '',
     bio: '',
     especialidades: '',
     pix_key: '',
-    billing_text: ''
+    billing_text: '',
+    avatar_url: ''
   });
   const [passwords, setPasswords] = useState({
     current: '',
@@ -69,17 +74,34 @@ export default function Perfil() {
   // Carregar dados do perfil
   useEffect(() => {
     if (profile) {
-      setFormData({
+      setProfileData({
         nome: profile.nome || '',
         email: profile.email || '',
         telefone: profile.telefone || '',
         bio: profile.bio || '',
         especialidades: profile.especialidades || '',
         pix_key: profile.pix_key || '',
-        billing_text: profile.billing_text || ''
+        billing_text: profile.billing_text || '',
+        avatar_url: profile.avatar_url || ''
       });
     }
   }, [profile]);
+
+  const loadProfile = () => {
+    // Reload profile data
+    if (profile) {
+      setProfileData({
+        nome: profile.nome || '',
+        email: profile.email || '',
+        telefone: profile.telefone || '',
+        bio: profile.bio || '',
+        especialidades: profile.especialidades || '',
+        pix_key: profile.pix_key || '',
+        billing_text: profile.billing_text || '',
+        avatar_url: profile.avatar_url || ''
+      });
+    }
+  };
 
   // Upload de avatar
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,10 +144,10 @@ export default function Perfil() {
   };
 
   // Salvar alterações no perfil
-  const handleSaveProfile = async () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
-      await updateProfile(formData);
+      await updateProfile(profileData);
       setIsEditing(false);
       toast({
         title: 'Perfil atualizado!',
@@ -263,11 +285,11 @@ export default function Perfil() {
                     <div className="flex items-center gap-2 mt-2">
                       <Badge className="flex items-center gap-1">
                         <Crown className="h-3 w-3" />
-                        {profileData.plano === 'premium' ? 'Premium' : 'Básico'}
+                        Professor
                       </Badge>
                       <Badge variant="outline">
                         <Calendar className="h-3 w-3 mr-1" />
-                        Limite: {profileData.limite_alunos} alunos
+                        Ativo
                       </Badge>
                     </div>
                   </div>

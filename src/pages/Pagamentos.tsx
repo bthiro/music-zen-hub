@@ -348,7 +348,7 @@ export default function Pagamentos() {
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold">{pagamento.aluno}</h3>
                       <Badge variant="outline" className="capitalize">
-                        {pagamento.tipo_pagamento?.replace('_', ' ') || 'Mensal'}
+                        {pagamento.formaPagamento?.replace('_', ' ') || 'Manual'}
                       </Badge>
                     </div>
                     
