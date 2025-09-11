@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { useAuthContext } from "@/contexts/AuthContext";
-import ProfessorApp from "@/pages/ProfessorApp";
+import Dashboard from "@/pages/Dashboard";
 import Alunos from "@/pages/Alunos";
 import Pagamentos from "@/pages/Pagamentos";
 import Aulas from "@/pages/Aulas";
@@ -64,7 +64,7 @@ function ModuleGuard({
 export function ProfessorRouter() {
   return (
     <Routes>
-      <Route path="/" element={<ProfessorApp />} />
+      <Route path="/" element={<Dashboard />} />
       <Route path="/alunos" element={<Alunos />} />
       <Route path="/pagamentos" element={
         <ModuleGuard moduleKey="pagamentos" moduleName="Pagamentos">
