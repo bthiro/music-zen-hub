@@ -458,7 +458,9 @@ export type Database = {
           created_at: string
           criado_por: string | null
           data_expiracao: string | null
+          data_nascimento: string | null
           email: string
+          endereco: string | null
           especialidades: string | null
           id: string
           limite_alunos: number | null
@@ -483,7 +485,9 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           data_expiracao?: string | null
+          data_nascimento?: string | null
           email: string
+          endereco?: string | null
           especialidades?: string | null
           id?: string
           limite_alunos?: number | null
@@ -508,7 +512,9 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           data_expiracao?: string | null
+          data_nascimento?: string | null
           email?: string
+          endereco?: string | null
           especialidades?: string | null
           id?: string
           limite_alunos?: number | null

@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, CheckCircle, AlertCircle, XCircle, RefreshCw } from "lucide-react";
 import { MercadoPagoButton } from "@/components/MercadoPagoButton";
+import { useAuthContext } from "@/contexts/AuthContext";
 import type { Pagamento } from "@/hooks/usePagamentos";
 
 interface PaymentStatusDisplayProps {
@@ -15,6 +16,9 @@ export function PaymentStatusDisplay({
   onScheduleClass,
   onReprocessPayment 
 }: PaymentStatusDisplayProps) {
+  const { user } = useAuthContext();
+  const isAdmin = user?.role === 'admin';
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pago': return 'bg-green-600';
@@ -53,8 +57,8 @@ export function PaymentStatusDisplay({
       
       <span className="font-medium">{formatCurrency(pagamento.valor)}</span>
       
-      {/* Show MercadoPago button for pending/overdue payments */}
-      {(['pendente', 'atrasado'].includes(pagamento.status)) && (
+      {/* Show MercadoPago button for pending/overdue payments - ONLY FOR PROFESSORS */}
+      {(['pendente', 'atrasado'].includes(pagamento.status)) && !isAdmin && (
         <div className="flex gap-2">
           <MercadoPagoButton 
             alunoId={pagamento.alunoId}
@@ -74,6 +78,14 @@ export function PaymentStatusDisplay({
               Verificar
             </Button>
           )}
+        </div>
+      )}
+      
+      {/* Show info for admin when payment is pending/overdue */}
+      {(['pendente', 'atrasado'].includes(pagamento.status)) && isAdmin && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <AlertCircle className="h-3 w-3" />
+          Gerenciado pelo professor
         </div>
       )}
       

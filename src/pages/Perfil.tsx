@@ -57,7 +57,9 @@ export default function Perfil() {
     especialidades: '',
     pix_key: '',
     billing_text: '',
-    avatar_url: ''
+    avatar_url: '',
+    data_nascimento: '',
+    endereco: ''
   });
   const [passwords, setPasswords] = useState({
     current: '',
@@ -81,7 +83,9 @@ export default function Perfil() {
         especialidades: profile.especialidades || '',
         pix_key: profile.pix_key || '',
         billing_text: profile.billing_text || '',
-        avatar_url: profile.avatar_url || ''
+        avatar_url: profile.avatar_url || '',
+        data_nascimento: profile.data_nascimento || '',
+        endereco: profile.endereco || ''
       });
     }
   }, [profile]);
@@ -96,7 +100,9 @@ export default function Perfil() {
         especialidades: profile.especialidades || '',
         pix_key: profile.pix_key || '',
         billing_text: profile.billing_text || '',
-        avatar_url: profile.avatar_url || ''
+        avatar_url: profile.avatar_url || '',
+        data_nascimento: profile.data_nascimento || '',
+        endereco: profile.endereco || ''
       });
     }
   };
@@ -345,6 +351,16 @@ export default function Perfil() {
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="data_nascimento">Data de Nascimento</Label>
+                    <Input
+                      id="data_nascimento"
+                      type="date"
+                      value={profileData.data_nascimento || ''}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, data_nascimento: e.target.value }))}
+                    />
+                  </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="especialidades">Especialidades</Label>
@@ -353,6 +369,16 @@ export default function Perfil() {
                       placeholder="Piano, Violão, Teoria Musical..."
                       value={profileData.especialidades || ''}
                       onChange={(e) => setProfileData(prev => ({ ...prev, especialidades: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="endereco">Endereço</Label>
+                    <Input
+                      id="endereco"
+                      placeholder="Rua, número, bairro, cidade, estado"
+                      value={profileData.endereco || ''}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, endereco: e.target.value }))}
                     />
                   </div>
                 </div>

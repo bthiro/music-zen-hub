@@ -10,6 +10,8 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -29,6 +31,7 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function AuthPage() {
   const { user, signIn, signUp, signInWithGoogle, loading } = useAuthContext();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -166,6 +169,45 @@ export default function AuthPage() {
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Entrar
                 </Button>
+
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                    onClick={async () => {
+                      const email = loginForm.getValues('email');
+                      if (!email) {
+                        loginForm.setError('email', { 
+                          type: 'manual', 
+                          message: 'Digite seu email primeiro' 
+                        });
+                        return;
+                      }
+                      
+                      try {
+                        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                          redirectTo: `${window.location.origin}/auth?reset=true`
+                        });
+                        
+                        if (error) throw error;
+                        
+                        toast({
+                          title: 'Email enviado!',
+                          description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: 'Erro',
+                          description: error.message || 'Não foi possível enviar o email.',
+                          variant: 'destructive',
+                        });
+                      }
+                    }}
+                  >
+                    Esqueci minha senha
+                  </Button>
+                </div>
               </form>
 
               <div className="relative">

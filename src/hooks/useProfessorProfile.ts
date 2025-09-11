@@ -18,6 +18,8 @@ interface ProfessorProfile {
   status: string;
   created_at: string;
   updated_at: string;
+  data_nascimento?: string;
+  endereco?: string;
 }
 
 interface ProfileUpdateData {
@@ -27,6 +29,8 @@ interface ProfileUpdateData {
   especialidades?: string;
   pix_key?: string;
   billing_text?: string;
+  data_nascimento?: string;
+  endereco?: string;
 }
 
 export function useProfessorProfile() {

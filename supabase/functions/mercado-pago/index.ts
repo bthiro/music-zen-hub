@@ -35,29 +35,83 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const requestData = await req.json();
-    console.log("Dados recebidos:", requestData);
-    
-    const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
-
-    if (!accessToken) {
-      console.error("MERCADOPAGO_ACCESS_TOKEN não encontrado");
-      throw new Error("Token do Mercado Pago não configurado");
+    // Get user from JWT token
+    const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Token de autorização necessário' }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
-    console.log("Token encontrado, processando...");
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(authHeader);
+    if (userError || !user) {
+      console.error("Erro de autenticação:", userError);
+      return new Response(JSON.stringify({ error: 'Usuário não autenticado' }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Get professor ID and verify ownership
+    const { data: professor, error: profError } = await supabaseClient
+      .from('professores')
+      .select('id, user_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profError || !professor) {
+      console.error("Professor não encontrado:", profError);
+      return new Response(JSON.stringify({ error: 'Professor não encontrado' }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Get professor's Mercado Pago config
+    const { data: mpConfig, error: mpConfigError } = await supabaseClient
+      .from('integration_configs')
+      .select('config_data')
+      .eq('professor_id', professor.id)
+      .eq('integration_name', 'mercado_pago')
+      .eq('status', 'connected')
+      .single();
+
+    if (mpConfigError || !mpConfig?.config_data?.access_token) {
+      console.error("Mercado Pago não configurado:", mpConfigError);
+      return new Response(JSON.stringify({ error: 'Mercado Pago não configurado para este professor' }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    const accessToken = mpConfig.config_data.access_token;
+    const requestData = await req.json();
+    console.log("Dados recebidos:", requestData);
 
     if (requestData.action === 'create_payment') {
       const { aluno_id, valor, tipo_pagamento, descricao, external_reference } = requestData as CreatePaymentRequest;
 
-      // Buscar dados do professor e aluno (usando dados mockados por enquanto)
-      const professor = { id: "prof1", nome: "Professor Teste", email: "prof@teste.com" };
-      const aluno = { nome: "Aluno Teste", email: "aluno@teste.com" };
+      // CRITICAL: Verify aluno belongs to this professor
+      const { data: aluno, error: alunoError } = await supabaseClient
+        .from('alunos')
+        .select('nome, email, professor_id')
+        .eq('id', aluno_id)
+        .eq('professor_id', professor.id) // SECURITY: Owner validation
+        .single();
 
-      // Criar preference no Mercado Pago
+      if (alunoError || !aluno) {
+        console.error("Aluno não encontrado ou não pertence ao professor:", alunoError);
+        return new Response(JSON.stringify({ error: 'Aluno não encontrado ou acesso negado' }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // Create preference no Mercado Pago
       const preferenceData = {
         items: [
           {
@@ -72,11 +126,11 @@ serve(async (req) => {
           email: aluno.email || "aluno@exemplo.com"
         },
         external_reference: external_reference || `${tipo_pagamento}_${Date.now()}`,
-        notification_url: `${req.headers.get("origin")}/api/mercado-pago/webhook`,
+        notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercado-pago-webhook`,
         back_urls: {
-          success: `${req.headers.get("origin")}/pagamentos?status=success`,
-          failure: `${req.headers.get("origin")}/pagamentos?status=failure`,
-          pending: `${req.headers.get("origin")}/pagamentos?status=pending`
+          success: `${req.headers.get("origin")}/app/pagamentos?status=success`,
+          failure: `${req.headers.get("origin")}/app/pagamentos?status=failure`,
+          pending: `${req.headers.get("origin")}/app/pagamentos?status=pending`
         },
         auto_return: "approved"
       };
@@ -101,70 +155,12 @@ serve(async (req) => {
       const mpData = await mpResponse.json();
       console.log("Preference criada:", mpData);
 
-      // Para sistemas mockados, não salvamos no banco por enquanto
-      /*
-      // Salvar pagamento no banco de dados
-      const { data: pagamento, error: pagamentoError } = await supabaseClient
-        .from('pagamentos')
-        .insert({
-          professor_id: professor.id,
-          aluno_id: aluno_id,
-          valor: valor,
-          tipo_pagamento: tipo_pagamento,
-          descricao: descricao,
-          referencia_externa: mpData.id,
-          link_pagamento: mpData.init_point,
-          status: 'pendente',
-          data_vencimento: new Date().toISOString().split('T')[0]
-        })
-        .select()
-        .single();
-
-      if (pagamentoError) {
-        console.error("Erro ao salvar pagamento:", pagamentoError);
-        throw new Error("Erro ao salvar pagamento no banco de dados");
-      }
-      */
-
       return new Response(JSON.stringify({
         success: true,
         payment_link: mpData.init_point,
         preference_id: mpData.id,
-        pagamento_id: `mock_${Date.now()}`
+        professor_id: professor.id
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-
-    } else if (requestData.action === 'webhook') {
-      // Webhook do Mercado Pago
-      const { payment_id, status } = requestData as WebhookRequest;
-
-      console.log("Webhook recebido:", { payment_id, status });
-
-      // Buscar detalhes do pagamento no Mercado Pago
-      const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${payment_id}`, {
-        headers: {
-          "Authorization": `Bearer ${accessToken}`
-        }
-      });
-
-      if (!paymentResponse.ok) {
-        throw new Error("Erro ao buscar pagamento no Mercado Pago");
-      }
-
-      const paymentData = await paymentResponse.json();
-      console.log("Dados do pagamento recebido via webhook:", paymentData);
-
-      // Por enquanto só logamos, quando integrar com banco real vamos salvar
-      console.log("Pagamento atualizado:", {
-        id: payment_id,
-        status: paymentData.status,
-        payment_method: paymentData.payment_method_id,
-        transaction_amount: paymentData.transaction_amount
-      });
-
-      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -198,7 +194,8 @@ serve(async (req) => {
           payment_method: payment.payment_method_id,
           amount: payment.transaction_amount,
           date_approved: payment.date_approved,
-          external_reference: payment.external_reference
+          external_reference: payment.external_reference,
+          professor_id: professor.id
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -207,7 +204,8 @@ serve(async (req) => {
         return new Response(JSON.stringify({
           success: true,
           payment_found: false,
-          status: 'pending'
+          status: 'pending',
+          professor_id: professor.id
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,

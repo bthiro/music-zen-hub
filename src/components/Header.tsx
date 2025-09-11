@@ -1,6 +1,7 @@
 import { Music } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserMenu } from "@/components/UserMenu";
 
 export function Header() {
   return (
@@ -20,8 +21,9 @@ export function Header() {
           </div>
         </div>
         
-        <div className="flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <ThemeToggle />
+          <UserMenu />
         </div>
       </div>
     </header>

@@ -37,7 +37,9 @@ export default function PerfilAdmin() {
     email: user?.email || '',
     telefone: '',
     bio: 'Administrador do sistema Music Zen Hub',
-    avatar_url: ''
+    avatar_url: '',
+    data_nascimento: '',
+    endereco: ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -321,6 +323,28 @@ export default function PerfilAdmin() {
                       onChange={(e) => setProfileData(prev => ({ ...prev, telefone: e.target.value }))}
                       disabled={!isEditing}
                       placeholder="(00) 00000-0000"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="data_nascimento">Data de Nascimento</Label>
+                    <Input
+                      id="data_nascimento"
+                      type="date"
+                      value={profileData.data_nascimento}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, data_nascimento: e.target.value }))}
+                      disabled={!isEditing}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="endereco">Endereço</Label>
+                    <Input
+                      id="endereco"
+                      value={profileData.endereco}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, endereco: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="Rua, número, bairro, cidade, estado"
                     />
                   </div>
                   

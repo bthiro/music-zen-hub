@@ -34,6 +34,7 @@ const adminMenuItems = [
   { icon: CreditCard, label: "Pagamentos", href: "/admin/pagamentos" },
   { icon: Users, label: "Alunos", href: "/admin/alunos" },
   { icon: Settings, label: "Configurações", href: "/admin/configuracoes" },
+  { icon: Users, label: "Perfil", href: "/admin/perfil" },
 ];
 
 // Professor menu items
@@ -48,6 +49,7 @@ const professorMenuItems = [
   { icon: Wrench, label: "Ferramentas", href: "/app/ferramentas", moduleKey: "ferramentas" },
   { icon: Brain, label: "IA Musical", href: "/app/ia-musical", moduleKey: "ia" },
   { icon: Settings, label: "Configurações", href: "/app/configuracoes", moduleKey: null }, // Always available
+  { icon: Users, label: "Perfil", href: "/app/perfil", moduleKey: null }, // Always available
 ];
 
 export function AppSidebar() {
