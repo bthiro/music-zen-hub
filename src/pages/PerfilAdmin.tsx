@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminProfile } from '@/hooks/useAdminProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   User, 
@@ -28,19 +29,11 @@ import {
 export default function PerfilAdmin() {
   const { user } = useAuthContext();
   const { toast } = useToast();
+  const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useAdminProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [profileData, setProfileData] = useState({
-    nome: user?.email?.split('@')[0] || '',
-    email: user?.email || '',
-    telefone: '',
-    bio: 'Administrador do sistema Music Zen Hub',
-    avatar_url: '',
-    data_nascimento: '',
-    endereco: ''
-  });
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -78,62 +71,18 @@ export default function PerfilAdmin() {
       return;
     }
 
-    try {
-      setSaving(true);
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `admin-avatar-${user?.id}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      setProfileData(prev => ({ ...prev, avatar_url: publicUrl }));
-      
-      toast({
-        title: 'Avatar atualizado!',
-        description: 'Sua foto de perfil foi alterada com sucesso.'
-      });
-    } catch (error) {
-      console.error('Erro ao fazer upload do avatar:', error);
-      toast({
-        title: 'Erro no upload',
-        description: 'Não foi possível atualizar o avatar.',
-        variant: 'destructive'
-      });
-    } finally {
-      setSaving(false);
-    }
+    setSaving(true);
+    await uploadAvatar(file);
+    setSaving(false);
   };
 
   const handleSave = async () => {
+    if (!profile) return;
+    
     setSaving(true);
-    try {
-      // For admin, we just show success since there's no profile table update needed
-      // In a real scenario, you might want to update user metadata or a separate admin profile table
-      
-      toast({
-        title: 'Perfil atualizado!',
-        description: 'Suas informações foram salvas com sucesso.'
-      });
-      
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Erro ao salvar perfil:', error);
-      toast({
-        title: 'Erro ao salvar',
-        description: 'Não foi possível atualizar seu perfil.',
-        variant: 'destructive'
-      });
-    } finally {
-      setSaving(false);
-    }
+    await updateProfile(profile);
+    setIsEditing(false);
+    setSaving(false);
   };
 
   const handlePasswordChange = async () => {
@@ -186,6 +135,21 @@ export default function PerfilAdmin() {
     }
   };
 
+  if (profileLoading) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <h2 className="text-3xl font-bold tracking-tight">Perfil do Administrador</h2>
+          <div className="animate-pulse space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-muted rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -215,9 +179,9 @@ export default function PerfilAdmin() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="relative">
                     <Avatar className="w-24 h-24">
-                      <AvatarImage src={profileData.avatar_url || ''} />
+                      <AvatarImage src={profile?.avatar_url || ''} />
                       <AvatarFallback className="text-2xl">
-                        {profileData.nome?.charAt(0) || 'A'}
+                        {profile?.nome?.charAt(0) || 'A'}
                       </AvatarFallback>
                     </Avatar>
                     <Button
@@ -240,7 +204,7 @@ export default function PerfilAdmin() {
                   
                   <div className="flex-1 space-y-2">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <h3 className="text-2xl font-bold">{profileData.nome}</h3>
+                      <h3 className="text-2xl font-bold">{profile?.nome || user?.email}</h3>
                       <div className="flex gap-2">
                         <Badge variant="default" className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
                           <Crown className="h-3 w-3 mr-1" />
@@ -252,8 +216,8 @@ export default function PerfilAdmin() {
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-muted-foreground">{profileData.email}</p>
-                    <p className="text-sm text-muted-foreground">{profileData.bio}</p>
+                    <p className="text-muted-foreground">{user?.email}</p>
+                    <p className="text-sm text-muted-foreground">{profile?.bio}</p>
                   </div>
                 </div>
               </CardContent>
@@ -295,8 +259,8 @@ export default function PerfilAdmin() {
                     <Label htmlFor="nome">Nome Completo</Label>
                     <Input
                       id="nome"
-                      value={profileData.nome}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, nome: e.target.value }))}
+                      value={profile?.nome || ''}
+                      onChange={(e) => updateProfile({ nome: e.target.value })}
                       disabled={!isEditing}
                     />
                   </div>
@@ -306,7 +270,7 @@ export default function PerfilAdmin() {
                     <Input
                       id="email"
                       type="email"
-                      value={profileData.email}
+                      value={user?.email || ''}
                       disabled // Admin email should not be editable via profile
                       className="bg-muted"
                     />
@@ -319,8 +283,8 @@ export default function PerfilAdmin() {
                     <Label htmlFor="telefone">Telefone</Label>
                     <Input
                       id="telefone"
-                      value={profileData.telefone}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, telefone: e.target.value }))}
+                      value={profile?.telefone || ''}
+                      onChange={(e) => updateProfile({ telefone: e.target.value })}
                       disabled={!isEditing}
                       placeholder="(00) 00000-0000"
                     />
@@ -331,8 +295,8 @@ export default function PerfilAdmin() {
                     <Input
                       id="data_nascimento"
                       type="date"
-                      value={profileData.data_nascimento}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, data_nascimento: e.target.value }))}
+                      value={profile?.data_nascimento || ''}
+                      onChange={(e) => updateProfile({ data_nascimento: e.target.value })}
                       disabled={!isEditing}
                     />
                   </div>
@@ -341,8 +305,8 @@ export default function PerfilAdmin() {
                     <Label htmlFor="endereco">Endereço</Label>
                     <Input
                       id="endereco"
-                      value={profileData.endereco}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, endereco: e.target.value }))}
+                      value={profile?.endereco || ''}
+                      onChange={(e) => updateProfile({ endereco: e.target.value })}
                       disabled={!isEditing}
                       placeholder="Rua, número, bairro, cidade, estado"
                     />
@@ -355,8 +319,8 @@ export default function PerfilAdmin() {
                     </Label>
                     <Textarea
                       id="bio"
-                      value={profileData.bio}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                      value={profile?.bio || ''}
+                      onChange={(e) => updateProfile({ bio: e.target.value })}
                       disabled={!isEditing}
                       rows={3}
                       placeholder="Descreva sua função e responsabilidades..."

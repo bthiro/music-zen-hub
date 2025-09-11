@@ -64,7 +64,17 @@ function ModuleGuard({
 export function ProfessorRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
+      {/* Main dashboard route - should show calendar */}
+      <Route path="/" element={
+        <ModuleGuard moduleKey="dashboard" moduleName="Dashboard">
+          <Dashboard />
+        </ModuleGuard>
+      } />
+      <Route path="/dashboard" element={
+        <ModuleGuard moduleKey="dashboard" moduleName="Dashboard">
+          <Dashboard />
+        </ModuleGuard>
+      } />
       <Route path="/alunos" element={<Alunos />} />
       <Route path="/pagamentos" element={
         <ModuleGuard moduleKey="pagamentos" moduleName="Pagamentos">
@@ -120,14 +130,16 @@ export function ProfessorRouter() {
       } />
       <Route path="/materiais" element={
         <ModuleGuard moduleKey="materiais" moduleName="Materiais">
-          <Card>
-            <CardHeader>
-              <CardTitle>Materiais</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Módulo de materiais em desenvolvimento...</p>
-            </CardContent>
-          </Card>
+          <Layout>
+            <Card>
+              <CardHeader>
+                <CardTitle>Materiais</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Módulo de materiais em desenvolvimento...</p>
+              </CardContent>
+            </Card>
+          </Layout>
         </ModuleGuard>
       } />
     </Routes>

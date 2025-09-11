@@ -1,6 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
-import AdminDashboard from "@/pages/AdminDashboard";
+import AdminOverview from "@/pages/AdminOverview";
+import AdminProfessores from "@/pages/AdminProfessores";
+import AdminConfiguracoes from "@/pages/AdminConfiguracoes";
 import { GlobalPaymentsView } from "@/components/GlobalPaymentsView";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -88,41 +90,13 @@ function AdminAlunosView() {
   );
 }
 
-// Admin Configurações
-function AdminConfiguracoes() {
-  return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Configurações Administrativas</h2>
-            <p className="text-muted-foreground">
-              Configurações globais do sistema
-            </p>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Configurações do Sistema</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Configurações globais em desenvolvimento...
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </Layout>
-  );
-}
+// Remove old AdminConfiguracoes - now uses dedicated page
 
 export function AdminRouter() {
   return (
     <Routes>
-      <Route path="/" element={<AdminDashboard />} />
-      <Route path="/professores" element={<AdminDashboard />} />
-      <Route path="/professores/novo" element={<AdminDashboard />} />
+      <Route path="/" element={<AdminOverview />} />
+      <Route path="/professores" element={<AdminProfessores />} />
       <Route path="/pagamentos" element={
         <Layout>
           <div className="space-y-6">
