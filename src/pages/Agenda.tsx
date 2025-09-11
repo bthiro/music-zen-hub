@@ -8,6 +8,7 @@ import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
 import { EventModal } from "@/components/EventModal";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { supabase } from '@/integrations/supabase/client';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -25,7 +26,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function Agenda() {
-  const { aulas, alunos, updateAula } = useApp();
+  const { aulas, alunos, updateAula, addAula } = useApp();
   const { 
     isAuthenticated, 
     userEmail, 
@@ -57,7 +58,7 @@ export default function Agenda() {
         const aluno = alunos.find(a => a.id === aula.alunoId);
         return {
           id: `local-${aula.id}`,
-          title: `${aula.tema || 'Aula'} - ${aluno?.nome || 'Aluno'}`,
+          title: `${aula.observacoes || 'Aula'} - ${aluno?.nome || 'Aluno'}`,
           start: `${aula.data}T${aula.horario}:00`,
           end: new Date(new Date(`${aula.data}T${aula.horario}:00`).getTime() + (aula.duracaoMinutos || 50) * 60000).toISOString(),
           backgroundColor: aula.status === 'realizada' ? '#10b981' : 
@@ -66,12 +67,12 @@ export default function Agenda() {
           extendedProps: {
             type: 'local',
             aulaId: aula.id,
-            alunoId: aula.aluno_id,
+            alunoId: aula.alunoId,
             status: aula.status,
-            meetLink: aula.meet_link,
-            googleEventId: aula.google_event_id,
-            feedback: aula.feedback,
-            tema: aula.tema
+            meetLink: aula.linkMeet,
+            googleEventId: null, // Will be fetched from raw data
+            feedback: aula.observacoesAula,
+            tema: aula.observacoes
           }
         };
       });
@@ -134,20 +135,20 @@ export default function Agenda() {
         setSelectedEvent({
           id: aula.id,
           type: 'local',
-          title: `${aula.tema || 'Aula'} - ${aluno.nome}`,
-          start: { dateTime: aula.data_hora },
-          end: { dateTime: new Date(new Date(aula.data_hora).getTime() + (aula.duracao_minutos || 50) * 60000).toISOString() },
-          description: aula.feedback,
+          title: `${aula.observacoes || 'Aula'} - ${aluno.nome}`,
+          start: { dateTime: `${aula.data}T${aula.horario}` },
+          end: { dateTime: new Date(new Date(`${aula.data}T${aula.horario}`).getTime() + (aula.duracaoMinutos || 50) * 60000).toISOString() },
+          description: aula.observacoesAula,
           location: 'Online',
-          meetLink: aula.meet_link,
+          meetLink: aula.linkMeet,
           extendedProps: {
             aulaId: aula.id,
-            alunoId: aula.aluno_id,
+            alunoId: aula.alunoId,
             alunoNome: aluno.nome,
-            tema: aula.tema,
-            feedback: aula.feedback,
+            tema: aula.observacoes,
+            feedback: aula.observacoesAula,
             status: aula.status,
-            googleEventId: aula.google_event_id
+            googleEventId: null // This would need to be fetched from raw database
           }
         });
       }
@@ -177,25 +178,26 @@ export default function Agenda() {
     if (extendedProps.type === 'local') {
       // Atualizar aula local
       try {
-        const newDateTime = event.startStr;
+        const newDate = new Date(event.startStr);
         await updateAula(extendedProps.aulaId, {
-          data_hora: newDateTime
+          data: newDate.toISOString().split('T')[0],
+          horario: newDate.toTimeString().slice(0, 5)
         });
 
         // Se tem evento no Google, atualizar também
         if (extendedProps.googleEventId && isAuthenticated) {
-          const endDate = new Date(new Date(newDateTime).getTime() + 50 * 60000);
+          const endDate = new Date(new Date(event.startStr).getTime() + 50 * 60000);
           await updateCalendarEvent(
             extendedProps.googleEventId,
             event.title,
-            newDateTime.split('T')[0],
-            newDateTime.split('T')[1].slice(0, 5),
+            newDate.toISOString().split('T')[0],
+            newDate.toTimeString().slice(0, 5),
             endDate.toTimeString().slice(0, 5)
           );
         }
 
         await logAction('aula_reagendada', 'aulas', extendedProps.aulaId, {
-          nova_data: newDateTime,
+          nova_data: event.startStr,
           google_sync: !!extendedProps.googleEventId
         });
 
@@ -227,10 +229,11 @@ export default function Agenda() {
         const duracaoMinutos = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60));
 
         await updateAula(selectedEvent.extendedProps.aulaId, {
-          data_hora: eventData.start.dateTime,
-          duracao_minutos: duracaoMinutos,
-          tema: eventData.title.split(' - ')[0] || eventData.title,
-          feedback: eventData.description || ''
+          data: startDate.toISOString().split('T')[0],
+          horario: startDate.toTimeString().slice(0, 5),
+          duracaoMinutos: duracaoMinutos,
+          observacoes: eventData.title.split(' - ')[0] || eventData.title,
+          observacoesAula: eventData.description || ''
         });
 
         // Sincronizar com Google se conectado e tem evento vinculado
@@ -269,39 +272,33 @@ export default function Agenda() {
 
         // Se especificou um aluno, criar como aula local
         if (eventData.extendedProps?.alunoId) {
-          const novaAula = await createAula({
-            aluno_id: eventData.extendedProps.alunoId,
-            data_hora: eventData.start.dateTime,
-            duracao_minutos: duracaoMinutos,
-            tema: eventData.title,
-            feedback: eventData.description || '',
-            status: 'agendada'
+          await addAula({
+            alunoId: eventData.extendedProps.alunoId,
+            data: startDate.toISOString().split('T')[0],
+            horario: startDate.toTimeString().slice(0, 5),
+            duracaoMinutos: duracaoMinutos,
+            observacoes: eventData.title,
+            observacoesAula: eventData.description || '',
+            status: 'agendada',
+            aluno: ''
           });
 
           // Sincronizar com Google se conectado
-          if (isAuthenticated && novaAula) {
-            setSyncingId(novaAula.id);
+          if (isAuthenticated) {
             try {
-              const resultado = await createCalendarEvent(
+              await createCalendarEvent(
                 eventData.extendedProps.alunoNome || 'Aluno',
                 startDate.toISOString().split('T')[0],
                 startDate.toTimeString().slice(0, 5),
                 endDate.toTimeString().slice(0, 5),
                 duracaoMinutos
               );
-
-              if (resultado?.eventId && resultado?.meetLink) {
-                await updateAula(novaAula.id, {
-                  google_event_id: resultado.eventId,
-                  meet_link: resultado.meetLink
-                });
-              }
-            } finally {
-              setSyncingId(null);
+            } catch (error) {
+              console.error('Erro ao criar evento no Google:', error);
             }
           }
 
-          await logAction('aula_criada', 'aulas', novaAula?.id);
+          await logAction('aula_criada', 'aulas', eventData.extendedProps.alunoId);
           
         } else if (isAuthenticated) {
           // Criar apenas no Google Calendar
@@ -335,8 +332,8 @@ export default function Agenda() {
   const handleDeleteEvent = async (eventId: string) => {
     try {
       if (selectedEvent?.type === 'local') {
-        // Deletar aula local
-        await deleteAula(selectedEvent.extendedProps.aulaId);
+        // Cancelar aula local
+        await updateAula(selectedEvent.extendedProps.aulaId, { status: 'cancelada' });
 
         // Deletar do Google se conectado
         if (selectedEvent.extendedProps.googleEventId && isAuthenticated) {
@@ -510,7 +507,7 @@ export default function Agenda() {
         alunos={alunos}
       />
 
-      <style jsx global>{`
+      <style>{`
         .fc-theme-standard .fc-scrollgrid {
           border: 1px solid hsl(var(--border));
         }
