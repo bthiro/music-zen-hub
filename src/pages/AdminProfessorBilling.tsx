@@ -70,7 +70,7 @@ interface Professor {
   plano: string;
 }
 
-export default function AdminProfessorBilling() {
+export default function AdminProfessorBilling({ embedded = false }: { embedded?: boolean }) {
   const [cobrancas, setCobrancas] = useState<Cobranca[]>([]);
   const [professores, setProfessores] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,12 +89,12 @@ export default function AdminProfessorBilling() {
 
   const fetchData = async () => {
     try {
-      // Fetch professor billings
+      // Fetch professor billings with left join to handle missing professors
       const { data: cobrancasData, error: cobrancasError } = await supabase
         .from('cobrancas_professor')
         .select(`
           *,
-          professores!inner (nome, email)
+          professores (nome, email)
         `)
         .order('created_at', { ascending: false });
 
@@ -259,28 +259,28 @@ export default function AdminProfessorBilling() {
   };
 
   if (loading) {
-    return (
-      <Layout>
-        <div className="space-y-6">
-          <h2 className="text-3xl font-bold tracking-tight">Cobrança de Professores</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
-            ))}
-          </div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
-            ))}
-          </div>
+    const content = (
+      <div className="space-y-6">
+        <h2 className="text-3xl font-bold tracking-tight">Cobrança de Professores</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+          ))}
         </div>
-      </Layout>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </div>
     );
+
+    return embedded ? content : <Layout>{content}</Layout>;
   }
 
-  return (
-    <Layout>
-      <div className="space-y-6">
+  const content = (
+    <div className="space-y-6">
+      {!embedded && (
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Cobrança de Professores</h2>
@@ -352,126 +352,196 @@ export default function AdminProfessorBilling() {
             </DialogContent>
           </Dialog>
         </div>
+      )}
 
-        {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Cobranças</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendente}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pagas</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pago}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Valor Recebido</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                R$ {stats.valorPago.toFixed(2)}
+      {embedded && (
+        <div className="flex items-center justify-between mb-4">
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Cobrança
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar Nova Cobrança</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados da nova cobrança para o professor
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={form.handleSubmit(handleCreateCobranca)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="professor_id">Professor</Label>
+                  <select {...form.register('professor_id')} className="w-full p-2 border rounded-md">
+                    <option value="">Selecione um professor</option>
+                    {professores.map((prof) => (
+                      <option key={prof.id} value={prof.id}>
+                        {prof.nome} - {prof.plano}
+                      </option>
+                    ))}
+                  </select>
+                  {form.formState.errors.professor_id && (
+                    <p className="text-sm text-destructive">{form.formState.errors.professor_id.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="valor">Valor (R$)</Label>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    {...form.register('valor', { valueAsNumber: true })} 
+                  />
+                  {form.formState.errors.valor && (
+                    <p className="text-sm text-destructive">{form.formState.errors.valor.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="data_vencimento">Data de Vencimento</Label>
+                  <Input type="date" {...form.register('data_vencimento')} />
+                  {form.formState.errors.data_vencimento && (
+                    <p className="text-sm text-destructive">{form.formState.errors.data_vencimento.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="descricao">Descrição</Label>
+                  <Input {...form.register('descricao')} />
+                  {form.formState.errors.descricao && (
+                    <p className="text-sm text-destructive">{form.formState.errors.descricao.message}</p>
+                  )}
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Criar Cobrança</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Cobranças</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.pendente}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pagas</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.pago}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Valor Recebido</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              R$ {stats.valorPago.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Billing List */}
+      <div className="space-y-4">
+        {cobrancas.map((cobranca) => (
+          <Card key={cobranca.id}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                <div className="flex flex-col">
+                  <h4 className="font-medium">{cobranca.professores?.nome || 'Professor não encontrado'}</h4>
+                  <p className="text-sm text-muted-foreground">{cobranca.professores?.email || ''}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {cobranca.descricao} • {cobranca.competencia}
+                  </p>
+                </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-lg font-bold">R$ {Number(cobranca.valor).toFixed(2)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      Vence: {format(parseISO(cobranca.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}
+                    </span>
+                  </div>
+                  <Badge className={`${getStatusColor(cobranca.status)} text-white`}>
+                    {getStatusLabel(cobranca.status)}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {cobranca.link_pagamento && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(cobranca.link_pagamento!, 'Link de pagamento')}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copiar Link
+                    </Button>
+                  )}
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {!cobranca.link_pagamento && cobranca.status === 'pendente' && (
+                        <DropdownMenuItem 
+                          onClick={() => handleGeneratePaymentLink(cobranca.id)}
+                        >
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Gerar Link MP
+                        </DropdownMenuItem>
+                      )}
+                      {cobranca.status === 'pendente' && (
+                        <DropdownMenuItem 
+                          onClick={() => handleMarkAsPaid(cobranca.id)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Marcar como Pago
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+        ))}
 
-        {/* Billing List */}
-        <div className="space-y-4">
-          {cobrancas.map((cobranca) => (
-            <Card key={cobranca.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                  <div className="flex flex-col">
-                    <h4 className="font-medium">{cobranca.professores?.nome || 'Professor não encontrado'}</h4>
-                    <p className="text-sm text-muted-foreground">{cobranca.professores?.email || ''}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {cobranca.descricao} • {cobranca.competencia}
-                    </p>
-                  </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-lg font-bold">R$ {Number(cobranca.valor).toFixed(2)}</span>
-                      <span className="text-xs text-muted-foreground">
-                        Vence: {format(parseISO(cobranca.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}
-                      </span>
-                    </div>
-                    <Badge className={`${getStatusColor(cobranca.status)} text-white`}>
-                      {getStatusLabel(cobranca.status)}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {cobranca.link_pagamento && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(cobranca.link_pagamento!, 'Link de pagamento')}
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copiar Link
-                      </Button>
-                    )}
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        {!cobranca.link_pagamento && cobranca.status === 'pendente' && (
-                          <DropdownMenuItem 
-                            onClick={() => handleGeneratePaymentLink(cobranca.id)}
-                          >
-                            <CreditCard className="h-4 w-4 mr-2" />
-                            Gerar Link MP
-                          </DropdownMenuItem>
-                        )}
-                        {cobranca.status === 'pendente' && (
-                          <DropdownMenuItem 
-                            onClick={() => handleMarkAsPaid(cobranca.id)}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Marcar como Pago
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {cobrancas.length === 0 && (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">Nenhuma cobrança encontrada</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {cobrancas.length === 0 && (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">Nenhuma cobrança encontrada</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
-    </Layout>
+    </div>
   );
+
+  return embedded ? content : <Layout>{content}</Layout>;
 }

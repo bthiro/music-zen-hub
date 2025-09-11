@@ -25,7 +25,29 @@ function ModuleGuard({
   moduleKey: string;
   moduleName: string;
 }) {
-  const { user } = useAuthContext();
+  const { user, loading } = useAuthContext();
+  
+  // Show loading while authentication is resolving
+  if (loading || !user) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">{moduleName}</h2>
+              <p className="text-muted-foreground">Carregando...</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+  
   const modules = user?.profile?.modules || {};
   
   if (!modules[moduleKey]) {

@@ -106,16 +106,17 @@ export function useAdminProfile() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `admin-avatar-${user.id}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       await updateProfile({ avatar_url: publicUrl });
     } catch (error: any) {
