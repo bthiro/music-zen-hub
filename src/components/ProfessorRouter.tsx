@@ -13,6 +13,7 @@ import Lousa from "@/pages/Lousa";
 import SessaoAoVivo from "@/pages/SessaoAoVivo";
 import Perfil from "@/pages/Perfil";
 import { Lock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Component for module access control
 function ModuleGuard({ 
@@ -87,19 +88,6 @@ export function ProfessorRouter() {
       } />
       <Route path="/configuracoes" element={<Configuracoes />} />
       <Route path="/perfil" element={<Perfil />} />
-      <Route path="/materiais" element={
-        <ModuleGuard moduleKey="materiais" moduleName="Materiais">
-          <Card>
-            <CardHeader>
-              <CardTitle>Materiais</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Módulo de materiais em desenvolvimento...</p>
-            </CardContent>
-          </Card>
-        </ModuleGuard>
-      } />
-    </Routes>
       <Route path="/ferramentas" element={
         <ModuleGuard moduleKey="ferramentas" moduleName="Ferramentas">
           <Ferramentas />
