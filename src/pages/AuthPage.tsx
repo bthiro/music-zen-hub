@@ -187,7 +187,7 @@ export default function AuthPage() {
                       
                       try {
                         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                          redirectTo: `${window.location.origin}/auth?reset=true`
+                          redirectTo: `${window.location.origin}/reset-password`
                         });
                         
                         if (error) throw error;

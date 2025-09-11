@@ -40,9 +40,17 @@ export default function ResetPassword() {
 
   useEffect(() => {
     // Check if we have session/tokens from URL parameters (recovery link)
-    const access_token = searchParams.get('access_token');
-    const refresh_token = searchParams.get('refresh_token');
-    const type = searchParams.get('type');
+    let access_token = searchParams.get('access_token');
+    let refresh_token = searchParams.get('refresh_token');
+    let type = searchParams.get('type');
+
+    // If not found in query params, check hash (alternative format)
+    if (!access_token && window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      access_token = hashParams.get('access_token');
+      refresh_token = hashParams.get('refresh_token');
+      type = hashParams.get('type');
+    }
 
     if (access_token && refresh_token && type === 'recovery') {
       console.log('[ResetPassword] Recovery tokens found, setting session');

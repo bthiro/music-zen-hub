@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,15 @@ export default function PerfilAdmin() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Local form state
+  const [formData, setFormData] = useState({
+    nome: '',
+    telefone: '',
+    data_nascimento: '',
+    endereco: '',
+    bio: ''
+  });
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -46,6 +55,19 @@ export default function PerfilAdmin() {
     new: false,
     confirm: false
   });
+
+  // Update form data when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        nome: profile.nome || '',
+        telefone: profile.telefone || '',
+        data_nascimento: profile.data_nascimento || '',
+        endereco: profile.endereco || '',
+        bio: profile.bio || ''
+      });
+    }
+  }, [profile]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -77,10 +99,8 @@ export default function PerfilAdmin() {
   };
 
   const handleSave = async () => {
-    if (!profile) return;
-    
     setSaving(true);
-    await updateProfile(profile);
+    await updateProfile(formData);
     setIsEditing(false);
     setSaving(false);
   };
@@ -237,9 +257,21 @@ export default function PerfilAdmin() {
                     </Button>
                   ) : (
                     <div className="flex gap-2">
-                      <Button 
+                       <Button 
                         variant="outline" 
-                        onClick={() => setIsEditing(false)}
+                        onClick={() => {
+                          setIsEditing(false);
+                          // Reset form data to original values
+                          if (profile) {
+                            setFormData({
+                              nome: profile.nome || '',
+                              telefone: profile.telefone || '',
+                              data_nascimento: profile.data_nascimento || '',
+                              endereco: profile.endereco || '',
+                              bio: profile.bio || ''
+                            });
+                          }
+                        }}
                       >
                         Cancelar
                       </Button>
@@ -259,8 +291,8 @@ export default function PerfilAdmin() {
                     <Label htmlFor="nome">Nome Completo</Label>
                     <Input
                       id="nome"
-                      value={profile?.nome || ''}
-                      onChange={(e) => updateProfile({ nome: e.target.value })}
+                      value={isEditing ? formData.nome : (profile?.nome || '')}
+                      onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                       disabled={!isEditing}
                     />
                   </div>
@@ -283,8 +315,8 @@ export default function PerfilAdmin() {
                     <Label htmlFor="telefone">Telefone</Label>
                     <Input
                       id="telefone"
-                      value={profile?.telefone || ''}
-                      onChange={(e) => updateProfile({ telefone: e.target.value })}
+                      value={isEditing ? formData.telefone : (profile?.telefone || '')}
+                      onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
                       disabled={!isEditing}
                       placeholder="(00) 00000-0000"
                     />
@@ -295,8 +327,8 @@ export default function PerfilAdmin() {
                     <Input
                       id="data_nascimento"
                       type="date"
-                      value={profile?.data_nascimento || ''}
-                      onChange={(e) => updateProfile({ data_nascimento: e.target.value })}
+                      value={isEditing ? formData.data_nascimento : (profile?.data_nascimento || '')}
+                      onChange={(e) => setFormData(prev => ({ ...prev, data_nascimento: e.target.value }))}
                       disabled={!isEditing}
                     />
                   </div>
@@ -305,8 +337,8 @@ export default function PerfilAdmin() {
                     <Label htmlFor="endereco">Endereço</Label>
                     <Input
                       id="endereco"
-                      value={profile?.endereco || ''}
-                      onChange={(e) => updateProfile({ endereco: e.target.value })}
+                      value={isEditing ? formData.endereco : (profile?.endereco || '')}
+                      onChange={(e) => setFormData(prev => ({ ...prev, endereco: e.target.value }))}
                       disabled={!isEditing}
                       placeholder="Rua, número, bairro, cidade, estado"
                     />
@@ -319,8 +351,8 @@ export default function PerfilAdmin() {
                     </Label>
                     <Textarea
                       id="bio"
-                      value={profile?.bio || ''}
-                      onChange={(e) => updateProfile({ bio: e.target.value })}
+                      value={isEditing ? formData.bio : (profile?.bio || '')}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                       disabled={!isEditing}
                       rows={3}
                       placeholder="Descreva sua função e responsabilidades..."
