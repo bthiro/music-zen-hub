@@ -78,7 +78,8 @@ export function AppSidebar() {
                   if (isAdmin) return true;
                   
                   // For professor, check module permissions
-                  if ('moduleKey' in item && item.moduleKey && !modules[item.moduleKey]) {
+                  const moduleKey = 'moduleKey' in item ? item.moduleKey as string | null : null;
+                  if (moduleKey && typeof moduleKey === 'string' && !modules[moduleKey]) {
                     return false;
                   }
                   
