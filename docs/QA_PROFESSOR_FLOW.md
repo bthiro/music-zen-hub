@@ -155,18 +155,25 @@
 1. **Tentar criar professor** com email já existente
 2. **Esperado**: Erro claro e específico
 
+### Convite para Usuário Existente
+1. **Reenviar convite** para professor já cadastrado
+2. **Esperado**: Deve gerar link de recuperação (não signup)
+3. **Validar**: Toast indica "Link de acesso gerado (usuário já cadastrado)"
+
 ### Dados Inválidos
 1. **Email inválido**: Deve ser rejeitado
 2. **Nome vazio**: Deve ser rejeitado
 3. **Limite de alunos negativo**: Deve ser rejeitado
 
-### Tokens Expirados
-1. **Link de reset antigo**: Deve mostrar erro
-2. **Link de convite antigo**: Deve mostrar erro
+### Tokens Expirados/Reutilizados
+1. **Link de reset antigo**: Deve mostrar erro específico
+2. **Link já usado**: Deve mostrar "Link expirado ou já utilizado"
+3. **Sessão inválida**: Deve orientar uso do link por email
 
 ### Permissões
 1. **Usuário não-admin**: Não deve acessar funções administrativas
-2. **Professor**: Não deve ver outros professores
+2. **Professor suspenso**: Login deve falhar com mensagem clara
+3. **Professor inativo**: Login deve falhar
 
 ## Limpeza Pós-Teste
 

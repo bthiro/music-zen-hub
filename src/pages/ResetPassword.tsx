@@ -72,12 +72,40 @@ export default function ResetPassword() {
 
       if (error) {
         console.error('[ResetPassword] Error updating password:', error);
+        
+        // Handle specific error cases
+        let errorMessage = 'Não foi possível redefinir a senha';
+        if (error.message.includes('Invalid refresh token') || error.message.includes('refresh_token')) {
+          errorMessage = 'Link de redefinição expirado ou já utilizado. Solicite um novo link.';
+        } else if (error.message.includes('Auth session missing')) {
+          errorMessage = 'Sessão inválida. Use o link enviado por email.';
+        } else if (error.message.includes('same as the old password')) {
+          errorMessage = 'A nova senha deve ser diferente da atual.';
+        } else if (error.message.includes('Password should be at least')) {
+          errorMessage = 'Senha deve ter pelo menos 8 caracteres.';
+        }
+        
         toast({
           title: "Erro",
-          description: error.message || "Não foi possível redefinir a senha",
+          description: errorMessage,
           variant: "destructive",
         });
         return;
+      }
+
+      // Log the password reset action
+      try {
+        await supabase.rpc('log_audit', {
+          p_action: 'password_reset_completed',
+          p_entity: 'professores',
+          p_entity_id: null,
+          p_metadata: { 
+            success: true,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (auditError) {
+        console.warn('[ResetPassword] Audit log failed:', auditError);
       }
 
       setResetComplete(true);

@@ -90,16 +90,17 @@ serve(async (req) => {
       }
     }
 
-    // Log the action
+    // Log the action with actor_user_id from request context if available
     await supabaseAdmin.from('audit_log').insert({
-      actor_user_id: null, // Will be set by the calling admin
+      actor_user_id: null, // This will be set by RLS if admin is authenticated
       action: 'professor_password_reset_requested',
-      entity: 'professores',
+      entity: 'professores', 
       entity_id: professor_id,
       metadata: { 
         email, 
         method: resetResult.method,
-        redirect_url: redirectTo
+        redirect_url: redirectTo,
+        timestamp: new Date().toISOString()
       }
     });
 

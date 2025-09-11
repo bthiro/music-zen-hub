@@ -37,6 +37,7 @@ import {
   Copy
 } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
+import { supabase } from "@/integrations/supabase/client";
 import { StatsCard } from "@/components/ui/stats-card";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -100,6 +101,15 @@ export default function AdminDashboard() {
 
   const handleModuleToggle = async (professorId: string, modules: Record<string, boolean>) => {
     await updateProfessorModules(professorId, modules);
+    
+    // Trigger a real-time notification to the professor by updating updated_at
+    try {
+      await supabase.from('professores').update({ 
+        updated_at: new Date().toISOString() 
+      }).eq('id', professorId);
+    } catch (error) {
+      console.warn('[AdminDashboard] Failed to trigger real-time update:', error);
+    }
   };
 
   const handleInviteProfessor = async (professorId: string, email: string) => {

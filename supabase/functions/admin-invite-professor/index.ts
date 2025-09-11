@@ -35,63 +35,97 @@ serve(async (req) => {
     let inviteResult;
     let linkGenerated = false;
 
-    // Try inviteUserByEmail first (requires SMTP configured)
-    try {
-      console.log('[admin-invite-professor] Attempting inviteUserByEmail');
-      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        redirectTo
+    // First check if user already exists
+    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers({
+      filter: `email.eq.${email}`
+    });
+
+    const userExists = existingUser && existingUser.users && existingUser.users.length > 0;
+
+    if (userExists) {
+      console.log('[admin-invite-professor] User already exists, generating recovery link');
+      
+      // For existing users, generate recovery link
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'recovery',
+        email,
+        options: {
+          redirectTo
+        }
       });
 
-      if (error) {
-        console.log('[admin-invite-professor] inviteUserByEmail failed:', error.message);
-        // If SMTP is not configured, fallback to generateLink
-        if (error.message.includes('SMTP') || error.message.includes('email')) {
-          throw new Error('SMTP_NOT_CONFIGURED');
-        }
-        throw error;
+      if (linkError) {
+        console.error('[admin-invite-professor] generateLink (recovery) error:', linkError);
+        throw new Error(`Erro ao gerar link de recuperação: ${linkError.message}`);
       }
 
       inviteResult = {
         success: true,
-        method: 'email',
-        message: 'Convite enviado por email',
-        data
+        method: 'link',
+        message: 'Link de acesso gerado (usuário já cadastrado)',
+        link: linkData.properties?.action_link,
+        data: linkData
       };
-      
-    } catch (error) {
-      if (error.message === 'SMTP_NOT_CONFIGURED' || error.message.includes('SMTP')) {
-        console.log('[admin-invite-professor] SMTP not configured, generating magic link');
-        
-        // Fallback: generate magic link
-        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'signup',
-          email,
-          options: {
-            redirectTo
-          }
+      linkGenerated = true;
+    } else {
+      // Try inviteUserByEmail for new users (requires SMTP configured)
+      try {
+        console.log('[admin-invite-professor] Attempting inviteUserByEmail for new user');
+        const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+          redirectTo
         });
 
-        if (linkError) {
-          console.error('[admin-invite-professor] generateLink error:', linkError);
-          throw new Error(`Erro ao gerar link: ${linkError.message}`);
+        if (error) {
+          console.log('[admin-invite-professor] inviteUserByEmail failed:', error.message);
+          // If SMTP is not configured, fallback to generateLink
+          if (error.message.includes('SMTP') || error.message.includes('email')) {
+            throw new Error('SMTP_NOT_CONFIGURED');
+          }
+          throw error;
         }
 
-        linkGenerated = true;
         inviteResult = {
           success: true,
-          method: 'link',
-          message: 'Link de acesso gerado (SMTP não configurado)',
-          link: linkData.properties?.action_link,
-          data: linkData
+          method: 'email',
+          message: 'Convite enviado por email',
+          data
         };
-      } else {
-        throw error;
+        
+      } catch (error) {
+        if (error.message === 'SMTP_NOT_CONFIGURED' || error.message.includes('SMTP')) {
+          console.log('[admin-invite-professor] SMTP not configured, generating signup link');
+          
+          // Fallback: generate signup link for new users
+          const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'signup',
+            email,
+            options: {
+              redirectTo
+            }
+          });
+
+          if (linkError) {
+            console.error('[admin-invite-professor] generateLink (signup) error:', linkError);
+            throw new Error(`Erro ao gerar link de acesso: ${linkError.message}`);
+          }
+
+          linkGenerated = true;
+          inviteResult = {
+            success: true,
+            method: 'link',
+            message: 'Link de acesso gerado (SMTP não configurado)',
+            link: linkData.properties?.action_link,
+            data: linkData
+          };
+        } else {
+          throw error;
+        }
       }
     }
 
-    // Log the action
+    // Log the action with more details
     await supabaseAdmin.from('audit_log').insert({
-      actor_user_id: null, // Will be set by the calling admin
+      actor_user_id: null, // This will be set by RLS if admin is authenticated  
       action: 'professor_invited',
       entity: 'professores',
       entity_id: professor_id,
@@ -99,7 +133,9 @@ serve(async (req) => {
         email, 
         method: inviteResult.method,
         link_generated: linkGenerated,
-        redirect_url: redirectTo
+        redirect_url: redirectTo,
+        user_exists: userExists,
+        timestamp: new Date().toISOString()
       }
     });
 
