@@ -12,20 +12,31 @@ export default function AuthCallback() {
     const run = async () => {
       try {
         console.log('[OAuth] Callback start', { href: window.location.href });
-        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-        if (error) {
-          console.error('[OAuth] exchangeCodeForSession error:', error, { href: window.location.href });
-          setStatus('error');
-          toast({
-            title: 'Erro no OAuth',
-            description: error.message?.includes('redirect_uri_mismatch')
-              ? 'Redirect URI incorreta. Atualize Google Console e Supabase com a URL atual.'
-              : error.message,
-            variant: 'destructive',
-          });
-          // Volta para /auth após breve pausa
-          setTimeout(() => navigate('/auth', { replace: true }), 1500);
-          return;
+        
+        // Check if there's already a valid session
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        
+        if (!existingSession) {
+          // No existing session, try to exchange code
+          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+          if (error) {
+            console.error('[OAuth] exchangeCodeForSession error:', error, { href: window.location.href });
+            
+            // Check again for session in case exchange partially worked
+            const { data: { session: retrySession } } = await supabase.auth.getSession();
+            if (!retrySession) {
+              setStatus('error');
+              toast({
+                title: 'Erro no OAuth',
+                description: error.message?.includes('redirect_uri_mismatch')
+                  ? 'Redirect URI incorreta. Atualize Google Console e Supabase com a URL atual.'
+                  : error.message,
+                variant: 'destructive',
+              });
+              setTimeout(() => navigate('/auth', { replace: true }), 1500);
+              return;
+            }
+          }
         }
 
         // Sessão criada, obter role e redirecionar

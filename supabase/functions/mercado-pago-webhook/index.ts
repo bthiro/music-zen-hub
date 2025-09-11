@@ -146,6 +146,37 @@ Deno.serve(async (req) => {
         .eq('mercado_pago_payment_id', paymentId)
         .select('*');
 
+      console.log('Student payment update result:', updateResult);
+
+      // Also try to update professor billing if external_reference matches pattern
+      const external_reference = paymentData.external_reference;
+      if (external_reference?.startsWith('prof_invoice_')) {
+        const cobrancaId = external_reference.replace('prof_invoice_', '');
+        
+        try {
+          const { data: profUpdateResult, error: profUpdateError } = await supabase
+            .from('cobrancas_professor')
+            .update({
+              mercado_pago_payment_id: paymentId,
+              mercado_pago_status: paymentData.status,
+              status: ourStatus,
+              data_pagamento: dataPagamento,
+              forma_pagamento: 'mercado_pago',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', cobrancaId)
+            .select('*');
+            
+          if (profUpdateError) {
+            console.error(`[Webhook] Error updating professor billing:`, profUpdateError);
+          } else {
+            console.log(`[Webhook] Updated professor billing:`, profUpdateResult);
+          }
+        } catch (error) {
+          console.error(`[Webhook] Error updating professor billing:`, error);
+        }
+      }
+
       if (updateError) {
         console.error('Error updating payment:', updateError);
         return new Response('Database update failed', { status: 200, headers: corsHeaders });

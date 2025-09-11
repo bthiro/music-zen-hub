@@ -28,6 +28,7 @@ import {
   UserMinus,
   Mail,
   KeyRound,
+  Lock,
 } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AdminImpersonation } from "@/components/AdminImpersonation";
+import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
 
 const professorSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -64,6 +66,8 @@ export default function AdminProfessores() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [impersonationOpen, setImpersonationOpen] = useState(false);
   const [impersonationData, setImpersonationData] = useState<{id: string, nome: string} | null>(null);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState<{id: string, nome: string} | null>(null);
 
   const form = useForm<ProfessorFormData>({
     resolver: zodResolver(professorSchema),
@@ -157,6 +161,11 @@ export default function AdminProfessores() {
 
   const handleResetPassword = async (professorId: string, email: string) => {
     await resetProfessorPassword(professorId, email);
+  };
+
+  const handleSetPassword = async (professorId: string, professorNome: string) => {
+    setPasswordData({ id: professorId, nome: professorNome });
+    setPasswordDialogOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -343,6 +352,12 @@ export default function AdminProfessores() {
                           Resetar Senha
                         </DropdownMenuItem>
                         <DropdownMenuItem 
+                          onClick={() => handleSetPassword(professor.id, professor.nome)}
+                        >
+                          <Lock className="h-4 w-4 mr-2" />
+                          Definir Senha
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
                           onClick={() => handleImpersonation(professor.id, professor.nome)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
@@ -384,6 +399,16 @@ export default function AdminProfessores() {
         }}
         professorId={impersonationData?.id}
         professorNome={impersonationData?.nome}
+      />
+
+      <AdminPasswordDialog
+        open={passwordDialogOpen}
+        onOpenChange={(open) => {
+          setPasswordDialogOpen(open);
+          if (!open) setPasswordData(null);
+        }}
+        professorId={passwordData?.id}
+        professorNome={passwordData?.nome}
       />
     </Layout>
   );

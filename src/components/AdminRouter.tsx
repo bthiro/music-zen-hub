@@ -3,6 +3,7 @@ import { Layout } from "@/components/Layout";
 import AdminOverview from "@/pages/AdminOverview";
 import AdminProfessores from "@/pages/AdminProfessores";
 import AdminConfiguracoes from "@/pages/AdminConfiguracoes";
+import AdminProfessorBilling from "@/pages/AdminProfessorBilling";
 import { GlobalPaymentsView } from "@/components/GlobalPaymentsView";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -113,6 +114,7 @@ export function AdminRouter() {
         </Layout>
       } />
       <Route path="/alunos" element={<AdminAlunosView />} />
+      <Route path="/assinaturas" element={<AdminProfessorBilling />} />
       <Route path="/configuracoes" element={<AdminConfiguracoes />} />
       <Route path="/perfil" element={
         <Layout>

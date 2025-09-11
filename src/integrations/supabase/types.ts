@@ -259,6 +259,75 @@ export type Database = {
           },
         ]
       }
+      cobrancas_professor: {
+        Row: {
+          competencia: string
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string | null
+          forma_pagamento: string | null
+          id: string
+          link_pagamento: string | null
+          manual_payment_at: string | null
+          manual_payment_by: string | null
+          manual_payment_reason: string | null
+          mercado_pago_payment_id: string | null
+          mercado_pago_status: string | null
+          payment_precedence: string | null
+          plano_nome: string | null
+          professor_id: string
+          referencia_externa: string | null
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          competencia: string
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          link_pagamento?: string | null
+          manual_payment_at?: string | null
+          manual_payment_by?: string | null
+          manual_payment_reason?: string | null
+          mercado_pago_payment_id?: string | null
+          mercado_pago_status?: string | null
+          payment_precedence?: string | null
+          plano_nome?: string | null
+          professor_id: string
+          referencia_externa?: string | null
+          status?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          competencia?: string
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          link_pagamento?: string | null
+          manual_payment_at?: string | null
+          manual_payment_by?: string | null
+          manual_payment_reason?: string | null
+          mercado_pago_payment_id?: string | null
+          mercado_pago_status?: string | null
+          payment_precedence?: string | null
+          plano_nome?: string | null
+          professor_id?: string
+          referencia_externa?: string | null
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       configuracoes: {
         Row: {
           chave_pix: string | null
@@ -517,6 +586,39 @@ export type Database = {
           },
         ]
       }
+      planos_professor: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          id: string
+          limite_alunos: number | null
+          nome: string
+          preco_mensal: number
+          recursos: Json | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          id?: string
+          limite_alunos?: number | null
+          nome: string
+          preco_mensal: number
+          recursos?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          id?: string
+          limite_alunos?: number | null
+          nome?: string
+          preco_mensal?: number
+          recursos?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       professores: {
         Row: {
           avatar_url: string | null
@@ -657,6 +759,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      criar_cobranca_professor_mensal: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       criar_pagamento_mensal: {
         Args: Record<PropertyKey, never>
         Returns: undefined

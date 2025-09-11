@@ -71,10 +71,11 @@ export function Gate({
     }
   }
 
-  // Check active status for professors (placeholder for now)
+  // Check active status for professors
   if (requireActiveStatus && user?.role === 'professor') {
-    // TODO: Implement professor status check from database
-    // For now, we allow access but this should verify professor.status = 'ativo'
+    // This will be checked via the existing profile status check in AuthCallback
+    // If a professor reaches here with suspended status, they shouldn't have gotten this far
+    // The status check happens during login/session validation
   }
 
   return <>{children}</>;

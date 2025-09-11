@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { Gate } from "@/components/Gate";
 import AuthPage from "./pages/AuthPage";
 import ResetPassword from "./pages/ResetPassword";
+import Logout from "./pages/Logout";
 import { AdminRouter } from "@/components/AdminRouter";
 import { ProfessorRouter } from "@/components/ProfessorRouter";
 import AuthCallback from "./pages/AuthCallback";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/google/callback" element={<AuthCallback />} />
+            <Route path="/logout" element={<Logout />} />
             
             {/* Protected admin routes */}
             <Route path="/admin/*" element={
