@@ -35,7 +35,7 @@ export function PagamentoCRUDDialog({
     valor: '',
     data_vencimento: '',
     descricao: '',
-    modo_pagamento: 'automatico',
+    modo_pagamento: 'automatic',
     // Quick create aluno
     quickCreateAluno: false,
     novoAlunoNome: '',
@@ -53,7 +53,7 @@ export function PagamentoCRUDDialog({
         valor: pagamento.valor?.toString() || '',
         data_vencimento: pagamento.data_vencimento || '',
         descricao: pagamento.descricao || '',
-        modo_pagamento: 'automatico',
+        modo_pagamento: 'automatic',
         quickCreateAluno: false,
         novoAlunoNome: '',
         novoAlunoEmail: '',
@@ -70,7 +70,7 @@ export function PagamentoCRUDDialog({
         valor: '',
         data_vencimento: proximoMes.toISOString().split('T')[0],
         descricao: '',
-        modo_pagamento: 'automatico',
+        modo_pagamento: 'automatic',
         quickCreateAluno: false,
         novoAlunoNome: '',
         novoAlunoEmail: '',
@@ -321,7 +321,7 @@ export function PagamentoCRUDDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="automatico">Automático (Mercado Pago)</SelectItem>
+                <SelectItem value="automatic">Automático (Mercado Pago)</SelectItem>
                 <SelectItem value="manual">Manual (Marcar manualmente)</SelectItem>
               </SelectContent>
             </Select>

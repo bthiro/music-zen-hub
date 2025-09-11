@@ -1,150 +1,180 @@
-# Guia de Testes - Music Zen Hub
+# TESTING GUIDE
 
-## Rotas e Navegação
+## Sistema de Calendário e Agenda
 
-### **Admin Routes** (`/admin/*`)
-✅ Deve estar logado como admin
+### 1. Calendário no Dashboard
+**Objetivo**: Verificar se o calendário aparece no dashboard e sincroniza com Google
 
-- `/admin/` - Dashboard administrativo
-- `/admin/professores` - Gerenciar professores (criar, editar, suspender)
-- `/admin/professores/novo` - Formulário criação de professor
-- `/admin/pagamentos` - Visão global de pagamentos
-- `/admin/alunos` - Visão global de alunos por professor
-- `/admin/configuracoes` - Configurações do sistema
+**Passos**:
+1. Acessar `/app` (dashboard)
+2. **Sem Google conectado**:
+   - ✅ Verificar se aparece banner "Conectar Google Calendar" 
+   - ✅ Clicar no botão "Conectar Google" e autenticar
+   - ✅ Após conectar, banner deve desaparecer e eventos do Google devem aparecer
+3. **Com Google conectado**:
+   - ✅ Verificar se eventos do Google Calendar aparecem no calendário
+   - ✅ Verificar se aulas locais aparecem no calendário
+   - ✅ Testar views: mês, semana, dia (botões no canto direito)
+   - ✅ Testar navegação: anterior, próximo, hoje
 
-### **Professor Routes** (`/app/*`)
-✅ Deve estar logado como professor ativo
+### 2. Criação e Edição de Eventos
+**Objetivo**: Testar criação, edição e cancelamento de eventos
 
-- `/app/` - Dashboard do professor
-- `/app/alunos` - Gerenciar próprios alunos
-- `/app/pagamentos` - Pagamentos dos próprios alunos (requer módulo)
-- `/app/aulas` - Agenda e aulas (requer módulo)
-- `/app/agenda` - Mesma funcionalidade que aulas
-- `/app/relatorios` - Relatórios (requer módulo dashboard)
-- `/app/configuracoes` - Configurações pessoais
-- `/app/ferramentas` - Ferramentas (requer módulo)
-- `/app/ferramentas/lousa` - Lousa digital (requer módulo lousa)
-- `/app/lousa` - Mesma funcionalidade que ferramentas/lousa
-- `/app/ia-musical` - IA Musical (requer módulo ia)
-- `/app/ia` - Mesma funcionalidade que ia-musical
-- `/app/sessao-ao-vivo` - Sessão ao vivo (requer módulo agenda)
-- `/app/materiais` - Materiais didáticos (requer módulo)
+**Passos**:
+1. **Criar evento**: Clicar em data vazia → modal abrir → preencher → salvar
+2. **Editar evento**: Clicar em evento existente → modal abrir → alterar → salvar  
+3. **Arrastar evento**: Drag & drop de um evento → confirmar atualização
+4. **Cancelar evento**: Abrir evento → deletar → verificar status "cancelada"
+5. **Meet Links**: Verificar se eventos criados geram links válidos do Google Meet
 
-### **Públicas**
-- `/auth` - Login e cadastro
-- `/auth/google/callback` - Callback OAuth Google
+### 3. Agenda Completa (/app/agenda)
+**Objetivo**: Testar a página completa de agenda
 
-## Teste de Criação de Professor (Admin)
+**Passos**:
+1. Navegar para `/app/agenda`
+2. Repetir todos os testes do calendário do dashboard
+3. Verificar integração Google Calendar funciona igual
 
-### Pré-requisitos
-1. Estar logado como admin
-2. Configurar URLs no Supabase e Google Console
+## Sistema de Pagamentos
 
-### Roteiro de Teste
-1. **Navegar para Admin → Professores**
-2. **Clicar "Novo Professor"**
-3. **Preencher formulário:**
-   - Nome: "Professor Teste"
-   - Email: "teste@exemplo.com"
-   - Telefone: "11999999999" (opcional)
-   - Plano: "basico" ou "premium"
-   - Limite de alunos: 50
+### 4. Criar Pagamento
+**Objetivo**: Testar criação de pagamentos com aluno existente e quick-create
 
-4. **Clicar "Criar Professor"**
-5. **Verificar toast de sucesso**
-6. **Verificar professor na lista**
+**Passos**:
+1. Ir para `/app/pagamentos`
+2. Clicar "Novo Pagamento"
+3. **Aluno existente**:
+   - ✅ Selecionar aluno da lista
+   - ✅ Escolher tipo (mensal/pacote/avulsa/quinzenal)  
+   - ✅ Definir valor e vencimento
+   - ✅ Salvar → verificar se aparece na lista
+4. **Quick-create aluno**:
+   - ✅ Ativar switch "Criar aluno rápido"
+   - ✅ Preencher nome, email, telefone
+   - ✅ Salvar → verificar se aluno foi criado E vinculado ao pagamento
 
-### Validações Esperadas
-- ✅ Toast: "Professor criado com sucesso!"
-- ✅ Email enviado ao professor (se configurado)
-- ✅ Professor aparece na lista
-- ✅ Status "ativo"
-- ✅ Módulos corretos baseados no plano
+### 5. Renovar Pagamento
+**Objetivo**: Testar renovação automática de mensalidades/pacotes
 
-## Teste de Navegação por Módulos
+**Passos**:
+1. Na lista de pagamentos, encontrar um pagamento 'pago'
+2. Clicar no menu (⋮) → "Renovar"
+3. ✅ Verificar se novo pagamento foi criado para período seguinte
+4. ✅ Confirmar que não há erro de constraint (payment_precedence)
 
-### Como Professor
-1. **Login como professor**
-2. **Verificar sidebar:**
-   - Itens habilitados devem aparecer
-   - Itens desabilitados não devem aparecer
-3. **Clicar em cada item disponível:**
-   - Deve navegar sem erro 404
-   - Deve carregar a página correta
-4. **Tentar acessar rota desabilitada manualmente:**
-   - Deve mostrar "Acesso Restrito"
+### 6. Marcar Pagamento Manual
+**Objetivo**: Testar marcação manual de pagamentos
 
-### Como Admin
-1. **Login como admin**
-2. **Verificar sidebar com ícone admin**
-3. **Clicar em cada item:**
-   - Todos devem funcionar
-   - Não deve haver erro 404
+**Passos**:
+1. Encontrar pagamento com status 'pendente'
+2. Clicar menu (⋮) → "Marcar como Pago"
+3. ✅ Inserir motivo quando solicitado
+4. ✅ Verificar se status mudou para 'pago'
+5. ✅ Verificar se apareceu CTA "Agendar Aulas"
 
-## Teste de Configuração OAuth
+### 7. Excluir Pagamento
+**Objetivo**: Testar exclusão de pagamentos pendentes
 
-### Supabase Auth URLs
-- Site URL: `https://preview--music-zen-hub.lovable.app`
-- Redirect URLs: `https://preview--music-zen-hub.lovable.app/auth/google/callback`
+**Passos**:
+1. Encontrar pagamento 'pendente' SEM aulas vinculadas
+2. Clicar menu (⋮) → "Excluir" → confirmar
+3. ✅ Pagamento deve ser removido (soft delete)
+4. **Teste negativo**: Tentar excluir pagamento 'pago' → deve ser bloqueado
 
-### Google Console URLs
-- Authorized JavaScript origins: `https://preview--music-zen-hub.lovable.app`
-- Authorized redirect URIs: `https://preview--music-zen-hub.lovable.app/auth/google/callback`
+## Sistema de Perfil/Configurações
 
-### Teste de Login Google
-1. **Ir para `/auth`**
-2. **Clicar "Continuar com Google"**
-3. **Completar fluxo OAuth**
-4. **Verificar redirecionamento:**
-   - Admin → `/admin`
-   - Professor → `/app`
+### 8. Perfil do Professor
+**Objetivo**: Testar edição de dados pessoais e configurações
 
-## RCA (Root Cause Analysis)
+**Passos**:
+1. Ir para `/app/perfil`
+2. **Aba Perfil**:
+   - ✅ Editar nome, telefone, especialidades, bio
+   - ✅ Upload de avatar (testar arquivo válido e inválido)
+   - ✅ Salvar → dados devem persistir após F5
+3. **Aba Integrações**:
+   - ✅ Verificar status Google Calendar e Mercado Pago
+   - ✅ Botões conectar/desconectar funcionais
 
-### Problemas Identificados e Corrigidos
+### 9. Alterar Senha
+**Objetivo**: Testar alteração de senha self-service
 
-#### 1. **Rotas 404**
-**Causa:** AppSidebar usava rotas como `/alunos`, `/pagamentos` mas App.tsx só tinha `/admin/*` e `/app/*`
-**Correção:** Criado AdminRouter e ProfessorRouter com estrutura de subrotas
+**Passos**:
+1. No perfil, localizar seção de senha
+2. ✅ Preencher nova senha e confirmação
+3. ✅ Salvar → fazer logout → login com nova senha
 
-#### 2. **Criar Professor Falhava**
-**Causa:** Tentativa de inserir direto na tabela sem criar usuário no auth.users
-**Correção:** Edge function `admin-create-professor` com Supabase Admin API
+## Sistema de Admin e Impersonação
 
-#### 3. **Admin sem Acesso Global**
-**Causa:** RLS policies só permitiam acesso baseado em professor_id
-**Correção:** Função `is_admin()` e policies globais para admin
+### 10. Admin Impersonar Read-Only
+**Objetivo**: Testar visualização admin de dados do professor
 
-#### 4. **Links Inconsistentes**
-**Causa:** Sidebar não diferenciava contexto admin vs professor
-**Correção:** Sidebar contextual baseado no role do usuário
+**Passos** (como admin):
+1. Ir para `/admin` 
+2. Encontrar professor na lista → "Impersonar (Read-Only)"
+3. ✅ Modal deve abrir mostrando:
+   - Contagem de alunos do professor
+   - Lista de alunos do professor
+   - Lista de pagamentos do professor
+4. ✅ Verificar que só aparecem dados do professor selecionado
+5. ✅ Fechar modal → audit log deve registrar início/fim da visualização
 
-## Checklist de Validação Final
+## Integração Mercado Pago
 
-- [ ] Login Google funciona na URL da Lovable
-- [ ] Admin consegue criar professor via edge function
-- [ ] Admin acessa visão global (alunos/pagamentos)
-- [ ] Professor acessa apenas próprios dados
-- [ ] Navegação sem erros 404
-- [ ] Módulos respeitam permissões
-- [ ] Redirecionamentos corretos por role
-- [ ] RLS policies funcionando (admin vs professor)
+### 11. Multi-tenant Mercado Pago
+**Objetivo**: Verificar isolamento por professor
 
-## Scripts de Teste Automatizado
+**Passos**:
+1. **Professor A**: conectar Mercado Pago com token próprio
+2. **Professor A**: criar pagamento automático → preference usa token do A
+3. **Professor B**: conectar Mercado Pago com token próprio  
+4. **Professor B**: criar pagamento → preference usa token do B
+5. ✅ Webhook deve rotear pagamentos corretos para cada professor
+6. **Admin**: não deve conseguir criar pagamentos usando tokens dos professores
 
-```bash
-# Validar rotas existem (sem autenticação)
-curl -I https://preview--music-zen-hub.lovable.app/admin
-curl -I https://preview--music-zen-hub.lovable.app/app
-curl -I https://preview--music-zen-hub.lovable.app/auth
+## Testes de UI/UX
 
-# Teste edge function (requer auth token)
-# Ver logs em: https://supabase.com/dashboard/project/hnftxautmxviwrfuaosu/functions/admin-create-professor/logs
-```
+### 12. Navegação e Layout Limpo
+**Objetivo**: Verificar que UI duplicada foi removida
 
-## Próximos Passos
-1. Configurar URLs no Supabase e Google Console
-2. Testar login Google end-to-end
-3. Testar criação de professor
-4. Validar navegação completa
-5. Documentar qualquer issue encontrado
+**Passos**:
+1. ✅ Dashboard (`/app`) não deve ter abas duplicadas embaixo do nome
+2. ✅ Cards de Ferramentas devem abrir rotas corretas:
+   - Lousa → `/app/ferramentas/lousa`
+   - IA → `/app/ia`  
+   - Metrônomo → `/app/ferramentas/metronomo`
+3. ✅ Nenhum card deve abrir página 404
+4. ✅ Menu lateral deve ter todas as opções funcionais
+
+## RCA: Erro de Payment Precedence
+
+### Problema Original
+**Erro**: `check constraint 'pagamentos_payment_precedence_check'`
+
+### Causa Raiz
+A constraint original permitia valores `['automatic', 'manual', 'refunded', 'cancelled', 'chargeback']` mas o código estava enviando `'automatico'` (português) ao invés de `'automatic'` (inglês).
+
+### Solução Implementada
+1. **Migration**: Atualizou constraint para aceitar `['automatic', 'manual']`
+2. **Código**: Corrigiu todas as referências para usar `'automatic'` em vez de `'automatico'`
+3. **Validação**: Formulários agora usam valores corretos em inglês
+
+### Resultado Esperado
+Renovações de pagamento devem funcionar sem erro de constraint.
+
+## Checklist Final de QA
+
+Antes de considerar a feature completa, todos os itens devem passar:
+
+- [ ] Calendário visível no dashboard
+- [ ] CTA Google aparece quando desconectado
+- [ ] Eventos editáveis com drag/resize
+- [ ] Criar/renovar/excluir pagamentos funciona
+- [ ] Quick-create de aluno funciona
+- [ ] Pagamento manual libera "Agendar Aulas"
+- [ ] Perfil editável com upload de avatar
+- [ ] Admin impersonar mostra dados corretos
+- [ ] Mercado Pago por professor isolado
+- [ ] UI limpa sem duplicações
+- [ ] Todas as rotas navegáveis sem 404
+- [ ] Renovação não quebra com erro de precedence

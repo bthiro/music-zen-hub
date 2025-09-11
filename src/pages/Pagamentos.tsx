@@ -17,6 +17,7 @@ import { AulaDialog } from "@/components/dialogs/AulaDialog";
 import { CobrancaDialog } from "@/components/dialogs/CobrancaDialog";
 import { MercadoPagoDialog } from "@/components/dialogs/MercadoPagoDialog";
 import { PagamentoCRUDDialog } from "@/components/dialogs/PagamentoCRUDDialog";
+import { usePagamentoActions } from "@/hooks/usePagamentoActions";
 import { PaymentStatusDisplay } from "@/components/PaymentStatusDisplay";
 import { usePagamentos } from "@/hooks/usePagamentos";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +33,8 @@ import {
   Trash2,
   Edit,
   RotateCcw,
-  Check
+  Check,
+  RefreshCw
 } from "lucide-react";
 import { useState } from "react";
 import { StatsCard } from "@/components/ui/stats-card";
@@ -46,6 +48,7 @@ import {
 
 export default function Pagamentos() {
   const { pagamentos, loading, refetch } = usePagamentos();
+  const { criarRenovacao, marcarComoPago, excluirPagamento, loading: actionLoading } = usePagamentoActions();
   const { toast } = useToast();
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [aulaDialogOpen, setAulaDialogOpen] = useState(false);
@@ -348,7 +351,7 @@ export default function Pagamentos() {
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold">{pagamento.aluno}</h3>
                       <Badge variant="outline" className="capitalize">
-                        {pagamento.formaPagamento?.replace('_', ' ') || 'Manual'}
+                        {pagamento.formaPagamento?.replace('_', ' ') || 'Mensal'}
                       </Badge>
                     </div>
                     

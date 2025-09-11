@@ -1,9 +1,9 @@
-import { Layout } from "@/components/Layout";
+import { CleanLayout } from "@/components/CleanLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
 import { Users, DollarSign, Calendar, AlertCircle, ExternalLink, CalendarDays } from "lucide-react";
-import { GoogleCalendarReal } from "@/components/GoogleCalendarReal";
+import { CalendarWidget } from "@/components/CalendarWidget";
 import { StatsCard } from "@/components/ui/stats-card";
 import { useState } from "react";
 
@@ -68,7 +68,7 @@ export default function Dashboard() {
   };
 
   return (
-    <Layout>
+    <CleanLayout>
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold tracking-tight font-display">Dashboard</h2>
@@ -121,17 +121,17 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Google Calendar Integration */}
+        {/* Calendar Integration */}
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
-                Google Calendar
+                Agenda
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6">
-              <GoogleCalendarReal />
+              <CalendarWidget />
             </CardContent>
           </Card>
 
@@ -244,6 +244,6 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-    </Layout>
+    </CleanLayout>
   );
 }
