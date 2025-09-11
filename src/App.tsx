@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Gate } from "@/components/Gate";
 import AuthPage from "./pages/AuthPage";
+import ResetPassword from "./pages/ResetPassword";
 import { AdminRouter } from "@/components/AdminRouter";
 import { ProfessorRouter } from "@/components/ProfessorRouter";
 import AuthCallback from "./pages/AuthCallback";
@@ -23,6 +24,7 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/google/callback" element={<AuthCallback />} />
             
             {/* Protected admin routes */}

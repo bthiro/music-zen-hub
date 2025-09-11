@@ -189,6 +189,120 @@ export function useAdmin() {
     }
   };
 
+  const inviteProfessor = async (professorId: string, email: string) => {
+    try {
+      console.log('[useAdmin] Inviting professor:', { professorId, email });
+      
+      const { data: result, error } = await supabase.functions.invoke('admin-invite-professor', {
+        body: {
+          professor_id: professorId,
+          email,
+          redirect_url: `${window.location.origin}/auth/reset-password`
+        }
+      });
+
+      if (error) {
+        console.error('[useAdmin] Edge function error:', error);
+        throw new Error(error.message || 'Erro na função de convite');
+      }
+
+      if (!result.success) {
+        console.error('[useAdmin] Edge function returned error:', result.error);
+        throw new Error(result.error || result.message || 'Erro desconhecido');
+      }
+
+      await logAction(
+        'professor_invited',
+        'professores',
+        professorId,
+        { email, method: result.method }
+      );
+
+      if (result.method === 'email') {
+        toast({
+          title: "Convite Enviado",
+          description: `Convite enviado por email para ${email}`,
+        });
+      } else {
+        toast({
+          title: "Link Gerado",
+          description: "Link de acesso copiado para área de transferência",
+        });
+        // Copy link to clipboard
+        if (result.link && navigator.clipboard) {
+          await navigator.clipboard.writeText(result.link);
+        }
+      }
+
+      return { data: result, error: null };
+    } catch (error: any) {
+      console.error('[useAdmin] Error inviting professor:', error);
+      toast({
+        title: "Erro",
+        description: error?.message || "Não foi possível enviar convite",
+        variant: "destructive",
+      });
+      return { data: null, error };
+    }
+  };
+
+  const resetProfessorPassword = async (professorId: string, email: string) => {
+    try {
+      console.log('[useAdmin] Resetting professor password:', { professorId, email });
+      
+      const { data: result, error } = await supabase.functions.invoke('admin-reset-professor-password', {
+        body: {
+          professor_id: professorId,
+          email,
+          redirect_url: `${window.location.origin}/auth/reset-password`
+        }
+      });
+
+      if (error) {
+        console.error('[useAdmin] Edge function error:', error);
+        throw new Error(error.message || 'Erro na função de reset');
+      }
+
+      if (!result.success) {
+        console.error('[useAdmin] Edge function returned error:', result.error);
+        throw new Error(result.error || result.message || 'Erro desconhecido');
+      }
+
+      await logAction(
+        'professor_password_reset_requested',
+        'professores',
+        professorId,
+        { email, method: result.method }
+      );
+
+      if (result.method === 'email') {
+        toast({
+          title: "Link Enviado",
+          description: `Link de redefinição enviado por email para ${email}`,
+        });
+      } else {
+        toast({
+          title: "Link Gerado",
+          description: "Link de redefinição copiado para área de transferência",
+        });
+        // Copy link to clipboard
+        if (result.link && navigator.clipboard) {
+          await navigator.clipboard.writeText(result.link);
+        }
+      }
+
+      return { data: result, error: null };
+    } catch (error: any) {
+      console.error('[useAdmin] Error resetting professor password:', error);
+      toast({
+        title: "Erro",
+        description: error?.message || "Não foi possível enviar link de redefinição",
+        variant: "destructive",
+      });
+      return { data: null, error };
+    }
+  };
+
   const createProfessor = async (professorData: {
     nome: string;
     email: string;
@@ -267,6 +381,8 @@ export function useAdmin() {
     updateProfessorStatus,
     updateProfessorModules,
     createProfessor,
+    inviteProfessor,
+    resetProfessorPassword,
     refreshStats: fetchStats,
     refreshProfessores: fetchProfessores,
   };

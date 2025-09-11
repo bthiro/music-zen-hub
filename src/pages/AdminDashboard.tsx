@@ -31,7 +31,10 @@ import {
   UserCheck,
   UserX,
   UserMinus,
-  Activity
+  Activity,
+  Mail,
+  KeyRound,
+  Copy
 } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { StatsCard } from "@/components/ui/stats-card";
@@ -58,7 +61,9 @@ export default function AdminDashboard() {
     loading, 
     updateProfessorStatus, 
     updateProfessorModules,
-    createProfessor 
+    createProfessor,
+    inviteProfessor,
+    resetProfessorPassword
   } = useAdmin();
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -95,6 +100,14 @@ export default function AdminDashboard() {
 
   const handleModuleToggle = async (professorId: string, modules: Record<string, boolean>) => {
     await updateProfessorModules(professorId, modules);
+  };
+
+  const handleInviteProfessor = async (professorId: string, email: string) => {
+    await inviteProfessor(professorId, email);
+  };
+
+  const handleResetPassword = async (professorId: string, email: string) => {
+    await resetProfessorPassword(professorId, email);
   };
 
   const getStatusColor = (status: string) => {
@@ -356,6 +369,18 @@ export default function AdminDashboard() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
+                            <DropdownMenuItem 
+                              onClick={() => handleInviteProfessor(professor.id, professor.email)}
+                            >
+                              <Mail className="h-4 w-4 mr-2" />
+                              Reenviar Convite
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleResetPassword(professor.id, professor.email)}
+                            >
+                              <KeyRound className="h-4 w-4 mr-2" />
+                              Resetar Senha
+                            </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Eye className="h-4 w-4 mr-2" />
                               Impersonar (Read-only)
