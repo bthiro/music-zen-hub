@@ -49,10 +49,10 @@ serve(async (req) => {
     // Step 2: Insert user role
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
-      .insert({
-        user_id: authUser.user.id,
-        role: 'professor'
-      });
+      .upsert(
+        { user_id: authUser.user.id, role: 'professor' },
+        { onConflict: 'user_id,role' }
+      );
 
     if (roleError) {
       console.error('[admin-create-professor] Role error:', roleError);
@@ -61,38 +61,40 @@ serve(async (req) => {
       throw new Error(`Erro ao definir role: ${roleError.message}`);
     }
 
-    console.log('[admin-create-professor] Role created');
+    console.log('[admin-create-professor] Role upserted');
 
-    // Step 3: Create professor profile
+    // Step 3: Create or update professor profile idempotently
+    const professorPayload = {
+      user_id: authUser.user.id,
+      nome,
+      email,
+      telefone: telefone || null,
+      plano,
+      limite_alunos,
+      status: 'ativo',
+      modules: {
+        dashboard: true,
+        ia: plano === 'premium',
+        ferramentas: true,
+        agenda: true,
+        pagamentos: true,
+        materiais: true,
+        lousa: true
+      }
+    };
+
     const { data: professor, error: professorError } = await supabaseAdmin
       .from('professores')
-      .insert({
-        user_id: authUser.user.id,
-        nome,
-        email,
-        telefone: telefone || null,
-        plano,
-        limite_alunos,
-        status: 'ativo',
-        modules: {
-          dashboard: true,
-          ia: plano === 'premium',
-          ferramentas: true,
-          agenda: true,
-          pagamentos: true,
-          materiais: true,
-          lousa: true
-        }
-      })
+      .upsert(professorPayload, { onConflict: 'user_id' })
       .select()
       .single();
 
+
     if (professorError) {
-      console.error('[admin-create-professor] Professor error:', professorError);
-      // Cleanup: delete auth user and role if professor creation fails
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
-      throw new Error(`Erro ao criar perfil: ${professorError.message}`);
+      console.error('[admin-create-professor] Professor upsert error:', professorError);
+      throw new Error(`Erro ao criar/atualizar perfil: ${professorError.message}`);
     }
+
 
     console.log('[admin-create-professor] Professor created:', professor.id);
 
