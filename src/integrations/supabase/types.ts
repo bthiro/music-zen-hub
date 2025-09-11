@@ -125,10 +125,12 @@ export type Database = {
           data_hora: string
           duracao_minutos: number | null
           feedback: string | null
+          google_event_id: string | null
           id: string
           link_meet: string | null
           materiais: Json | null
           meet_id: string | null
+          meet_link: string | null
           presenca: boolean | null
           professor_id: string
           status: string | null
@@ -141,10 +143,12 @@ export type Database = {
           data_hora: string
           duracao_minutos?: number | null
           feedback?: string | null
+          google_event_id?: string | null
           id?: string
           link_meet?: string | null
           materiais?: Json | null
           meet_id?: string | null
+          meet_link?: string | null
           presenca?: boolean | null
           professor_id: string
           status?: string | null
@@ -157,10 +161,12 @@ export type Database = {
           data_hora?: string
           duracao_minutos?: number | null
           feedback?: string | null
+          google_event_id?: string | null
           id?: string
           link_meet?: string | null
           materiais?: Json | null
           meet_id?: string | null
+          meet_link?: string | null
           presenca?: boolean | null
           professor_id?: string
           status?: string | null
@@ -219,6 +225,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      configuracoes_professor: {
+        Row: {
+          billing_message: string | null
+          created_at: string | null
+          id: string
+          payment_link: string | null
+          pix_key: string | null
+          professor_id: string
+          push_notifications: boolean | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_message?: string | null
+          created_at?: string | null
+          id?: string
+          payment_link?: string | null
+          pix_key?: string | null
+          professor_id: string
+          push_notifications?: boolean | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_message?: string | null
+          created_at?: string | null
+          id?: string
+          payment_link?: string | null
+          pix_key?: string | null
+          professor_id?: string
+          push_notifications?: boolean | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuracoes_professor_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: true
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       integration_configs: {
         Row: {
@@ -313,8 +363,12 @@ export type Database = {
           forma_pagamento: string | null
           id: string
           link_pagamento: string | null
+          manual_payment_at: string | null
+          manual_payment_by: string | null
+          manual_payment_reason: string | null
           mercado_pago_payment_id: string | null
           mercado_pago_status: string | null
+          payment_precedence: string | null
           professor_id: string
           referencia_externa: string | null
           status: string
@@ -333,8 +387,12 @@ export type Database = {
           forma_pagamento?: string | null
           id?: string
           link_pagamento?: string | null
+          manual_payment_at?: string | null
+          manual_payment_by?: string | null
+          manual_payment_reason?: string | null
           mercado_pago_payment_id?: string | null
           mercado_pago_status?: string | null
+          payment_precedence?: string | null
           professor_id: string
           referencia_externa?: string | null
           status?: string
@@ -353,8 +411,12 @@ export type Database = {
           forma_pagamento?: string | null
           id?: string
           link_pagamento?: string | null
+          manual_payment_at?: string | null
+          manual_payment_by?: string | null
+          manual_payment_reason?: string | null
           mercado_pago_payment_id?: string | null
           mercado_pago_status?: string | null
+          payment_precedence?: string | null
           professor_id?: string
           referencia_externa?: string | null
           status?: string
@@ -389,6 +451,7 @@ export type Database = {
       professores: {
         Row: {
           avatar_url: string | null
+          billing_text: string | null
           bio: string | null
           config_calendario: Json | null
           config_notificacoes: Json | null
@@ -401,6 +464,8 @@ export type Database = {
           limite_alunos: number | null
           modules: Json
           nome: string
+          payment_preference: Json | null
+          pix_key: string | null
           plano: string | null
           senha_temporaria: boolean | null
           status: string | null
@@ -411,6 +476,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          billing_text?: string | null
           bio?: string | null
           config_calendario?: Json | null
           config_notificacoes?: Json | null
@@ -423,6 +489,8 @@ export type Database = {
           limite_alunos?: number | null
           modules?: Json
           nome: string
+          payment_preference?: Json | null
+          pix_key?: string | null
           plano?: string | null
           senha_temporaria?: boolean | null
           status?: string | null
@@ -433,6 +501,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          billing_text?: string | null
           bio?: string | null
           config_calendario?: Json | null
           config_notificacoes?: Json | null
@@ -445,6 +514,8 @@ export type Database = {
           limite_alunos?: number | null
           modules?: Json
           nome?: string
+          payment_preference?: Json | null
+          pix_key?: string | null
           plano?: string | null
           senha_temporaria?: boolean | null
           status?: string | null

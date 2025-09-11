@@ -11,9 +11,10 @@ interface EventModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   event?: any;
-  selectedDate?: Date;
-  onSave: (eventData: any) => Promise<void>;
-  onDelete?: (eventId: string) => Promise<void>;
+  selectedDate?: Date | null;
+  onSave: (eventData: any) => void;
+  onDelete?: (eventId: string) => void;
+  alunos?: Array<{ id: string; nome: string; }>;
 }
 
 export function EventModal({ 
@@ -22,7 +23,8 @@ export function EventModal({
   event, 
   selectedDate, 
   onSave, 
-  onDelete 
+  onDelete,
+  alunos = []
 }: EventModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);

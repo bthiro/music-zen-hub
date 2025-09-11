@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
+import { useProfessorSettings } from "@/hooks/useProfessorSettings";
 import { GoogleIntegrationTest } from "@/components/GoogleIntegrationTest";
 import { 
   Settings, 
@@ -33,10 +34,17 @@ export default function Configuracoes() {
     signOut, 
     testIntegration 
   } = useGoogleIntegration();
+  
+  const { 
+    settings, 
+    loading: settingsLoading, 
+    saveSettings 
+  } = useProfessorSettings();
+
   const [config, setConfig] = useState({
-    fusoHorario: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    chavePix: "professor@email.com",
-    linkPagamento: "https://mercadopago.com.br/checkout/v1/redirect?pref_id=123456789",
+    fusoHorario: 'America/Sao_Paulo',
+    chavePix: '',
+    linkPagamento: '',
     mensagemCobranca: `Olá {ALUNO}! 😊
 
 📋 *Lembrete de Pagamento*
@@ -50,17 +58,34 @@ export default function Configuracoes() {
 
 Qualquer dúvida, estou à disposição!
 Obrigado(a) pela confiança! 🎵`,
-    emailGoogle: "",
     notificacoesPush: true
   });
 
-  const salvarConfiguracoes = () => {
-    // Aqui você salvaria no localStorage ou context
-    localStorage.setItem('configuracoes', JSON.stringify(config));
-    toast({
-      title: "Configurações salvas!",
-      description: "Suas preferências foram atualizadas com sucesso."
-    });
+  // Carregar configurações do banco quando disponíveis
+  useEffect(() => {
+    if (settings) {
+      setConfig({
+        fusoHorario: settings.timezone || 'America/Sao_Paulo',
+        chavePix: settings.pix_key || '',
+        linkPagamento: settings.payment_link || '',
+        mensagemCobranca: settings.billing_message || config.mensagemCobranca,
+        notificacoesPush: settings.push_notifications ?? true
+      });
+    }
+  }, [settings]);
+
+  const salvarConfiguracoes = async () => {
+    try {
+      await saveSettings({
+        timezone: config.fusoHorario,
+        pix_key: config.chavePix,
+        payment_link: config.linkPagamento,
+        billing_message: config.mensagemCobranca,
+        push_notifications: config.notificacoesPush
+      });
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+    }
   };
 
   return (
