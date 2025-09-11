@@ -139,6 +139,27 @@ export function AdminRouter() {
       } />
       <Route path="/alunos" element={<AdminAlunosView />} />
       <Route path="/configuracoes" element={<AdminConfiguracoes />} />
+      <Route path="/perfil" element={
+        <Layout>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight">Perfil do Administrador</h2>
+                <p className="text-muted-foreground">
+                  Configurações da conta administrativa
+                </p>
+              </div>
+            </div>
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground">
+                  Perfil administrativo em desenvolvimento...
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </Layout>
+      } />
     </Routes>
   );
 }

@@ -11,7 +11,7 @@ import Ferramentas from "@/pages/Ferramentas";
 import IaMusical from "@/pages/IaMusical";
 import Lousa from "@/pages/Lousa";
 import SessaoAoVivo from "@/pages/SessaoAoVivo";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Perfil from "@/pages/Perfil";
 import { Lock } from "lucide-react";
 
 // Component for module access control
@@ -86,6 +86,20 @@ export function ProfessorRouter() {
         </ModuleGuard>
       } />
       <Route path="/configuracoes" element={<Configuracoes />} />
+      <Route path="/perfil" element={<Perfil />} />
+      <Route path="/materiais" element={
+        <ModuleGuard moduleKey="materiais" moduleName="Materiais">
+          <Card>
+            <CardHeader>
+              <CardTitle>Materiais</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Módulo de materiais em desenvolvimento...</p>
+            </CardContent>
+          </Card>
+        </ModuleGuard>
+      } />
+    </Routes>
       <Route path="/ferramentas" element={
         <ModuleGuard moduleKey="ferramentas" moduleName="Ferramentas">
           <Ferramentas />

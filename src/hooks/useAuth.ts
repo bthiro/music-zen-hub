@@ -189,43 +189,43 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
-    const redirectTo = `${window.location.origin}/auth/google/callback`;
-    const inIframe = window.top !== window;
-    console.log('[Auth] Google sign-in start', { redirectTo, href: window.location.href, inIframe });
+    try {
+      const redirectTo = `${window.location.origin}/auth/google/callback`;
+      const inIframe = window.top !== window;
+      console.log('[Auth] Google sign-in start', { redirectTo, href: window.location.href, inIframe });
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo,
-        queryParams: { prompt: 'consent', access_type: 'offline' },
-        skipBrowserRedirect: true,
-      },
-    });
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          queryParams: { 
+            prompt: 'consent', 
+            access_type: 'offline' 
+          },
+          skipBrowserRedirect: false, // Let Supabase handle redirect
+        },
+      });
 
-    if (error) {
-      console.error('[Auth] Google sign-in error:', error, { redirectTo, href: window.location.href });
-      const friendly = error.message?.includes('redirect_uri_mismatch')
-        ? 'Redirect URI não corresponde. Atualize Google Console e Supabase com a URL atual.'
-        : error.message || 'Falha ao iniciar login com Google.';
-      toast({ title: 'Erro no Login com Google', description: friendly, variant: 'destructive' });
-      return;
-    }
-
-    if (data?.url) {
-      // Abrir fora do iframe para evitar bloqueio do Google
-      try {
-        if (window.top && inIframe) {
-          (window.top as Window).location.href = data.url;
-        } else {
-          window.location.href = data.url;
-        }
-      } catch (e) {
-        console.warn('[Auth] Top navigation blocked, falling back to same window', e);
-        window.location.href = data.url;
+      if (error) {
+        console.error('[Auth] Google sign-in error:', error, { redirectTo, href: window.location.href });
+        const friendly = error.message?.includes('redirect_uri_mismatch')
+          ? 'Redirect URI não corresponde. Verifique as configurações do Google Console.'
+          : error.message?.includes('popup_closed_by_user')
+            ? 'Login cancelado pelo usuário.'
+            : error.message || 'Falha ao iniciar login com Google.';
+        toast({ title: 'Erro no Login com Google', description: friendly, variant: 'destructive' });
+        return;
       }
-    } else {
-      console.error('[Auth] No OAuth URL returned', { redirectTo });
-      toast({ title: 'Erro no Login com Google', description: 'URL de autenticação não retornada.', variant: 'destructive' });
+
+      // Supabase will handle the redirect automatically
+      console.log('[Auth] OAuth initiated successfully');
+    } catch (err: any) {
+      console.error('[Auth] Unexpected error in signInWithGoogle:', err);
+      toast({ 
+        title: 'Erro Inesperado', 
+        description: 'Não foi possível iniciar o login com Google. Tente novamente.', 
+        variant: 'destructive' 
+      });
     }
   };
 

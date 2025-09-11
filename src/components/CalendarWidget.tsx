@@ -289,14 +289,23 @@ export function CalendarWidget({ className }: CalendarWidgetProps) {
       {!isAuthenticated && (
         <Card className="mb-4">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/50">
-              <div>
-                <p className="font-medium text-sm">Conectar Google Calendar</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Sincronize automaticamente suas aulas e gere links do Meet.
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-primary/20 rounded-lg bg-primary/5 gap-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <CalendarIcon className="h-5 w-5 text-primary" />
+                  <p className="font-semibold text-base">Integrar Google Calendar</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  • Sincronize automaticamente suas aulas com o Google Calendar
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  • Gere links do Google Meet automaticamente para cada aula
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  • Edite eventos diretamente no calendário
                 </p>
               </div>
-              <Button onClick={signIn} disabled={isLoading} size="sm">
+              <Button onClick={signIn} disabled={isLoading} size="default" className="shrink-0">
                 {isLoading ? (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -305,7 +314,7 @@ export function CalendarWidget({ className }: CalendarWidgetProps) {
                 ) : (
                   <>
                     <CalendarIcon className="h-4 w-4 mr-2" />
-                    Conectar Google
+                    Conectar Google Calendar
                   </>
                 )}
               </Button>

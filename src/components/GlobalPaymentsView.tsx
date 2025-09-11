@@ -66,19 +66,28 @@ export function GlobalPaymentsView() {
           status = 'atrasado';
         }
 
+        // Mask sensitive data for admin view
+        const maskEmail = (email: string) => {
+          if (!email || email.length < 3) return email;
+          const [local, domain] = email.split('@');
+          if (!domain) return email;
+          return `${local.substring(0, 2)}***@${domain}`;
+        };
+
         return {
           id: pagamento.id,
           alunoId: pagamento.aluno_id,
-          aluno: pagamento.alunos?.nome || '',
+          aluno: maskEmail(pagamento.alunos?.nome || ''), // Mask student name/email if it's an email
           valor: Number(pagamento.valor),
           vencimento: pagamento.data_vencimento,
           pagamento: pagamento.data_pagamento,
           status,
           mes: mes.charAt(0).toUpperCase() + mes.slice(1),
           formaPagamento: pagamento.forma_pagamento as "pix" | "cartao" | "dinheiro" | "mercado_pago" | undefined,
-          metodoPagamento: pagamento.referencia_externa,
+          // Hide sensitive payment data from admin
+          metodoPagamento: '***', // Hide external reference
           professor_id: pagamento.professor_id,
-          mercado_pago_payment_id: pagamento.mercado_pago_payment_id,
+          mercado_pago_payment_id: pagamento.mercado_pago_payment_id ? '***' : null, // Hide MP payment ID
           eligible_to_schedule: pagamento.eligible_to_schedule,
           professorNome: pagamento.professores?.nome || ''
         };
@@ -277,9 +286,12 @@ export function GlobalPaymentsView() {
                   <div>
                     <h4 className="font-medium">{pagamento.aluno}</h4>
                     <p className="text-sm text-muted-foreground">Professor: {pagamento.professorNome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Ref: {pagamento.metodoPagamento} {pagamento.mercado_pago_payment_id && `| MP: ${pagamento.mercado_pago_payment_id}`}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">R$ {pagamento.valor}</p>
+                    <p className="font-medium">R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                     <p className="text-sm text-muted-foreground">{pagamento.mes}</p>
                   </div>
                 </div>

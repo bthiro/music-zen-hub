@@ -18,7 +18,6 @@ import {
   User, 
   Mail, 
   Phone, 
-  MapPin,
   CreditCard,
   Key,
   Lock,
@@ -88,7 +87,6 @@ export default function Perfil() {
   }, [profile]);
 
   const loadProfile = () => {
-    // Reload profile data
     if (profile) {
       setProfileData({
         nome: profile.nome || '',
@@ -244,6 +242,10 @@ export default function Perfil() {
               <User className="h-4 w-4 mr-2" />
               Perfil
             </TabsTrigger>
+            <TabsTrigger value="security">
+              <Lock className="h-4 w-4 mr-2" />
+              Segurança
+            </TabsTrigger>
             <TabsTrigger value="integrations">
               <Settings className="h-4 w-4 mr-2" />
               Integrações
@@ -368,6 +370,44 @@ export default function Perfil() {
                     />
                   </div>
                 </div>
+                
+                <Separator />
+
+                {/* Financial Information */}
+                <div className="space-y-4">
+                  <h4 className="flex items-center gap-2 font-medium">
+                    <DollarSign className="h-4 w-4" />
+                    Informações de Pagamento
+                  </h4>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="pix_key">Chave PIX</Label>
+                    <div className="relative">
+                      <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="pix_key"
+                        className="pl-10"
+                        placeholder="Sua chave PIX (CPF, email, telefone ou aleatória)"
+                        value={profileData.pix_key || ''}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, pix_key: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="billing_text">Mensagem de Cobrança Padrão</Label>
+                    <Textarea
+                      id="billing_text"
+                      className="min-h-32"
+                      placeholder="Olá {ALUNO}! Sua mensalidade de {PERIODO} no valor de R$ {VALOR} vence em {VENCIMENTO}. PIX: {PIX}"
+                      value={profileData.billing_text || ''}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, billing_text: e.target.value }))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use as variáveis: {'{ALUNO}'}, {'{PERIODO}'}, {'{VALOR}'}, {'{VENCIMENTO}'}, {'{PIX}'}
+                    </p>
+                  </div>
+                </div>
 
                 <Separator />
                 
@@ -388,6 +428,141 @@ export default function Perfil() {
                       </>
                     )}
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Alterar Senha
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current-password">Senha Atual</Label>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="current-password"
+                      type={showPasswords.current ? 'text' : 'password'}
+                      className="pl-10"
+                      value={passwords.current}
+                      onChange={(e) => setPasswords(prev => ({ ...prev, current: e.target.value }))}
+                      placeholder="Digite sua senha atual"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                    >
+                      {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Nova Senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="new-password"
+                      type={showPasswords.new ? 'text' : 'password'}
+                      className="pl-10"
+                      value={passwords.new}
+                      onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
+                      placeholder="Digite a nova senha (min. 6 caracteres)"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                    >
+                      {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="confirm-password"
+                      type={showPasswords.confirm ? 'text' : 'password'}
+                      className="pl-10"
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords(prev => ({ ...prev, confirm: e.target.value }))}
+                      placeholder="Confirme a nova senha"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                    >
+                      {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={handlePasswordChange} 
+                    disabled={!passwords.new || !passwords.confirm}
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
+                    Alterar Senha
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações de Segurança</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Google Calendar</p>
+                    <p className="text-sm text-muted-foreground">
+                      {googleConnected ? `Conectado: ${googleEmail}` : 'Não conectado'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {googleConnected ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <Button variant="outline" size="sm" onClick={googleSignOut}>
+                          Desconectar
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4 text-red-500" />
+                        <Button size="sm" onClick={googleSignIn}>
+                          Conectar
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Autenticação 2FA</p>
+                    <p className="text-sm text-muted-foreground">Autenticação em duas etapas (em breve)</p>
+                  </div>
+                  <Badge variant="outline">Em desenvolvimento</Badge>
                 </div>
               </CardContent>
             </Card>
