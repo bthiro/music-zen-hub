@@ -44,6 +44,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GlobalPaymentsView } from "@/components/GlobalPaymentsView";
+import { AdminImpersonation } from "@/components/AdminImpersonation";
 
 const professorSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -69,6 +70,8 @@ export default function AdminDashboard() {
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedProfessor, setSelectedProfessor] = useState<string | null>(null);
+  const [impersonationOpen, setImpersonationOpen] = useState(false);
+  const [impersonationData, setImpersonationData] = useState<{id: string, nome: string} | null>(null);
 
   const form = useForm<ProfessorFormData>({
     resolver: zodResolver(professorSchema),
@@ -114,6 +117,11 @@ export default function AdminDashboard() {
 
   const handleInviteProfessor = async (professorId: string, email: string) => {
     await inviteProfessor(professorId, email);
+  };
+
+  const handleImpersonation = async (professorId: string, professorNome: string) => {
+    setImpersonationData({ id: professorId, nome: professorNome });
+    setImpersonationOpen(true);
   };
 
   const handleResetPassword = async (professorId: string, email: string) => {
@@ -391,7 +399,9 @@ export default function AdminDashboard() {
                               <KeyRound className="h-4 w-4 mr-2" />
                               Resetar Senha
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleImpersonation(professor.id, professor.nome)}
+                            >
                               <Eye className="h-4 w-4 mr-2" />
                               Impersonar (Read-only)
                             </DropdownMenuItem>
@@ -454,6 +464,13 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <AdminImpersonation
+        open={impersonationOpen}
+        onOpenChange={setImpersonationOpen}
+        professorId={impersonationData?.id}
+        professorNome={impersonationData?.nome}
+      />
     </Layout>
   );
 }

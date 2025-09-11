@@ -56,11 +56,14 @@ export default function Agenda() {
       // Combinar aulas locais com eventos do Google
       const localEvents = aulas.map(aula => {
         const aluno = alunos.find(a => a.id === aula.alunoId);
+        const startDateTime = new Date(`${aula.data}T${aula.horario}:00`);
+        const endDateTime = new Date(startDateTime.getTime() + (aula.duracaoMinutos || 50) * 60000);
+        
         return {
           id: `local-${aula.id}`,
           title: `${aula.observacoes || 'Aula'} - ${aluno?.nome || 'Aluno'}`,
-          start: `${aula.data}T${aula.horario}:00`,
-          end: new Date(new Date(`${aula.data}T${aula.horario}:00`).getTime() + (aula.duracaoMinutos || 50) * 60000).toISOString(),
+          start: startDateTime.toISOString(),
+          end: endDateTime.toISOString(),
           backgroundColor: aula.status === 'realizada' ? '#10b981' : 
                           aula.status === 'cancelada' ? '#ef4444' : '#3b82f6',
           borderColor: 'transparent',
@@ -70,7 +73,7 @@ export default function Agenda() {
             alunoId: aula.alunoId,
             status: aula.status,
             meetLink: aula.linkMeet,
-            googleEventId: null, // Will be fetched from raw data
+            googleEventId: null,
             feedback: aula.observacoesAula,
             tema: aula.observacoes
           }
@@ -148,7 +151,7 @@ export default function Agenda() {
             tema: aula.observacoes,
             feedback: aula.observacoesAula,
             status: aula.status,
-            googleEventId: null // This would need to be fetched from raw database
+            googleEventId: null
           }
         });
       }
@@ -172,7 +175,7 @@ export default function Agenda() {
 
   // Manipular drag & drop de eventos
   const handleEventDrop = async (dropInfo: any) => {
-    const { event, delta } = dropInfo;
+    const { event } = dropInfo;
     const { extendedProps } = event;
 
     if (extendedProps.type === 'local') {
@@ -506,46 +509,6 @@ export default function Agenda() {
         onDelete={handleDeleteEvent}
         alunos={alunos}
       />
-
-      <style>{`
-        .fc-theme-standard .fc-scrollgrid {
-          border: 1px solid hsl(var(--border));
-        }
-        .fc-theme-standard td, .fc-theme-standard th {
-          border: 1px solid hsl(var(--border));
-        }
-        .fc-theme-standard .fc-scrollgrid-sync-table {
-          border: none;
-        }
-        .fc-button-primary {
-          background-color: hsl(var(--primary));
-          border-color: hsl(var(--primary));
-        }
-        .fc-button-primary:hover {
-          background-color: hsl(var(--primary));
-          border-color: hsl(var(--primary));
-          opacity: 0.9;
-        }
-        .fc-daygrid-event {
-          border-radius: 4px;
-          border: none;
-          padding: 2px 4px;
-          font-size: 0.75rem;
-        }
-        .fc-event-time {
-          font-weight: 600;
-        }
-        .fc-event-title {
-          font-weight: 500;
-        }
-        .fc-day-today {
-          background-color: hsl(var(--accent)) !important;
-        }
-        .fc-col-header-cell {
-          background-color: hsl(var(--muted));
-          font-weight: 600;
-        }
-      `}</style>
     </Layout>
   );
 }
