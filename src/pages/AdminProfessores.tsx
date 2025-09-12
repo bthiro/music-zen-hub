@@ -95,6 +95,8 @@ export default function AdminProfessores() {
   const [selectedProfessor, setSelectedProfessor] = useState<any>(null);
   const [professoresToTransfer, setProfessoresToTransfer] = useState<any[]>([]);
   const [transferToId, setTransferToId] = useState<string>('');
+  const [studentCount, setStudentCount] = useState<number>(0);
+  const [suspendStudents, setSuspendStudents] = useState<boolean>(false);
 
   const form = useForm<ProfessorFormData>({
     resolver: zodResolver(professorSchema),
@@ -201,26 +203,44 @@ export default function AdminProfessores() {
     }
   };
 
-  const handleDeleteProfessor = (professor: any) => {
+  const handleDeleteProfessor = async (professor: any) => {
     setSelectedProfessor(professor);
+    
+    // Get active students count for this professor
+    const { data: studentsData } = await supabase
+      .from('alunos')
+      .select('id')
+      .eq('professor_id', professor.id)
+      .eq('ativo', true);
+    
+    const activeStudentCount = studentsData?.length || 0;
+    setStudentCount(activeStudentCount);
+    
     // Get active professors for transfer options (excluding current)
     const activeProfessors = professores.filter(p => 
       p.status === 'ativo' && p.id !== professor.id
     );
     setProfessoresToTransfer(activeProfessors);
     setTransferToId('');
+    setSuspendStudents(false);
     setDeleteDialogOpen(true);
   };
 
   const confirmDeleteProfessor = async () => {
     if (!selectedProfessor) return;
     
-    const result = await deleteProfessor(selectedProfessor.id, transferToId || undefined);
+    const result = await deleteProfessor(
+      selectedProfessor.id, 
+      transferToId || undefined, 
+      suspendStudents
+    );
     
     if (result?.success) {
       setDeleteDialogOpen(false);
       setSelectedProfessor(null);
       setTransferToId('');
+      setSuspendStudents(false);
+      setStudentCount(0);
     }
   };
 
@@ -380,7 +400,9 @@ export default function AdminProfessores() {
         </div>
 
         <div className="space-y-4">
-          {professores.map((professor) => (
+          {professores
+            .filter((professor: any) => professor.status !== 'excluido')
+            .map((professor) => (
             <Card key={professor.id}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -616,33 +638,61 @@ export default function AdminProfessores() {
                 Esta ação não pode ser desfeita.
               </p>
               
-              {selectedProfessor && (
+              {studentCount > 0 && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                   <p className="text-sm font-medium text-yellow-800">
-                    ⚠️ Este professor pode ter alunos ativos
+                    ⚠️ Este professor tem {studentCount} alunos ativos
                   </p>
                   <p className="text-xs text-yellow-700 mt-1">
-                    Escolha um professor para transferir os alunos ou eles ficarão órfãos.
+                    Escolha como tratar os alunos ativos antes de excluir.
                   </p>
                 </div>
               )}
 
-              {professoresToTransfer.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Transferir alunos para:</Label>
-                  <Select value={transferToId} onValueChange={setTransferToId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um professor (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Não transferir (deixar órfãos)</SelectItem>
-                      {professoresToTransfer.map(prof => (
-                        <SelectItem key={prof.id} value={prof.id}>
-                          {prof.nome} ({prof.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {studentCount > 0 && (
+                <div className="space-y-4">
+                  {professoresToTransfer.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Transferir alunos para:</Label>
+                      <Select 
+                        value={transferToId} 
+                        onValueChange={(value) => {
+                          setTransferToId(value);
+                          if (value) setSuspendStudents(false);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um professor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {professoresToTransfer.map(prof => (
+                            <SelectItem key={prof.id} value={prof.id}>
+                              {prof.nome} ({prof.email})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={suspendStudents}
+                      onCheckedChange={(checked) => {
+                        setSuspendStudents(checked);
+                        if (checked) setTransferToId('');
+                      }}
+                    />
+                    <Label className="text-sm">
+                      Suspender alunos ativos (não transferir)
+                    </Label>
+                  </div>
+                  
+                  {suspendStudents && (
+                    <p className="text-xs text-muted-foreground">
+                      Os alunos serão suspensos e poderão ser reativados posteriormente.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -653,7 +703,7 @@ export default function AdminProfessores() {
                 <Button 
                   variant="destructive" 
                   onClick={confirmDeleteProfessor} 
-                  disabled={loading}
+                  disabled={loading || (studentCount > 0 && !transferToId && !suspendStudents)}
                 >
                   {loading ? 'Excluindo...' : 'Confirmar Exclusão'}
                 </Button>

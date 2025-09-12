@@ -442,7 +442,7 @@ export function useAdmin() {
     }
   };
 
-  const deleteProfessor = async (professorId: string, transferToId?: string) => {
+  const deleteProfessor = async (professorId: string, transferToId?: string, suspendStudents = false) => {
     try {
       setLoading(true);
 
@@ -460,22 +460,68 @@ export function useAdmin() {
 
       const activeStudents = studentsData?.length || 0;
 
-      // If has active students and no transfer professor specified
-      if (activeStudents > 0 && !transferToId) {
-        throw new Error(`Professor tem ${activeStudents} alunos ativos. Escolha um professor para transferir os alunos.`);
-      }
+      // Handle students based on options
+      if (activeStudents > 0) {
+        if (transferToId) {
+          // Validate destination professor capacity
+          const { data: destProfessor, error: destError } = await supabase
+            .from('professores')
+            .select('id, nome, limite_alunos')
+            .eq('id', transferToId)
+            .single();
 
-      // Transfer students if specified
-      if (transferToId && activeStudents > 0) {
-        const { error: transferError } = await supabase
-          .from('alunos')
-          .update({ professor_id: transferToId })
-          .eq('professor_id', professorId)
-          .eq('ativo', true);
+          if (destError) {
+            throw new Error('Erro ao verificar professor de destino');
+          }
 
-        if (transferError) {
-          console.error('Error transferring students:', transferError);
-          throw new Error('Erro ao transferir alunos');
+          const { data: destStudents, error: destStudentsError } = await supabase
+            .from('alunos')
+            .select('id')
+            .eq('professor_id', transferToId)
+            .eq('ativo', true);
+
+          if (destStudentsError) {
+            throw new Error('Erro ao verificar alunos do professor de destino');
+          }
+
+          const currentDestStudents = destStudents?.length || 0;
+          const totalAfterTransfer = currentDestStudents + activeStudents;
+          const destLimit = destProfessor.limite_alunos || 20;
+
+          if (totalAfterTransfer > destLimit) {
+            const excess = totalAfterTransfer - destLimit;
+            throw new Error(`Transferência excede o limite do professor destino em ${excess} alunos. Selecione outro professor ou use a opção de suspender alunos.`);
+          }
+
+          // Transfer students
+          const { error: transferError } = await supabase
+            .from('alunos')
+            .update({ professor_id: transferToId })
+            .eq('professor_id', professorId)
+            .eq('ativo', true);
+
+          if (transferError) {
+            console.error('Error transferring students:', transferError);
+            throw new Error('Erro ao transferir alunos');
+          }
+        } else if (suspendStudents) {
+          // Suspend all active students
+          const { error: suspendError } = await supabase
+            .from('alunos')
+            .update({ 
+              ativo: false,
+              suspended_at: new Date().toISOString(),
+              suspended_reason: 'Professor excluído'
+            })
+            .eq('professor_id', professorId)
+            .eq('ativo', true);
+
+          if (suspendError) {
+            console.error('Error suspending students:', suspendError);
+            throw new Error('Erro ao suspender alunos');
+          }
+        } else {
+          throw new Error(`Professor tem ${activeStudents} alunos ativos. Escolha um professor para transferir ou marque para suspender os alunos.`);
         }
       }
 
@@ -506,16 +552,24 @@ export function useAdmin() {
         'professores',
         professorId,
         { 
-          students_transferred: activeStudents,
-          transfer_to: transferToId 
+          students_count: activeStudents,
+          transfer_to: transferToId,
+          students_suspended: suspendStudents && activeStudents > 0
         }
       );
 
+      let description = 'Professor excluído com sucesso';
+      if (activeStudents > 0) {
+        if (transferToId) {
+          description = `Professor excluído e ${activeStudents} alunos transferidos`;
+        } else if (suspendStudents) {
+          description = `Professor excluído e ${activeStudents} alunos suspensos`;
+        }
+      }
+
       toast({
         title: 'Professor excluído',
-        description: activeStudents > 0 
-          ? `Professor excluído e ${activeStudents} alunos transferidos`
-          : 'Professor excluído com sucesso',
+        description,
       });
 
       return { success: true };
