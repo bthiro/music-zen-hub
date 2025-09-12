@@ -17,8 +17,24 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
+  DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { 
   Plus, 
   MoreVertical,
@@ -29,6 +45,9 @@ import {
   Mail,
   KeyRound,
   Lock,
+  Edit,
+  Trash2,
+  Download
 } from "lucide-react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,15 +78,23 @@ export default function AdminProfessores() {
     updateProfessorStatus, 
     updateProfessorModules,
     createProfessor,
+    updateProfessor,
+    deleteProfessor,
+    exportProfessores,
     inviteProfessor,
     resetProfessorPassword
   } = useAdmin();
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [impersonationOpen, setImpersonationOpen] = useState(false);
   const [impersonationData, setImpersonationData] = useState<{id: string, nome: string} | null>(null);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [passwordData, setPasswordData] = useState<{id: string, nome: string} | null>(null);
+  const [selectedProfessor, setSelectedProfessor] = useState<any>(null);
+  const [professoresToTransfer, setProfessoresToTransfer] = useState<any[]>([]);
+  const [transferToId, setTransferToId] = useState<string>('');
 
   const form = useForm<ProfessorFormData>({
     resolver: zodResolver(professorSchema),
@@ -130,6 +157,70 @@ export default function AdminProfessores() {
       form.reset();
       // Clear saved form data
       localStorage.removeItem(FORM_STORAGE_KEY);
+    }
+  };
+
+  const editForm = useForm<ProfessorFormData>({
+    resolver: zodResolver(professorSchema),
+    defaultValues: {
+      nome: '',
+      email: '',
+      telefone: '',
+      plano: 'basico',
+      limite_alunos: 20
+    }
+  });
+
+  const handleEditProfessor = (professor: any) => {
+    setSelectedProfessor(professor);
+    editForm.reset({
+      nome: professor.nome || '',
+      email: professor.email || '',
+      telefone: professor.telefone || '',
+      plano: professor.plano || 'basico',
+      limite_alunos: professor.limite_alunos || 20
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateProfessor = async (data: ProfessorFormData) => {
+    if (!selectedProfessor) return;
+    
+    const result = await updateProfessor(selectedProfessor.id, {
+      nome: data.nome,
+      email: data.email,
+      telefone: data.telefone,
+      plano: data.plano,
+      limite_alunos: data.limite_alunos
+    });
+
+    if (result?.success) {
+      setEditDialogOpen(false);
+      setSelectedProfessor(null);
+      editForm.reset();
+    }
+  };
+
+  const handleDeleteProfessor = (professor: any) => {
+    setSelectedProfessor(professor);
+    // Get active professors for transfer options (excluding current)
+    const activeProfessors = professores.filter(p => 
+      p.status === 'ativo' && p.id !== professor.id
+    );
+    setProfessoresToTransfer(activeProfessors);
+    setTransferToId('');
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteProfessor = async () => {
+    if (!selectedProfessor) return;
+    
+    const result = await deleteProfessor(selectedProfessor.id, transferToId || undefined);
+    
+    if (result?.success) {
+      setDeleteDialogOpen(false);
+      setSelectedProfessor(null);
+      setTransferToId('');
     }
   };
 
@@ -219,13 +310,18 @@ export default function AdminProfessores() {
               Cadastre novos professores e gerencie permissões
             </p>
           </div>
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Professor
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportProfessores}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Professor
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Criar Novo Professor</DialogTitle>
@@ -280,6 +376,7 @@ export default function AdminProfessores() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -339,6 +436,11 @@ export default function AdminProfessores() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleEditProfessor(professor)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => handleInviteProfessor(professor.id, professor.email)}
                         >
@@ -362,6 +464,14 @@ export default function AdminProfessores() {
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           Impersonar (Read-only)
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteProfessor(professor)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -389,6 +499,168 @@ export default function AdminProfessores() {
             </Card>
           ))}
         </div>
+
+        {/* Edit Professor Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Editar Professor</DialogTitle>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(handleUpdateProfessor)} className="space-y-4">
+                <FormField
+                  control={editForm.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome Completo *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome do professor" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="email@exemplo.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="telefone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(11) 99999-9999" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="plano"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Plano</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um plano" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="basico">Básico</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="limite_alunos"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Limite de Alunos</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="20" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 20)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Salvando...' : 'Salvar Alterações'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Professor Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Excluir Professor</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Tem certeza que deseja excluir o professor <strong>{selectedProfessor?.nome}</strong>?
+                Esta ação não pode ser desfeita.
+              </p>
+              
+              {selectedProfessor && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm font-medium text-yellow-800">
+                    ⚠️ Este professor pode ter alunos ativos
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    Escolha um professor para transferir os alunos ou eles ficarão órfãos.
+                  </p>
+                </div>
+              )}
+
+              {professoresToTransfer.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Transferir alunos para:</Label>
+                  <Select value={transferToId} onValueChange={setTransferToId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um professor (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Não transferir (deixar órfãos)</SelectItem>
+                      {professoresToTransfer.map(prof => (
+                        <SelectItem key={prof.id} value={prof.id}>
+                          {prof.nome} ({prof.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={confirmDeleteProfessor} 
+                  disabled={loading}
+                >
+                  {loading ? 'Excluindo...' : 'Confirmar Exclusão'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <AdminImpersonation

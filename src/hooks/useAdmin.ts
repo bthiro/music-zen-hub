@@ -365,6 +365,227 @@ export function useAdmin() {
     }
   };
 
+  const updateProfessor = async (professorId: string, data: {
+    nome?: string;
+    email?: string;
+    telefone?: string;
+    plano?: string;
+    limite_alunos?: number;
+    modules?: Record<string, boolean>;
+  }) => {
+    try {
+      setLoading(true);
+
+      // Check if reducing student limit and current active students exceed new limit
+      if (data.limite_alunos !== undefined) {
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('alunos')
+          .select('id')
+          .eq('professor_id', professorId)
+          .eq('ativo', true);
+
+        if (studentsError) {
+          console.error('Error checking students:', studentsError);
+          throw new Error('Erro ao verificar alunos ativos');
+        }
+
+        const activeStudents = studentsData?.length || 0;
+        if (activeStudents > data.limite_alunos) {
+          throw new Error(`Não é possível reduzir o limite para ${data.limite_alunos}. Professor tem ${activeStudents} alunos ativos.`);
+        }
+      }
+
+      const { error } = await supabase
+        .from('professores')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', professorId);
+
+      if (error) {
+        console.error('Error updating professor:', error);
+        throw new Error('Erro ao atualizar professor');
+      }
+
+      // Update local state
+      setProfessores(prev => prev.map(prof => 
+        prof.id === professorId 
+          ? { ...prof, ...data }
+          : prof
+      ));
+
+      // Log audit
+      await logAction(
+        'professor_atualizado',
+        'professores',
+        professorId,
+        data
+      );
+
+      toast({
+        title: 'Professor atualizado',
+        description: 'Dados do professor foram atualizados com sucesso',
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error updating professor:', error);
+      toast({
+        title: 'Erro ao atualizar',
+        description: error.message || 'Não foi possível atualizar o professor',
+        variant: 'destructive'
+      });
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteProfessor = async (professorId: string, transferToId?: string) => {
+    try {
+      setLoading(true);
+
+      // Check for active students
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('alunos')
+        .select('id, nome')
+        .eq('professor_id', professorId)
+        .eq('ativo', true);
+
+      if (studentsError) {
+        console.error('Error checking students:', studentsError);
+        throw new Error('Erro ao verificar alunos do professor');
+      }
+
+      const activeStudents = studentsData?.length || 0;
+
+      // If has active students and no transfer professor specified
+      if (activeStudents > 0 && !transferToId) {
+        throw new Error(`Professor tem ${activeStudents} alunos ativos. Escolha um professor para transferir os alunos.`);
+      }
+
+      // Transfer students if specified
+      if (transferToId && activeStudents > 0) {
+        const { error: transferError } = await supabase
+          .from('alunos')
+          .update({ professor_id: transferToId })
+          .eq('professor_id', professorId)
+          .eq('ativo', true);
+
+        if (transferError) {
+          console.error('Error transferring students:', transferError);
+          throw new Error('Erro ao transferir alunos');
+        }
+      }
+
+      // Soft delete professor
+      const { error } = await supabase
+        .from('professores')
+        .update({ 
+          status: 'excluido',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', professorId);
+
+      if (error) {
+        console.error('Error deleting professor:', error);
+        throw new Error('Erro ao excluir professor');
+      }
+
+      // Update local state
+      setProfessores(prev => prev.map(prof => 
+        prof.id === professorId 
+          ? { ...prof, status: 'excluido' as any }
+          : prof
+      ));
+
+      // Log audit
+      await logAction(
+        'professor_excluido',
+        'professores',
+        professorId,
+        { 
+          students_transferred: activeStudents,
+          transfer_to: transferToId 
+        }
+      );
+
+      toast({
+        title: 'Professor excluído',
+        description: activeStudents > 0 
+          ? `Professor excluído e ${activeStudents} alunos transferidos`
+          : 'Professor excluído com sucesso',
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error deleting professor:', error);
+      toast({
+        title: 'Erro ao excluir',
+        description: error.message || 'Não foi possível excluir o professor',
+        variant: 'destructive'
+      });
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportProfessores = () => {
+    try {
+      const csvData = professores
+        .filter(prof => prof.status !== 'excluido' as any)
+        .map(prof => ({
+          Nome: prof.nome,
+          Email: prof.email,
+          Telefone: prof.telefone || 'N/A',
+          Plano: prof.plano || 'Básico',
+          Status: prof.status || 'Ativo',
+          'Limite Alunos': prof.limite_alunos || 20,
+          'Data Criação': new Date(prof.created_at).toLocaleDateString('pt-BR'),
+          'Último Acesso': (prof as any).ultimo_acesso 
+            ? new Date((prof as any).ultimo_acesso).toLocaleDateString('pt-BR')
+            : 'Nunca'
+        }));
+
+      const headers = Object.keys(csvData[0] || {});
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => 
+          headers.map(header => `"${row[header as keyof typeof row]}"`).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `professores_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+
+      toast({
+        title: 'Exportação concluída',
+        description: `${csvData.length} professores exportados para CSV`,
+      });
+
+      // Log audit
+      logAction(
+        'professores_exportados',
+        'professores',
+        undefined,
+        { total_exported: csvData.length }
+      );
+
+    } catch (error: any) {
+      console.error('Error exporting professors:', error);
+      toast({
+        title: 'Erro na exportação',
+        description: 'Não foi possível exportar os dados',
+        variant: 'destructive'
+      });
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -382,6 +603,9 @@ export function useAdmin() {
     updateProfessorStatus,
     updateProfessorModules,
     createProfessor,
+    updateProfessor,
+    deleteProfessor,
+    exportProfessores,
     inviteProfessor,
     resetProfessorPassword,
     refreshStats: fetchStats,
