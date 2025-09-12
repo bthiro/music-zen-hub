@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useProfessorProfile } from "@/hooks/useProfessorProfile";
@@ -81,12 +81,12 @@ export function ProfessorRouter() {
   return (
     <Routes>
       {/* Main dashboard route - should show calendar */}
-      <Route path="/" element={
+      <Route index element={
         <ModuleGuard module="dashboard">
           <Dashboard />
         </ModuleGuard>
       } />
-      <Route path="/dashboard" element={
+      <Route path="dashboard" element={
         <ModuleGuard module="dashboard">
           <Dashboard />
         </ModuleGuard>
@@ -158,6 +158,8 @@ export function ProfessorRouter() {
           </Layout>
         </ModuleGuard>
       } />
+      {/* Fallback redirect */}
+      <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
     </Routes>
   );
 }

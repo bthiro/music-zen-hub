@@ -104,7 +104,6 @@ export default function AdminProfessorBilling({ embedded = false }: { embedded?:
       const { data: professoresData, error: professoresError } = await supabase
         .from('professores')
         .select('id, nome, email, plano')
-        .eq('status', 'ativo')
         .order('nome');
 
       if (professoresError) throw professoresError;

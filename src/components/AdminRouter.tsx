@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import AdminOverview from "@/pages/AdminOverview";
 import AdminProfessores from "@/pages/AdminProfessores";
@@ -97,7 +97,7 @@ function AdminAlunosView() {
 export function AdminRouter() {
   return (
     <Routes>
-      <Route path="/" element={<AdminOverview />} />
+      <Route index element={<AdminOverview />} />
       <Route path="/professores" element={<AdminProfessores />} />
       <Route path="/pagamentos" element={
         <Layout>
@@ -123,6 +123,8 @@ export function AdminRouter() {
           <PerfilAdmin />
         </Layout>
       } />
+      {/* Fallback redirect */}
+      <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
 }
