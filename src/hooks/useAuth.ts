@@ -4,6 +4,7 @@ import type { AuthUser, AuthState, UserRole, UserProfile } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
 
 import { useNavigate } from 'react-router-dom';
+import { SafeNavigation } from '@/utils/navigation';
 
 export function useAuth() {
   const navigate = useNavigate();
@@ -175,7 +176,7 @@ export function useAuth() {
   };
 
   const signUp = async (email: string, password: string, nome?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${SafeNavigation.getOrigin()}/`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -219,9 +220,9 @@ export function useAuth() {
 
   const signInWithGoogle = async () => {
     try {
-      const redirectTo = `${window.location.origin}/auth/google/callback`;
+      const redirectTo = `${SafeNavigation.getOrigin()}/auth/google/callback`;
       const inIframe = window.top !== window;
-      console.log('[Auth] Google sign-in start', { redirectTo, href: window.location.href, inIframe });
+      console.log('[Auth] Google sign-in start', { redirectTo, href: SafeNavigation.getCurrentHref(), inIframe });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -236,7 +237,7 @@ export function useAuth() {
       });
 
       if (error) {
-        console.error('[Auth] Google sign-in error:', error, { redirectTo, href: window.location.href });
+        console.error('[Auth] Google sign-in error:', error, { redirectTo, href: SafeNavigation.getCurrentHref() });
         const friendly = error.message?.includes('redirect_uri_mismatch')
           ? 'Redirect URI não corresponde. Verifique as configurações do Google Console.'
           : error.message?.includes('popup_closed_by_user')

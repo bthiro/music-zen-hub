@@ -26,7 +26,8 @@ import {
   CheckCircle,
   DollarSign,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Trash2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -34,6 +35,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEnhancedAdminBilling } from "@/hooks/useEnhancedAdminBilling";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -71,9 +73,17 @@ interface Professor {
 }
 
 export default function AdminProfessorBilling({ embedded = false }: { embedded?: boolean }) {
-  const [cobrancas, setCobrancas] = useState<Cobranca[]>([]);
+  const { 
+    cobrancas, 
+    loading, 
+    createCobranca, 
+    markAsPaid, 
+    generatePaymentLink, 
+    softDelete,
+    refetch
+  } = useEnhancedAdminBilling();
+  
   const [professores, setProfessores] = useState<Professor[]>([]);
-  const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -89,42 +99,21 @@ export default function AdminProfessorBilling({ embedded = false }: { embedded?:
 
   const fetchData = async () => {
     try {
-      // Fetch professor billings with left join to handle missing professors
-      const { data: cobrancasData, error: cobrancasError } = await supabase
-        .from('cobrancas_professor')
-        .select(`
-          *,
-          professores (nome, email)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (cobrancasError) throw cobrancasError;
-
-      // Fetch professors for the form
+      // Fetch professors for the form dropdown
       const { data: professoresData, error: professoresError } = await supabase
         .from('professores')
         .select('id, nome, email, plano')
         .order('nome');
 
       if (professoresError) throw professoresError;
-
-      // Cast to get proper type handling from Supabase
-      const cobrancasWithProfessors = cobrancasData?.map(cobranca => ({
-        ...cobranca,
-        professores: Array.isArray(cobranca.professores) ? cobranca.professores[0] : cobranca.professores
-      })) || [];
-      
-      setCobrancas(cobrancasWithProfessors as Cobranca[]);
       setProfessores(professoresData || []);
     } catch (error: any) {
       console.error('[AdminBilling] Error fetching data:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao carregar cobranças',
+        description: 'Erro ao carregar dados',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -134,33 +123,16 @@ export default function AdminProfessorBilling({ embedded = false }: { embedded?:
 
   const handleCreateCobranca = async (data: CobrancaFormData) => {
     try {
-      const { error } = await supabase
-        .from('cobrancas_professor')
-        .insert({
-          professor_id: data.professor_id,
-          valor: data.valor,
-          data_vencimento: data.data_vencimento,
-          descricao: data.descricao,
-          competencia: format(parseISO(data.data_vencimento), 'yyyy-MM'),
-          status: 'pendente'
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Sucesso',
-        description: 'Cobrança criada com sucesso',
+      await createCobranca({
+        professor_id: data.professor_id,
+        valor: data.valor,
+        data_vencimento: data.data_vencimento,
+        descricao: data.descricao
       });
-
       setCreateDialogOpen(false);
       form.reset();
-      fetchData();
     } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao criar cobrança: ' + error.message,
-        variant: 'destructive',
-      });
+      // Error already handled in hook
     }
   };
 

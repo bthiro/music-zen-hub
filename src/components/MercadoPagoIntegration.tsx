@@ -58,7 +58,7 @@ export function MercadoPagoIntegration() {
 
       setMpConfig(data);
     } catch (error) {
-      console.error('Erro ao carregar config MP:', error);
+      console.error('Erro ao carregar configuração MP:', error);
     }
   };
 
@@ -85,7 +85,7 @@ export function MercadoPagoIntegration() {
 
       if (!professor) throw new Error('Professor não encontrado');
 
-      // Test the token first
+      // Testar o token primeiro
       const testResponse = await fetch('https://api.mercadopago.com/v1/payment_methods', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -97,7 +97,7 @@ export function MercadoPagoIntegration() {
         throw new Error('Token inválido ou sem permissões necessárias');
       }
 
-      // Save configuration
+      // Salvar configuração
       const configData = {
         professor_id: professor.id,
         integration_name: 'mercado_pago',
@@ -129,7 +129,7 @@ export function MercadoPagoIntegration() {
       setAccessToken('');
       await loadMercadoPagoConfig();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao conectar MP:', error);
       toast({
         title: 'Erro',
@@ -158,7 +158,7 @@ export function MercadoPagoIntegration() {
       });
 
       await loadMercadoPagoConfig();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao desconectar MP:', error);
       toast({
         title: 'Erro',
@@ -213,7 +213,7 @@ export function MercadoPagoIntegration() {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
               <div>
-                <p className="font-medium text-green-800">Mercado Pago Ativo</p>
+                <p className="font-medium text-green-800">Mercado Pago Conectado</p>
                 <p className="text-sm text-green-600">
                   Conectado em {new Date(mpConfig.config_data.connected_at).toLocaleDateString('pt-BR')}
                 </p>
@@ -231,13 +231,13 @@ export function MercadoPagoIntegration() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div className="p-3 border rounded-lg">
-                <p className="font-medium">Status do Token</p>
-                <p className="text-green-600">✅ Ativo e válido</p>
+                <p className="font-medium">Status da Conexão</p>
+                <p className="text-green-600">✅ Conectado e funcionando</p>
               </div>
               <div className="p-3 border rounded-lg">
                 <p className="font-medium">Último Teste</p>
                 <p className="text-muted-foreground">
-                  {mpConfig.last_test ? new Date(mpConfig.last_test).toLocaleDateString('pt-BR') : 'Nunca'}
+                  {mpConfig.last_test ? new Date(mpConfig.last_test).toLocaleDateString('pt-BR') : 'Nunca testado'}
                 </p>
               </div>
             </div>

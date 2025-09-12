@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.mercado-pago-reprocess]
 verify_jwt = true
 
+[functions.mercado-pago-admin]
+verify_jwt = false
+
 [functions.ia-musical]
 verify_jwt = false
 
@@ -25,4 +28,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.admin-reset-professor-password]
+verify_jwt = false
+
+[functions.admin-set-professor-password]
 verify_jwt = false

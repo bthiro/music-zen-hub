@@ -31,7 +31,7 @@ import {
 const adminMenuItems = [
   { icon: Home, label: "Dashboard", href: "/admin/" },
   { icon: UserCog, label: "Professores", href: "/admin/professores" },
-  { icon: CreditCard, label: "Pagamentos", href: "/admin/pagamentos" },
+  { icon: CreditCard, label: "Cobrança", href: "/admin/pagamentos" },
   { icon: CreditCard, label: "Assinaturas", href: "/admin/assinaturas" },
   { icon: Users, label: "Alunos", href: "/admin/alunos" },
   { icon: Settings, label: "Configurações", href: "/admin/configuracoes" },
