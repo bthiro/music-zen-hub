@@ -32,7 +32,6 @@ function AppRouter() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/auth/google/callback" element={<AuthCallback />} />
             <Route path="/logout" element={<Logout />} />
             
             {/* Protected admin routes */}

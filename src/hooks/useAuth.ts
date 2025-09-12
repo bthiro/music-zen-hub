@@ -227,7 +227,7 @@ export function useAuth() {
 
   const signInWithGoogle = async () => {
     try {
-      const redirectTo = `${SafeNavigation.getOrigin()}/auth/google/callback`;
+      const redirectTo = `${SafeNavigation.getOrigin()}/auth/callback`;
       const inIframe = window.top !== window;
       console.log('[Auth] Google sign-in start', { redirectTo, href: SafeNavigation.getCurrentHref(), inIframe });
 
@@ -236,10 +236,10 @@ export function useAuth() {
         options: {
           redirectTo,
           queryParams: { 
-            prompt: 'consent', 
+            prompt: 'select_account',
             access_type: 'offline' 
           },
-          skipBrowserRedirect: false, // Let Supabase handle redirect
+          skipBrowserRedirect: false,
         },
       });
 

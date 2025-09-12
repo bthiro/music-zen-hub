@@ -19,12 +19,22 @@ export default function AuthCallback() {
 
   const handleAuthCallback = async () => {
     try {
+      console.log('[AuthCallback] Starting callback processing, URL:', window.location.href);
+      
       // Exchange code for session
       const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href);
       
-      if (error || !data.user) {
-        throw error || new Error('Usuário não encontrado');
+      if (error) {
+        console.error('[AuthCallback] Exchange error:', error);
+        throw new Error(`Erro na autenticação: ${error.message}`);
       }
+      
+      if (!data.user) {
+        console.error('[AuthCallback] No user data returned');
+        throw new Error('Dados do usuário não encontrados');
+      }
+
+      console.log('[AuthCallback] Successfully exchanged code for session');
 
       setMessage('Verificando perfil...');
 
@@ -119,20 +129,31 @@ export default function AuthCallback() {
       }, 1500);
 
     } catch (error: any) {
-      console.error('Auth callback error:', error);
+      console.error('[AuthCallback] Error:', error);
       setStatus('error');
-      setMessage(error.message || 'Erro na autenticação');
+      
+      // More specific error messages
+      let errorMessage = 'Erro na autenticação';
+      if (error.message?.includes('invalid request')) {
+        errorMessage = 'Configuração OAuth inválida. Verifique as configurações do Google Console.';
+      } else if (error.message?.includes('code') && error.message?.includes('verifier')) {
+        errorMessage = 'Erro no fluxo OAuth. Tente fazer login novamente.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setMessage(errorMessage);
       
       toast({
         title: 'Erro na Autenticação',
-        description: error.message || 'Não foi possível completar o login',
+        description: errorMessage,
         variant: 'destructive'
       });
 
       // Redirect to auth page after a delay
       setTimeout(() => {
         navigate('/auth', { replace: true });
-      }, 3000);
+      }, 4000);
     }
   };
 
