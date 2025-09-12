@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getOrigin } from '@/utils/navigation';
 
 interface GoogleEvent {
   id?: string;
@@ -51,7 +52,7 @@ export function useGoogleIntegration() {
   const signIn = useCallback(async () => {
     setIsLoading(true);
     try {
-      const redirectUri = `${window.location.origin}/google-oauth-callback.html`;
+      const redirectUri = `${getOrigin()}/google-oauth-callback.html`;
       
       const { data, error } = await supabase.functions.invoke('google-oauth', {
         body: { action: 'getAuthUrl', redirectUri }
@@ -64,7 +65,7 @@ export function useGoogleIntegration() {
       
       // Aguardar código de autorização via postMessage
       const handleMessage = async (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
+        if (event.origin !== getOrigin()) return;
         
         if (event.data.type === 'GOOGLE_AUTH_CODE' && event.data.code) {
           window.removeEventListener('message', handleMessage);

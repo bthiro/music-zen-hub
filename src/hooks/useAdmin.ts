@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuditLog } from './useAuditLog';
 import { useToast } from '@/hooks/use-toast';
+import { getOrigin } from '@/utils/navigation';
 import type { UserProfile } from '@/types/auth';
 
 export interface AdminStats {
@@ -197,7 +198,7 @@ export function useAdmin() {
         body: {
           professor_id: professorId,
           email,
-          redirect_url: `${window.location.origin}/auth/reset-password`
+          redirect_url: `${getOrigin()}/auth/reset-password`
         }
       });
 
@@ -254,7 +255,7 @@ export function useAdmin() {
         body: {
           professor_id: professorId,
           email,
-          redirect_url: `${window.location.origin}/auth/reset-password`
+          redirect_url: `${getOrigin()}/auth/reset-password`
         }
       });
 

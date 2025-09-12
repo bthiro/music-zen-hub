@@ -5,6 +5,7 @@ import { useApp } from "@/contexts/AppContext";
 import { Users, DollarSign, Calendar, AlertCircle, ExternalLink, CalendarDays } from "lucide-react";
 import { CalendarWidget } from "@/components/CalendarWidget";
 import { StatsCard } from "@/components/ui/stats-card";
+import { t } from "@/constants/translations";
 import { useState } from "react";
 
 export default function Dashboard() {
@@ -71,51 +72,51 @@ export default function Dashboard() {
     <CleanLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight font-display">Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight font-display">{t('navigation.dashboard')}</h2>
           <p className="text-muted-foreground">
-            Visão geral das suas aulas particulares
+            {t('business.dashboardOverview')}
           </p>
         </div>
 
         {/* Cards de estatísticas */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard 
-            title="Total de Alunos"
+            title={t('business.totalStudents')}
             value={stats.totalAlunos}
-            subtitle="Alunos ativos"
+            subtitle={t('business.activeStudents')}
             icon={Users}
             color="blue"
           />
 
           <StatsCard 
-            title="Receita do Mês"
+            title={t('business.monthlyRevenue')}
             value={`R$ ${stats.pagamentosRecebidos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            subtitle="Pagamentos recebidos"
+            subtitle={t('business.receivedPayments')}
             icon={DollarSign}
             color="green"
             trend={{
               value: 12,
               direction: 'up',
-              label: 'vs mês anterior'
+              label: t('business.vsPreviousMonth')
             }}
           />
 
           <StatsCard 
-            title="Aulas do Mês"
+            title={t('business.monthlyLessons')}
             value={stats.aulasMes}
-            subtitle="Aulas agendadas"
+            subtitle={t('business.scheduledLessons')}
             icon={Calendar}
             color="purple"
           />
 
           <StatsCard 
-            title="Pendências"
+            title={t('business.pendingPayments')}
             value={stats.pagamentosPendentes}
-            subtitle="Pagamentos em atraso"
+            subtitle={t('business.overduePayments')}
             icon={AlertCircle}
             color="red"
             badge={stats.pagamentosPendentes > 0 ? {
-              text: "Atenção",
+              text: t('common.attention'),
               variant: "destructive"
             } : undefined}
           />
@@ -127,7 +128,7 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
-                Agenda
+                {t('navigation.schedule')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6">
@@ -137,7 +138,7 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg">Aulas de Hoje</CardTitle>
+              <CardTitle className="text-base sm:text-lg">{t('business.todaysLessons')}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6 pt-0">
               <div className="space-y-3">
@@ -151,7 +152,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex gap-2 justify-between items-center">
                       <div className="px-2 py-1 rounded-full text-xs bg-green-50 text-green-700 border border-green-200">
-                        Hoje
+                        {t('business.today')}
                       </div>
                       {aula.linkMeet && (
                         <Button size="sm" variant="default" asChild className="text-xs">
@@ -167,7 +168,7 @@ export default function Dashboard() {
                 {aulasDoDia.length === 0 && (
                   <div className="text-center py-6">
                     <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground text-sm">Nenhuma aula agendada para hoje</p>
+                    <p className="text-muted-foreground text-sm">{t('business.noLessonsToday')}</p>
                   </div>
                 )}
               </div>
@@ -179,7 +180,7 @@ export default function Dashboard() {
           {/* Próximas Aulas */}
           <Card>
             <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg">Próximas Aulas (3 dias)</CardTitle>
+              <CardTitle className="text-base sm:text-lg">{t('business.upcomingLessons')} (3 dias)</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6 pt-0">
               <div className="space-y-3">
@@ -193,7 +194,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex gap-2 justify-between items-center">
                       <div className="px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700 border border-blue-200">
-                        agendada
+                        {t('status.scheduled')}
                       </div>
                       {aula.linkMeet && (
                         <Button size="sm" variant="outline" asChild className="text-xs">
@@ -207,7 +208,7 @@ export default function Dashboard() {
                 ))}
                 {proximasAulas.length === 0 && (
                   <p className="text-center text-muted-foreground py-4 text-sm">
-                    Nenhuma aula agendada
+                    {t('business.noScheduledLessons')}
                   </p>
                 )}
               </div>
@@ -217,7 +218,7 @@ export default function Dashboard() {
           {/* Pagamentos Pendentes */}
           <Card>
             <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg">Pagamentos Pendentes</CardTitle>
+              <CardTitle className="text-base sm:text-lg">{t('business.pendingPayments')}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-6 pt-0">
               <div className="space-y-3">
@@ -236,7 +237,7 @@ export default function Dashboard() {
                 ))}
                 {pagamentosPendentes.length === 0 && (
                   <p className="text-center text-muted-foreground py-4 text-sm">
-                    Todos os pagamentos em dia! 🎉
+                    {t('business.allPaymentsCurrent')} 🎉
                   </p>
                 )}
               </div>

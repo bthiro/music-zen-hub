@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getCurrentHref } from '@/utils/navigation';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres'),
@@ -46,8 +47,10 @@ export default function ResetPassword() {
     let type = searchParams.get('type');
 
     // If not found in query params, check hash (alternative format)
-    if (!access_token && window.location.hash) {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const currentHref = getCurrentHref();
+    const hashIndex = currentHref.indexOf('#');
+    if (!access_token && hashIndex > -1) {
+      const hashParams = new URLSearchParams(currentHref.substring(hashIndex + 1));
       access_token = hashParams.get('access_token');
       refresh_token = hashParams.get('refresh_token');
       type = hashParams.get('type');

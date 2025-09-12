@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getOrigin } from '@/utils/navigation';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -188,7 +189,7 @@ export default function AuthPage() {
                       
                       try {
                         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                          redirectTo: `${window.location.origin}/reset-password`
+                          redirectTo: `${getOrigin()}/reset-password`
                         });
                         
                         if (error) throw error;

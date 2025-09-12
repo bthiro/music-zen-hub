@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getCurrentHref } from '@/utils/navigation';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -11,16 +12,16 @@ export default function AuthCallback() {
   useEffect(() => {
     const run = async () => {
       try {
-        console.log('[OAuth] Callback start', { href: window.location.href });
+        console.log('[OAuth] Callback start', { href: getCurrentHref() });
         
         // Check if there's already a valid session
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         
         if (!existingSession) {
           // No existing session, try to exchange code
-          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+          const { error } = await supabase.auth.exchangeCodeForSession(getCurrentHref());
           if (error) {
-            console.error('[OAuth] exchangeCodeForSession error:', error, { href: window.location.href });
+            console.error('[OAuth] exchangeCodeForSession error:', error, { href: getCurrentHref() });
             
             // Check again for session in case exchange partially worked
             const { data: { session: retrySession } } = await supabase.auth.getSession();
@@ -84,7 +85,7 @@ export default function AuthCallback() {
           navigate('/auth', { replace: true });
         }
         } catch (err: any) {
-        console.error('[OAuth] Unexpected error in callback:', err, { href: window.location.href });
+        console.error('[OAuth] Unexpected error in callback:', err, { href: getCurrentHref() });
         setStatus('error');
         toast({ title: 'Erro inesperado', description: err?.message || 'Tente novamente.', variant: 'destructive' });
         setTimeout(() => navigate('/auth', { replace: true }), 1500);
