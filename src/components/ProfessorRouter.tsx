@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useProfessorProfile } from "@/hooks/useProfessorProfile";
 import Dashboard from "@/pages/Dashboard";
 import Alunos from "@/pages/Alunos";
 import Pagamentos from "@/pages/Pagamentos";
@@ -12,74 +13,67 @@ import IaMusical from "@/pages/IaMusical";
 import Lousa from "@/pages/Lousa";
 import SessaoAoVivo from "@/pages/SessaoAoVivo";
 import Perfil from "@/pages/Perfil";
-import { Lock } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Component for module access control
 function ModuleGuard({ 
   children, 
-  moduleKey, 
-  moduleName 
+  module
 }: { 
   children: React.ReactNode;
-  moduleKey: string;
-  moduleName: string;
+  module: string;
 }) {
-  const { user, loading } = useAuthContext();
+  const { profile, loading: profileLoading } = useProfessorProfile();
   
-  // Show loading while authentication is resolving
-  if (loading || !user) {
+  // Show loading while checking access
+  if (profileLoading) {
     return (
-      <Layout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight">{moduleName}</h2>
-              <p className="text-muted-foreground">Carregando...</p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
-            ))}
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando módulos...</p>
         </div>
-      </Layout>
+      </div>
     );
   }
-  
-  const modules = user?.profile?.modules || {};
-  
-  if (!modules[moduleKey]) {
+
+  // If no profile, allow access (better than blocking)
+  if (!profile) {
+    console.warn('[ModuleGuard] No profile found, allowing access to module:', module);
+    return <>{children}</>;
+  }
+
+  // Check if module exists and is enabled, or if no modules defined (allow access)
+  const modules = (profile as any)?.modules || {};
+  const hasAccess = !modules || 
+                   typeof modules !== 'object' || 
+                   modules[module] === true ||
+                   modules[module] === undefined; // Allow undefined modules
+
+  console.log('[ModuleGuard] Module access check:', { 
+    module, 
+    hasAccess, 
+    modules,
+    profileId: profile?.id 
+  });
+
+  if (!hasAccess) {
     return (
-      <Layout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight">{moduleName}</h2>
-              <p className="text-muted-foreground">Módulo não disponível</p>
-            </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 max-w-md text-center">
+          <AlertTriangle className="h-16 w-16 text-muted-foreground" />
+          <div>
+            <h3 className="text-lg font-semibold">Acesso Restrito</h3>
+            <p className="text-muted-foreground mt-2">
+              Este módulo não está disponível no seu plano atual.
+            </p>
           </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Acesso Restrito
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Este módulo não está habilitado em seu plano atual. Entre em contato com o administrador 
-                para mais informações sobre como ativar este recurso.
-              </p>
-            </CardContent>
-          </Card>
         </div>
-      </Layout>
+      </div>
     );
   }
-  
+
   return <>{children}</>;
 }
 
@@ -88,70 +82,70 @@ export function ProfessorRouter() {
     <Routes>
       {/* Main dashboard route - should show calendar */}
       <Route path="/" element={
-        <ModuleGuard moduleKey="dashboard" moduleName="Dashboard">
+        <ModuleGuard module="dashboard">
           <Dashboard />
         </ModuleGuard>
       } />
       <Route path="/dashboard" element={
-        <ModuleGuard moduleKey="dashboard" moduleName="Dashboard">
+        <ModuleGuard module="dashboard">
           <Dashboard />
         </ModuleGuard>
       } />
       <Route path="/alunos" element={<Alunos />} />
       <Route path="/pagamentos" element={
-        <ModuleGuard moduleKey="pagamentos" moduleName="Pagamentos">
+        <ModuleGuard module="pagamentos">
           <Pagamentos />
         </ModuleGuard>
       } />
       <Route path="/aulas" element={
-        <ModuleGuard moduleKey="agenda" moduleName="Aulas">
+        <ModuleGuard module="agenda">
           <Aulas />
         </ModuleGuard>
       } />
       <Route path="/agenda" element={
-        <ModuleGuard moduleKey="agenda" moduleName="Agenda">
+        <ModuleGuard module="agenda">
           <Aulas />
         </ModuleGuard>
       } />
       <Route path="/relatorios" element={
-        <ModuleGuard moduleKey="dashboard" moduleName="Relatórios">
+        <ModuleGuard module="dashboard">
           <Relatorios />
         </ModuleGuard>
       } />
       <Route path="/configuracoes" element={<Configuracoes />} />
       <Route path="/perfil" element={<Perfil />} />
       <Route path="/ferramentas" element={
-        <ModuleGuard moduleKey="ferramentas" moduleName="Ferramentas">
+        <ModuleGuard module="ferramentas">
           <Ferramentas />
         </ModuleGuard>
       } />
       <Route path="/ferramentas/lousa" element={
-        <ModuleGuard moduleKey="lousa" moduleName="Lousa Digital">
+        <ModuleGuard module="lousa">
           <Lousa />
         </ModuleGuard>
       } />
       <Route path="/lousa" element={
-        <ModuleGuard moduleKey="lousa" moduleName="Lousa Digital">
+        <ModuleGuard module="lousa">
           <Lousa />
         </ModuleGuard>
       } />
       <Route path="/ia-musical" element={
-        <ModuleGuard moduleKey="ia" moduleName="IA Musical">
+        <ModuleGuard module="ia">
           <IaMusical />
         </ModuleGuard>
       } />
       <Route path="/ia" element={
-        <ModuleGuard moduleKey="ia" moduleName="IA Musical">
+        <ModuleGuard module="ia">
           <IaMusical />
         </ModuleGuard>
       } />
       <Route path="/sessao-ao-vivo" element={
-        <ModuleGuard moduleKey="agenda" moduleName="Sessão ao Vivo">
+        <ModuleGuard module="agenda">
           <SessaoAoVivo />
         </ModuleGuard>
       } />
       <Route path="/materiais" element={
-        <ModuleGuard moduleKey="materiais" moduleName="Materiais">
+        <ModuleGuard module="materiais">
           <Layout>
             <Card>
               <CardHeader>

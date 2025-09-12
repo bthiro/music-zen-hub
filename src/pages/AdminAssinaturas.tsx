@@ -1,7 +1,7 @@
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminProfessorBilling from "./AdminProfessorBilling";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlobalPaymentsView } from "@/components/GlobalPaymentsView";
 import { Users, CreditCard } from "lucide-react";
 
 export default function AdminAssinaturas() {
@@ -32,16 +32,7 @@ export default function AdminAssinaturas() {
           </TabsContent>
 
           <TabsContent value="alunos" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pagamentos de Alunos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Em desenvolvimento - Visualização global dos pagamentos de alunos por professor
-                </p>
-              </CardContent>
-            </Card>
+            <GlobalPaymentsView />
           </TabsContent>
         </Tabs>
       </div>

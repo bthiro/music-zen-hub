@@ -221,6 +221,27 @@ export default function AdminProfessorBilling({ embedded = false }: { embedded?:
     }
   };
 
+  const handleCreateMonthlyCharges = async () => {
+    try {
+      const { data, error } = await supabase.rpc('criar_cobranca_professor_mensal');
+      
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Cobranças mensais criadas com sucesso',
+      });
+      fetchData();
+    } catch (error: any) {
+      console.error('[AdminBilling] Error creating monthly charges:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao criar cobranças mensais: ' + error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast({
@@ -356,69 +377,79 @@ export default function AdminProfessorBilling({ embedded = false }: { embedded?:
 
       {embedded && (
         <div className="flex items-center justify-between mb-4">
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Cobrança
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Nova Cobrança</DialogTitle>
-                <DialogDescription>
-                  Preencha os dados da nova cobrança para o professor
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={form.handleSubmit(handleCreateCobranca)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="professor_id">Professor</Label>
-                  <select {...form.register('professor_id')} className="w-full p-2 border rounded-md">
-                    <option value="">Selecione um professor</option>
-                    {professores.map((prof) => (
-                      <option key={prof.id} value={prof.id}>
-                        {prof.nome} - {prof.plano}
-                      </option>
-                    ))}
-                  </select>
-                  {form.formState.errors.professor_id && (
-                    <p className="text-sm text-destructive">{form.formState.errors.professor_id.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="valor">Valor (R$)</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01"
-                    {...form.register('valor', { valueAsNumber: true })} 
-                  />
-                  {form.formState.errors.valor && (
-                    <p className="text-sm text-destructive">{form.formState.errors.valor.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="data_vencimento">Data de Vencimento</Label>
-                  <Input type="date" {...form.register('data_vencimento')} />
-                  {form.formState.errors.data_vencimento && (
-                    <p className="text-sm text-destructive">{form.formState.errors.data_vencimento.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="descricao">Descrição</Label>
-                  <Input {...form.register('descricao')} />
-                  {form.formState.errors.descricao && (
-                    <p className="text-sm text-destructive">{form.formState.errors.descricao.message}</p>
-                  )}
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit">Criar Cobrança</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Cobrança
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Nova Cobrança</DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados da nova cobrança para o professor
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={form.handleSubmit(handleCreateCobranca)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="professor_id">Professor</Label>
+                    <select {...form.register('professor_id')} className="w-full p-2 border rounded-md">
+                      <option value="">Selecione um professor</option>
+                      {professores.map((prof) => (
+                        <option key={prof.id} value={prof.id}>
+                          {prof.nome} - {prof.plano}
+                        </option>
+                      ))}
+                    </select>
+                    {form.formState.errors.professor_id && (
+                      <p className="text-sm text-destructive">{form.formState.errors.professor_id.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="valor">Valor (R$)</Label>
+                    <Input 
+                      type="number" 
+                      step="0.01"
+                      {...form.register('valor', { valueAsNumber: true })} 
+                    />
+                    {form.formState.errors.valor && (
+                      <p className="text-sm text-destructive">{form.formState.errors.valor.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="data_vencimento">Data de Vencimento</Label>
+                    <Input type="date" {...form.register('data_vencimento')} />
+                    {form.formState.errors.data_vencimento && (
+                      <p className="text-sm text-destructive">{form.formState.errors.data_vencimento.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Descrição</Label>
+                    <Input {...form.register('descricao')} />
+                    {form.formState.errors.descricao && (
+                      <p className="text-sm text-destructive">{form.formState.errors.descricao.message}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit">Criar Cobrança</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+            <Button 
+              variant="outline" 
+              onClick={handleCreateMonthlyCharges}
+              className="ml-2"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Gerar Cobranças Mensais
+            </Button>
+          </div>
         </div>
       )}
 

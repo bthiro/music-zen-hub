@@ -268,7 +268,7 @@ Atenciosamente,
 Professor`;
 
     const url = `mailto:${aluno.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
-    window.location.href = url;
+    window.open(url); // Use window.open instead of location.href for mailto
   };
 
   const proximasAulas = aulasFiltradas

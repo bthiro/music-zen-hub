@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +29,7 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -125,11 +126,11 @@ export default function ResetPassword() {
       // Redirect after 2 seconds
       setTimeout(() => {
         if (user?.role === 'admin') {
-          window.location.href = '/admin';
+          navigate('/admin', { replace: true });
         } else if (user?.role === 'professor') {
-          window.location.href = '/app';
+          navigate('/app', { replace: true });
         } else {
-          window.location.href = '/auth';
+          navigate('/auth', { replace: true });
         }
       }, 2000);
 

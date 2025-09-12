@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 export default function Logout() {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const performLogout = async () => {
@@ -42,7 +43,7 @@ export default function Logout() {
 
   // Show loading briefly then redirect
   setTimeout(() => {
-    window.location.href = '/auth';
+    navigate('/auth', { replace: true });
   }, 1000);
 
   return (

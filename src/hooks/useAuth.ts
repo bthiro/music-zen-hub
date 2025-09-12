@@ -53,14 +53,40 @@ export function useAuth() {
 
               let profile: UserProfile | undefined;
               if (roleData.role === 'professor') {
-                const { data: profileData } = await supabase
+                console.log('[Auth] Ensuring professor profile exists for user:', session.user.id);
+                
+                // Upsert professor profile with default modules
+                const { data: profileData, error: profileError } = await supabase
                   .from('professores')
-                  .select('*')
-                  .eq('user_id', session.user.id)
-                  .maybeSingle();
+                  .upsert({
+                    user_id: session.user.id,
+                    nome: session.user.user_metadata?.nome || session.user.email || 'Professor',
+                    email: session.user.email || '',
+                    status: 'ativo',
+                    modules: {
+                      ia: false,
+                      lousa: true, 
+                      agenda: true,
+                      dashboard: true,
+                      materiais: true,
+                      pagamentos: true,
+                      ferramentas: true
+                    }
+                  }, {
+                    onConflict: 'user_id'
+                  })
+                  .select()
+                  .single();
+
+                if (profileError) {
+                  console.error('[Auth] Error upserting professor profile:', profileError);
+                  // Continue anyway - don't block login
+                }
 
                 if (profileData) {
                   profile = profileData;
+                  console.log('[Auth] Professor profile ensured:', profileData);
+                  
                   if (profileData.status !== 'ativo') {
                     console.warn('[Auth] Professor inactive. Signing out.');
                     await supabase.auth.signOut();

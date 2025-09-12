@@ -43,6 +43,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 
 const alunoSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -63,6 +64,7 @@ type AlunoFormData = z.infer<typeof alunoSchema>;
 export default function ProfessorApp() {
   const { user } = useAuthContext();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const {
     stats, 
     alunos, 
@@ -134,7 +136,7 @@ export default function ProfessorApp() {
         });
         
         // Reload data to show updated status
-        window.location.reload();
+        navigate(0); // React Router equivalent of reload
       }
     } catch (error) {
       console.error('Erro ao reprocessar pagamento:', error);

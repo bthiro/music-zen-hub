@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,7 @@ type SignupFormData = z.infer<typeof signupSchema>;
 export default function AuthPage() {
   const { user, signIn, signUp, signInWithGoogle, loading } = useAuthContext();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -57,12 +58,12 @@ export default function AuthPage() {
   useEffect(() => {
     if (user) {
       if (user.role === 'admin') {
-        window.location.href = '/admin';
+        navigate('/admin', { replace: true });
       } else if (user.role === 'professor') {
-        window.location.href = '/app';
+        navigate('/app', { replace: true });
       }
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
