@@ -171,6 +171,11 @@ Deno.serve(async (req) => {
             console.error(`[Webhook] Error updating professor billing:`, profUpdateError);
           } else {
             console.log(`[Webhook] Updated professor billing:`, profUpdateResult);
+            
+            // NOVO: Processar upgrade automático se pagamento aprovado
+            if (ourStatus === 'pago' && profUpdateResult && profUpdateResult.length > 0) {
+              await handleTeacherUpgrade(supabase, profUpdateResult[0], paymentId);
+            }
           }
         } catch (error) {
           console.error(`[Webhook] Error updating professor billing:`, error);
@@ -218,3 +223,135 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+// NOVA FUNÇÃO: Processar upgrade automático de professor
+async function handleTeacherUpgrade(supabase: any, billing: any, paymentId: string) {
+  try {
+    console.log(`[Upgrade] Processando upgrade automático para cobrança:`, billing.id);
+    
+    // Buscar dados do professor
+    const { data: professor, error: profError } = await supabase
+      .from('professores')
+      .select('id, nome, email, plano, manual_plan_override')
+      .eq('id', billing.professor_id)
+      .single();
+
+    if (profError) {
+      console.error(`[Upgrade] Erro ao buscar professor:`, profError);
+      return;
+    }
+
+    // Se professor tem override manual, não fazer upgrade automático
+    if (professor.manual_plan_override) {
+      console.log(`[Upgrade] Professor ${professor.nome} tem override manual. Upgrade automático pulado.`);
+      return;
+    }
+
+    // Buscar dados do novo plano
+    const { data: planData, error: planError } = await supabase
+      .from('planos_professor')
+      .select('*')
+      .eq('nome', billing.plano_nome)
+      .eq('ativo', true)
+      .single();
+
+    if (planError) {
+      console.error(`[Upgrade] Erro ao buscar plano ${billing.plano_nome}:`, planError);
+      return;
+    }
+
+    // Contar alunos ativos do professor
+    const { count: studentCount, error: countError } = await supabase
+      .from('alunos')
+      .select('*', { count: 'exact', head: true })
+      .eq('professor_id', professor.id)
+      .eq('ativo', true);
+
+    if (countError) {
+      console.error(`[Upgrade] Erro ao contar alunos:`, countError);
+      return;
+    }
+
+    const currentStudentCount = studentCount || 0;
+
+    // Se o novo plano tem limite menor, suspender alunos excedentes
+    if (currentStudentCount > planData.limite_alunos) {
+      console.log(`[Upgrade] Suspendendo ${currentStudentCount - planData.limite_alunos} alunos excedentes`);
+      await suspendExcessStudents(supabase, professor.id, planData.limite_alunos);
+    }
+
+    // Atualizar plano do professor
+    const { error: updateError } = await supabase
+      .from('professores')
+      .update({
+        plano: billing.plano_nome,
+        limite_alunos: planData.limite_alunos,
+        plan_changed_at: new Date().toISOString(),
+        manual_plan_override: false,
+        grace_period_until: null // Limpar período de carência
+      })
+      .eq('id', professor.id);
+
+    if (updateError) {
+      console.error(`[Upgrade] Erro ao atualizar professor:`, updateError);
+      return;
+    }
+
+    // Log de auditoria
+    await supabase.rpc('log_audit', {
+      p_action: 'upgrade_automatico_pagamento',
+      p_entity: 'professores',
+      p_entity_id: professor.id,
+      p_metadata: {
+        old_plan: professor.plano,
+        new_plan: billing.plano_nome,
+        payment_id: paymentId,
+        billing_id: billing.id,
+        amount: billing.valor,
+        student_count: currentStudentCount,
+        plan_limit: planData.limite_alunos
+      }
+    });
+
+    console.log(`[Upgrade] Upgrade automático concluído: ${professor.nome} → ${billing.plano_nome}`);
+    
+  } catch (error) {
+    console.error(`[Upgrade] Erro no upgrade automático:`, error);
+  }
+}
+
+// NOVA FUNÇÃO: Suspender alunos excedentes
+async function suspendExcessStudents(supabase: any, professorId: string, newLimit: number) {
+  try {
+    // Buscar alunos ativos ordenados por data de criação (mais antigos primeiro)
+    const { data: students, error } = await supabase
+      .from('alunos')
+      .select('id, nome')
+      .eq('professor_id', professorId)
+      .eq('ativo', true)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    if (students && students.length > newLimit) {
+      const studentsToSuspend = students.slice(newLimit);
+      const studentIds = studentsToSuspend.map((s: any) => s.id);
+
+      const { error: suspendError } = await supabase
+        .from('alunos')
+        .update({
+          ativo: false,
+          suspended_reason: 'plan_downgrade',
+          suspended_at: new Date().toISOString()
+        })
+        .in('id', studentIds);
+
+      if (suspendError) throw suspendError;
+
+      console.log(`[Upgrade] Suspensos ${studentsToSuspend.length} alunos devido ao downgrade de plano`);
+    }
+  } catch (error) {
+    console.error(`[Upgrade] Erro ao suspender alunos excedentes:`, error);
+    throw error;
+  }
+}

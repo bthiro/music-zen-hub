@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_mercado_pago_config: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       admin_profiles: {
         Row: {
           avatar_url: string | null
@@ -100,6 +127,8 @@ export type Database = {
           professor_id: string
           responsavel_nome: string | null
           responsavel_telefone: string | null
+          suspended_at: string | null
+          suspended_reason: string | null
           telefone: string | null
           tipo_cobranca: string | null
           updated_at: string
@@ -121,6 +150,8 @@ export type Database = {
           professor_id: string
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           telefone?: string | null
           tipo_cobranca?: string | null
           updated_at?: string
@@ -142,6 +173,8 @@ export type Database = {
           professor_id?: string
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           telefone?: string | null
           tipo_cobranca?: string | null
           updated_at?: string
@@ -673,12 +706,16 @@ export type Database = {
           email: string
           endereco: string | null
           especialidades: string | null
+          grace_period_until: string | null
           id: string
           limite_alunos: number | null
+          manual_plan_override: boolean | null
           modules: Json
           nome: string
           payment_preference: Json | null
           pix_key: string | null
+          plan_changed_at: string | null
+          plan_changed_by: string | null
           plano: string | null
           senha_temporaria: boolean | null
           status: string | null
@@ -700,12 +737,16 @@ export type Database = {
           email: string
           endereco?: string | null
           especialidades?: string | null
+          grace_period_until?: string | null
           id?: string
           limite_alunos?: number | null
+          manual_plan_override?: boolean | null
           modules?: Json
           nome: string
           payment_preference?: Json | null
           pix_key?: string | null
+          plan_changed_at?: string | null
+          plan_changed_by?: string | null
           plano?: string | null
           senha_temporaria?: boolean | null
           status?: string | null
@@ -727,12 +768,16 @@ export type Database = {
           email?: string
           endereco?: string | null
           especialidades?: string | null
+          grace_period_until?: string | null
           id?: string
           limite_alunos?: number | null
+          manual_plan_override?: boolean | null
           modules?: Json
           nome?: string
           payment_preference?: Json | null
           pix_key?: string | null
+          plan_changed_at?: string | null
+          plan_changed_by?: string | null
           plano?: string | null
           senha_temporaria?: boolean | null
           status?: string | null
