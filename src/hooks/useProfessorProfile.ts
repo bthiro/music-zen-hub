@@ -25,6 +25,7 @@ interface ProfessorProfile {
 interface ProfileUpdateData {
   nome?: string;
   telefone?: string;
+  email?: string;
   bio?: string;
   especialidades?: string;
   pix_key?: string;
@@ -74,17 +75,48 @@ export function useProfessorProfile() {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Usuário não autenticado');
 
+      // Sanitizar e validar dados
+      const sanitizedData = {
+        ...updateData,
+        // Remover espaços extras e validar campos
+        nome: updateData.nome?.trim(),
+        telefone: updateData.telefone?.replace(/\D/g, ''),
+        email: updateData.email?.toLowerCase().trim(),
+        pix_key: updateData.pix_key?.trim(),
+        bio: updateData.bio?.trim(),
+        especialidades: updateData.especialidades?.trim(),
+        endereco: updateData.endereco?.trim(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Validações básicas
+      if (sanitizedData.nome && sanitizedData.nome.length < 2) {
+        throw new Error('Nome deve ter pelo menos 2 caracteres');
+      }
+      
+      if (sanitizedData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedData.email)) {
+        throw new Error('E-mail inválido');
+      }
+      
+      if (sanitizedData.telefone && sanitizedData.telefone.length < 10) {
+        throw new Error('Telefone deve ter pelo menos 10 dígitos');
+      }
+
       const { data, error } = await supabase
         .from('professores')
-        .update({
-          ...updateData,
-          updated_at: new Date().toISOString()
-        })
+        .update(sanitizedData)
         .eq('user_id', user.id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error('Erro ao salvar no banco de dados: ' + error.message);
+      }
+
+      if (!data) {
+        throw new Error('Nenhum dado retornado após atualização');
+      }
 
       setProfile(data);
       
@@ -93,9 +125,19 @@ export function useProfessorProfile() {
         ...updateData
       });
 
+      toast({
+        title: 'Perfil atualizado!',
+        description: 'Suas informações foram salvas com sucesso.',
+      });
+
       return data;
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
+      toast({
+        title: 'Erro ao atualizar perfil',
+        description: error.message || 'Não foi possível atualizar suas informações.',
+        variant: 'destructive'
+      });
       throw error;
     }
   };
@@ -106,17 +148,43 @@ export function useProfessorProfile() {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Usuário não autenticado');
 
+      // Validações do arquivo
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Arquivo deve ser uma imagem');
+      }
+      
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error('Imagem deve ter no máximo 2MB');
+      }
+
+      // Remover avatar anterior se existir
+      if (profile?.avatar_url) {
+        try {
+          await supabase.storage
+            .from('avatars')
+            .remove([profile.avatar_url]);
+        } catch (removeError) {
+          console.warn('Erro ao remover avatar anterior:', removeError);
+        }
+      }
+
       // Gerar nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      // Upload do arquivo
+      // Upload do arquivo com upsert para substituir se existir
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          upsert: true,
+          cacheControl: '3600'
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw new Error('Erro no upload: ' + uploadError.message);
+      }
 
       // Atualizar URL do avatar no perfil
       const { data, error: updateError } = await supabase
@@ -129,7 +197,14 @@ export function useProfessorProfile() {
         .select()
         .single();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw new Error('Erro ao salvar avatar no perfil: ' + updateError.message);
+      }
+
+      if (!data) {
+        throw new Error('Nenhum dado retornado após atualização do avatar');
+      }
 
       setProfile(data);
 
@@ -137,9 +212,19 @@ export function useProfessorProfile() {
         novo_avatar: filePath
       });
 
+      toast({
+        title: 'Avatar atualizado!',
+        description: 'Sua foto de perfil foi alterada com sucesso.',
+      });
+
       return filePath;
     } catch (error) {
       console.error('Erro no upload do avatar:', error);
+      toast({
+        title: 'Erro no upload',
+        description: error.message || 'Não foi possível atualizar sua foto.',
+        variant: 'destructive'
+      });
       throw error;
     }
   };

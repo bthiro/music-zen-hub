@@ -4,168 +4,71 @@ import { useAuditLog } from '@/hooks/useAuditLog';
 import { supabase } from '@/integrations/supabase/client';
 
 export function usePagamentoActions() {
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { logAction } = useAuditLog();
-  const [loading, setLoading] = useState(false);
 
-  const criarRenovacao = async (pagamento: any) => {
-    setLoading(true);
+  // Excluir pagamento (soft delete)
+  const excluirPagamento = async (pagamentoId: string, motivo?: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      setLoading(true);
 
-      const { data: professor } = await supabase
-        .from('professores')
-        .select('id')
-        .eq('user_id', user.id)
+      // Verificar se existe e não está pago
+      const { data: pagamento, error: fetchError } = await supabase
+        .from('pagamentos')
+        .select('id, status, aluno_id, valor')
+        .eq('id', pagamentoId)
         .single();
 
-      if (!professor) throw new Error('Professor não encontrado');
-
-      // Calcular próxima data de vencimento
-      const dataAtual = new Date(pagamento.data_vencimento);
-      let proximaData: Date;
-
-      switch (pagamento.tipo_pagamento) {
-        case 'mensal':
-          proximaData = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, dataAtual.getDate());
-          break;
-        case 'quinzenal':
-          proximaData = new Date(dataAtual.getTime() + (15 * 24 * 60 * 60 * 1000));
-          break;
-        case 'pacote_4':
-          proximaData = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, dataAtual.getDate());
-          break;
-        default:
-          proximaData = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, dataAtual.getDate());
+      if (fetchError) {
+        throw new Error('Pagamento não encontrado');
       }
 
-      const renovacaoData = {
-        professor_id: professor.id,
-        aluno_id: pagamento.aluno_id,
-        tipo_pagamento: pagamento.tipo_pagamento,
-        valor: pagamento.valor,
-        data_vencimento: proximaData.toISOString().split('T')[0],
-        descricao: `Renovação - ${pagamento.descricao || 'Pagamento mensal'}`,
-        status: 'pendente',
-        payment_precedence: 'automatic'
-      };
+      if (pagamento.status === 'pago') {
+        throw new Error('Não é possível excluir um pagamento já confirmado');
+      }
 
-      const { data, error } = await supabase
-        .from('pagamentos')
-        .insert(renovacaoData)
-        .select()
-        .single();
+      // Verificar se há aulas associadas
+      const { data: aulasAssociadas, error: aulasError } = await supabase
+        .from('aulas')
+        .select('id')
+        .eq('pagamento_id', pagamentoId)
+        .limit(1);
 
-      if (error) throw error;
+      if (aulasError) {
+        console.warn('Erro ao verificar aulas associadas:', aulasError);
+      }
 
-      await logAction('pagamento_renovado', 'pagamentos', data.id, {
-        pagamento_original_id: pagamento.id,
-        tipo: pagamento.tipo_pagamento,
-        valor: pagamento.valor
-      });
+      if (aulasAssociadas && aulasAssociadas.length > 0) {
+        throw new Error('Não é possível excluir um pagamento com aulas agendadas');
+      }
 
-      toast({
-        title: 'Renovação criada!',
-        description: 'Nova cobrança gerada para o próximo período.'
-      });
-
-      return data;
-    } catch (error) {
-      console.error('Erro ao criar renovação:', error);
-      toast({
-        title: 'Falha ao criar renovação',
-        description: error.message || 'Não foi possível gerar a renovação.',
-        variant: 'destructive'
-      });
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const marcarComoPago = async (pagamentoId: string, motivo: string) => {
-    setLoading(true);
-    try {
-      const hoje = new Date().toISOString().split('T')[0];
-      
-      const { error } = await supabase
+      // Soft delete - marcar como cancelado
+      const { error: updateError } = await supabase
         .from('pagamentos')
         .update({
-          status: 'pago',
-          data_pagamento: hoje,
-          forma_pagamento: 'manual',
-          manual_payment_reason: motivo,
-          eligible_to_schedule: true,
+          status: 'cancelado',
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: motivo || 'Excluído pelo professor',
           updated_at: new Date().toISOString()
         })
         .eq('id', pagamentoId);
 
-      if (error) throw error;
-
-      await logAction('pagamento_manual', 'pagamentos', pagamentoId, {
-        motivo,
-        data_pagamento: hoje
-      });
-
-      toast({
-        title: 'Pagamento confirmado!',
-        description: 'Marcado como pago manualmente.'
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Erro ao marcar pagamento:', error);
-      toast({
-        title: 'Erro',
-        description: error.message || 'Não foi possível marcar como pago.',
-        variant: 'destructive'
-      });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const excluirPagamento = async (pagamento: any) => {
-    setLoading(true);
-    try {
-      // Verificar se o pagamento pode ser excluído
-      if (pagamento.status === 'pago') {
-        throw new Error('Não é possível excluir pagamentos já realizados. Contate o suporte para estornos.');
+      if (updateError) {
+        console.error('Erro ao cancelar pagamento:', updateError);
+        throw new Error('Erro ao excluir pagamento: ' + updateError.message);
       }
 
-      // Verificar se há aulas vinculadas
-      const { data: aulas } = await supabase
-        .from('aulas')
-        .select('id')
-        .eq('aluno_id', pagamento.aluno_id)
-        .eq('status', 'agendada');
-
-      if (aulas && aulas.length > 0) {
-        throw new Error('Não é possível excluir pagamentos com aulas agendadas.');
-      }
-
-      // Soft delete
-      const { error } = await supabase
-        .from('pagamentos')
-        .update({
-          status: 'cancelado',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', pagamento.id);
-
-      if (error) throw error;
-
-      await logAction('pagamento_excluido', 'pagamentos', pagamento.id, {
-        motivo: 'Exclusão pelo professor',
-        valor: pagamento.valor,
+      // Log da ação
+      await logAction('pagamento_excluido', 'pagamentos', pagamentoId, {
+        motivo: motivo || 'Excluído pelo professor',
+        valor_cancelado: pagamento.valor,
         aluno_id: pagamento.aluno_id
       });
 
       toast({
-        title: 'Pagamento excluído!',
-        description: 'Pagamento removido com sucesso.'
+        title: 'Pagamento excluído',
+        description: 'O pagamento foi cancelado com sucesso.',
       });
 
       return true;
@@ -176,16 +79,137 @@ export function usePagamentoActions() {
         description: error.message || 'Não foi possível excluir o pagamento.',
         variant: 'destructive'
       });
-      return false;
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Marcar como pago manualmente
+  const marcarComoPago = async (pagamentoId: string, motivo: string, dataPagamento?: string) => {
+    try {
+      setLoading(true);
+
+      const dataAtual = dataPagamento || new Date().toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('pagamentos')
+        .update({
+          status: 'pago',
+          data_pagamento: dataAtual,
+          payment_precedence: 'manual',
+          manual_payment_by: (await supabase.auth.getUser()).data.user?.id,
+          manual_payment_at: new Date().toISOString(),
+          manual_payment_reason: motivo,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', pagamentoId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao marcar como pago:', error);
+        throw new Error('Erro ao confirmar pagamento: ' + error.message);
+      }
+
+      await logAction('pagamento_manual', 'pagamentos', pagamentoId, {
+        motivo,
+        data_pagamento: dataAtual
+      });
+
+      toast({
+        title: 'Pagamento confirmado',
+        description: 'O pagamento foi marcado como pago.',
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Erro ao marcar como pago:', error);
+      toast({
+        title: 'Erro ao confirmar',
+        description: error.message || 'Não foi possível confirmar o pagamento.',
+        variant: 'destructive'
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Criar renovação
+  const criarRenovacao = async (pagamento: any) => {
+    try {
+      setLoading(true);
+
+      // Calcular próxima data de vencimento
+      const dataAtual = new Date(pagamento.data_vencimento);
+      let proximaData = new Date(dataAtual);
+
+      switch (pagamento.tipo_pagamento) {
+        case 'mensal':
+          proximaData.setMonth(proximaData.getMonth() + 1);
+          break;
+        case 'semanal':
+          proximaData.setDate(proximaData.getDate() + 7);
+          break;
+        case 'quinzenal':
+          proximaData.setDate(proximaData.getDate() + 15);
+          break;
+        default:
+          throw new Error('Tipo de pagamento não suporta renovação automática');
+      }
+
+      const novaRenovacao = {
+        professor_id: pagamento.professor_id,
+        aluno_id: pagamento.aluno_id,
+        valor: pagamento.valor,
+        data_vencimento: proximaData.toISOString().split('T')[0],
+        tipo_pagamento: pagamento.tipo_pagamento,
+        descricao: `Renovação - ${pagamento.descricao || 'Mensalidade'}`,
+        status: 'pendente',
+        payment_mode: pagamento.payment_mode || 'manual'
+      };
+
+      const { data, error } = await supabase
+        .from('pagamentos')
+        .insert(novaRenovacao)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao criar renovação:', error);
+        throw new Error('Erro ao criar renovação: ' + error.message);
+      }
+
+      await logAction('renovacao_criada', 'pagamentos', data.id, {
+        pagamento_original: pagamento.id,
+        nova_data_vencimento: novaRenovacao.data_vencimento,
+        valor: novaRenovacao.valor
+      });
+
+      toast({
+        title: 'Renovação criada',
+        description: `Nova cobrança criada com vencimento em ${proximaData.toLocaleDateString('pt-BR')}.`,
+      });
+
+      return data;
+    } catch (error) {
+      console.error('Erro ao criar renovação:', error);
+      toast({
+        title: 'Erro na renovação',
+        description: error.message || 'Não foi possível criar a renovação.',
+        variant: 'destructive'
+      });
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    criarRenovacao,
-    marcarComoPago,
     excluirPagamento,
+    marcarComoPago,
+    criarRenovacao,
     loading
   };
 }

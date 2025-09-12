@@ -6,7 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApp } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
+import { usePagamentoActions } from "@/hooks/usePagamentoActions";
 import { MercadoPagoDialog } from "./MercadoPagoDialog";
+import { Trash2 } from "lucide-react";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PagamentoDialogProps {
   open: boolean;
@@ -20,9 +32,11 @@ interface PagamentoDialogProps {
 export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoId, alunoNome, valor }: PagamentoDialogProps) {
   const { marcarPagamento } = useApp();
   const { toast } = useToast();
+  const { excluirPagamento } = usePagamentoActions();
   const [formaPagamento, setFormaPagamento] = useState<string>("");
   const [metodoPagamento, setMetodoPagamento] = useState("");
   const [showMercadoPago, setShowMercadoPago] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,11 +77,23 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoId, alun
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      await excluirPagamento(pagamentoId);
+      setShowDeleteDialog(false);
+      onOpenChange(false);
+      setFormaPagamento("");
+      setMetodoPagamento("");
+    } catch (error) {
+      // Erro já tratado no hook
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Confirmar Pagamento</DialogTitle>
+            <DialogTitle>Confirmar Pagamento</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -89,7 +115,7 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoId, alun
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="cartao">Cartão de Crédito</SelectItem>
+                <SelectItem value="cartao">Cartão</SelectItem>
                 <SelectItem value="dinheiro">Dinheiro</SelectItem>
                 <SelectItem value="mercado_pago">Mercado Pago</SelectItem>
               </SelectContent>
@@ -98,7 +124,7 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoId, alun
 
           {formaPagamento === "cartao" && (
             <div className="space-y-2">
-              <Label htmlFor="metodoPagamento">Método de Pagamento</Label>
+              <Label htmlFor="metodoPagamento">Detalhes do Pagamento</Label>
               <Input
                 id="metodoPagamento"
                 value={metodoPagamento}
@@ -108,13 +134,25 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoId, alun
             </div>
           )}
 
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
+          <div className="flex justify-between gap-3">
+            <Button 
+              type="button" 
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir
             </Button>
-            <Button type="submit">
-              Confirmar Pagamento
-            </Button>
+            
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                Confirmar Pagamento
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>
@@ -126,6 +164,27 @@ export function PagamentoDialog({ open, onOpenChange, pagamentoId, alunoId, alun
         alunoNome={alunoNome}
         valorSugerido={valor}
       />
+      
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Pagamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este pagamento de {alunoNome}? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

@@ -49,14 +49,14 @@ export function MercadoPagoIntegration() {
 
       if (!professor) return;
 
-      const { data: config } = await supabase
+      const { data, error } = await supabase
         .from('integration_configs')
         .select('*')
         .eq('professor_id', professor.id)
         .eq('integration_name', 'mercado_pago')
         .maybeSingle();
 
-      setMpConfig(config);
+      setMpConfig(data);
     } catch (error) {
       console.error('Erro ao carregar config MP:', error);
     }

@@ -3,7 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import type { AuthUser, AuthState, UserRole, UserProfile } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
 
+import { useNavigate } from 'react-router-dom';
+
 export function useAuth() {
+  const navigate = useNavigate();
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     session: null,

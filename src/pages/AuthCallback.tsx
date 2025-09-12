@@ -83,7 +83,7 @@ export default function AuthCallback() {
           // Fallback
           navigate('/auth', { replace: true });
         }
-      } catch (err: any) {
+        } catch (err: any) {
         console.error('[OAuth] Unexpected error in callback:', err, { href: window.location.href });
         setStatus('error');
         toast({ title: 'Erro inesperado', description: err?.message || 'Tente novamente.', variant: 'destructive' });
