@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { PlanGate } from "@/components/PlanGate";
 import { 
   Brain, 
   Send, 
@@ -157,7 +158,8 @@ export default function IaMusical() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <PlanGate feature="IA Musical" requiresPaidPlan={true}>
+        <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -388,8 +390,9 @@ export default function IaMusical() {
               </CardContent>
             </Card>
           </div>
+          </div>
         </div>
-      </div>
+      </PlanGate>
     </Layout>
   );
 }

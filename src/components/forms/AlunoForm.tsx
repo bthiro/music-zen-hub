@@ -10,6 +10,9 @@ import { useApp, Aluno } from "@/contexts/AppContext";
 import { useToast } from "@/hooks/use-toast";
 import { countries, getStatesByCountry, getCitiesByState, getTimezoneInfo } from "@/data/locations";
 import { MapPin, Clock } from "lucide-react";
+import { useProfessorPlan } from "@/hooks/useProfessorPlan";
+import { StudentLimitDialog } from "@/components/dialogs/StudentLimitDialog";
+import { useConversionMetrics } from "@/hooks/useConversionMetrics";
 
 interface AlunoFormProps {
   aluno?: Aluno;
@@ -20,6 +23,9 @@ interface AlunoFormProps {
 export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
   const { addAluno, updateAluno } = useApp();
   const { toast } = useToast();
+  const { planInfo, currentStudentCount, canAddStudent, refreshStudentCount } = useProfessorPlan();
+  const { trackEvent } = useConversionMetrics();
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
   
   const [formData, setFormData] = useState({
     nome: aluno?.nome || "",
@@ -50,6 +56,16 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Verificar limite de alunos apenas para novos alunos
+    if (!aluno && !canAddStudent()) {
+      trackEvent('limit_reached', { 
+        current_count: currentStudentCount,
+        limit: planInfo?.limite_alunos || 3
+      });
+      setShowLimitDialog(true);
+      return;
+    }
+    
     if (!formData.nome || !formData.email || !formData.mensalidade || !formData.duracaoAula || !formData.cidade || !formData.estado) {
       toast({
         title: "Erro",
@@ -68,18 +84,38 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
         });
       } else {
         addAluno(formData);
+        
+        // Track first student metric
+        if (currentStudentCount === 0) {
+          trackEvent('first_student');
+        }
+        
         toast({
           title: "Sucesso", 
           description: "Aluno cadastrado com sucesso!"
         });
+        
+        // Refresh student count
+        refreshStudentCount();
       }
       onSuccess?.();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar aluno",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      const isLimitError = error?.message?.includes('Limite de alunos atingido');
+      
+      if (isLimitError) {
+        trackEvent('limit_reached', { 
+          current_count: currentStudentCount,
+          limit: planInfo?.limite_alunos || 3,
+          error_caught: true
+        });
+        setShowLimitDialog(true);
+      } else {
+        toast({
+          title: "Erro",
+          description: "Erro ao salvar aluno",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -108,10 +144,21 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{aluno ? "Editar Aluno" : "Novo Aluno"}</CardTitle>
-      </CardHeader>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>{aluno ? "Editar Aluno" : "Novo Aluno"}</CardTitle>
+            {planInfo && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>{currentStudentCount}/{planInfo.limite_alunos} alunos</span>
+                <Badge variant={canAddStudent() ? "secondary" : "destructive"}>
+                  {planInfo.nome}
+                </Badge>
+              </div>
+            )}
+          </div>
+        </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -307,5 +354,13 @@ export function AlunoForm({ aluno, onSuccess, onCancel }: AlunoFormProps) {
         </form>
       </CardContent>
     </Card>
+
+    <StudentLimitDialog
+      open={showLimitDialog}
+      onOpenChange={setShowLimitDialog}
+      currentStudentCount={currentStudentCount}
+      limit={planInfo?.limite_alunos || 3}
+    />
+    </>
   );
 }

@@ -1,115 +1,193 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentHref } from '@/utils/navigation';
+import { useConversionMetrics } from '@/hooks/useConversionMetrics';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [status, setStatus] = useState<'processing' | 'error'>('processing');
+  const { trackEvent } = useConversionMetrics();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState('Verificando autenticação...');
 
   useEffect(() => {
-    const run = async () => {
-      try {
-        console.log('[OAuth] Callback start', { href: getCurrentHref() });
-        
-        // Check if there's already a valid session
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
-        
-        if (!existingSession) {
-          // No existing session, try to exchange code
-          const { error } = await supabase.auth.exchangeCodeForSession(getCurrentHref());
-          if (error) {
-            console.error('[OAuth] exchangeCodeForSession error:', error, { href: getCurrentHref() });
-            
-            // Check again for session in case exchange partially worked
-            const { data: { session: retrySession } } = await supabase.auth.getSession();
-            if (!retrySession) {
-              setStatus('error');
-              toast({
-                title: 'Erro no OAuth',
-                description: error.message?.includes('redirect_uri_mismatch')
-                  ? 'Redirect URI incorreta. Atualize Google Console e Supabase com a URL atual.'
-                  : error.message,
-                variant: 'destructive',
-              });
-              setTimeout(() => navigate('/auth', { replace: true }), 1500);
-              return;
-            }
-          }
-        }
+    handleAuthCallback();
+  }, []);
 
-        // Sessão criada, obter role e redirecionar
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          console.warn('[OAuth] No session after exchange');
-          setStatus('error');
-          toast({ title: 'Sessão não encontrada', description: 'Tente novamente.', variant: 'destructive' });
-          setTimeout(() => navigate('/auth', { replace: true }), 1500);
-          return;
-        }
+  const handleAuthCallback = async () => {
+    try {
+      // Exchange code for session
+      const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+      
+      if (error || !data.user) {
+        throw error || new Error('Usuário não encontrado');
+      }
 
-        const { data: roleData } = await supabase
+      setMessage('Verificando perfil...');
+
+      // Get user session
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session?.user) {
+        throw new Error('Sessão não encontrada');
+      }
+
+      // Get user role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', sessionData.session.user.id)
+        .single();
+
+      if (roleError || !roleData) {
+        // First time user - create professor role and profile
+        const { error: roleCreateError } = await supabase
           .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
+          .insert({
+            user_id: sessionData.session.user.id,
+            role: 'professor'
+          });
 
-        const role = roleData?.role;
-        console.log('[OAuth] Role resolved:', role);
+        if (roleCreateError) {
+          throw roleCreateError;
+        }
 
+        // Track signup event
+        setTimeout(() => {
+          trackEvent('signup', { method: 'google' });
+        }, 1000);
+      }
+
+      // Check if professor exists
+      const { data: professorData, error: professorError } = await supabase
+        .from('professores')
+        .select('*')
+        .eq('user_id', sessionData.session.user.id)
+        .maybeSingle();
+
+      if (professorError) {
+        throw professorError;
+      }
+
+      if (!professorData) {
+        // Create professor profile
+        const { error: createProfError } = await supabase
+          .from('professores')
+          .insert({
+            user_id: sessionData.session.user.id,
+            nome: sessionData.session.user.user_metadata?.nome || 
+                  sessionData.session.user.user_metadata?.full_name || 
+                  sessionData.session.user.email?.split('@')[0] || 'Professor',
+            email: sessionData.session.user.email!,
+            plano: 'Gratuito',
+            status: 'ativo',
+            modules: {
+              ia: false,
+              lousa: true,
+              agenda: true,
+              dashboard: true,
+              materiais: true,
+              pagamentos: true,
+              ferramentas: true
+            }
+          });
+
+        if (createProfError) {
+          throw createProfError;
+        }
+
+        // Track signup for new users
+        setTimeout(() => {
+          trackEvent('signup', { method: 'google', new_profile: true });
+        }, 1000);
+      }
+
+      setStatus('success');
+      setMessage('Autenticação realizada com sucesso!');
+
+      // Redirect based on role
+      setTimeout(() => {
+        const role = roleData?.role || 'professor';
         if (role === 'admin') {
           navigate('/admin', { replace: true });
-        } else if (role === 'professor') {
-          // Optionally ensure profile is active
-          const { data: profile } = await supabase
-            .from('professores')
-            .select('status')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-
-          if (profile?.status !== 'ativo') {
-            toast({
-              title: 'Acesso Bloqueado',
-              description: 'Conta indisponível. Contate o administrador.',
-              variant: 'destructive',
-            });
-            await supabase.auth.signOut();
-            navigate('/auth', { replace: true });
-            return;
-          }
-          navigate('/app', { replace: true });
         } else {
-          // Fallback
-          navigate('/auth', { replace: true });
+          navigate('/app', { replace: true });
         }
-        } catch (err: any) {
-        console.error('[OAuth] Unexpected error in callback:', err, { href: getCurrentHref() });
-        setStatus('error');
-        toast({ title: 'Erro inesperado', description: err?.message || 'Tente novamente.', variant: 'destructive' });
-        setTimeout(() => navigate('/auth', { replace: true }), 1500);
-      }
-    };
+      }, 1500);
 
-    run();
-  }, [navigate, toast]);
+    } catch (error: any) {
+      console.error('Auth callback error:', error);
+      setStatus('error');
+      setMessage(error.message || 'Erro na autenticação');
+      
+      toast({
+        title: 'Erro na Autenticação',
+        description: error.message || 'Não foi possível completar o login',
+        variant: 'destructive'
+      });
+
+      // Redirect to auth page after a delay
+      setTimeout(() => {
+        navigate('/auth', { replace: true });
+      }, 3000);
+    }
+  };
+
+  const getIcon = () => {
+    switch (status) {
+      case 'loading':
+        return <Loader2 className="h-8 w-8 animate-spin text-primary" />;
+      case 'success':
+        return <CheckCircle className="h-8 w-8 text-green-500" />;
+      case 'error':
+        return <XCircle className="h-8 w-8 text-red-500" />;
+    }
+  };
+
+  const getColor = () => {
+    switch (status) {
+      case 'loading':
+        return 'text-primary';
+      case 'success':
+        return 'text-green-600';
+      case 'error':
+        return 'text-red-600';
+    }
+  };
 
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <section className="text-center space-y-2">
-        {status === 'processing' ? (
-          <>
-            <h1 className="text-xl font-semibold">Concluindo login com Google…</h1>
-            <p className="text-muted-foreground">Aguarde enquanto validamos sua sessão.</p>
-          </>
-        ) : (
-          <>
-            <h1 className="text-xl font-semibold">Falha no login</h1>
-            <p className="text-muted-foreground">Redirecionando para a página de autenticação…</p>
-          </>
-        )}
-      </section>
-    </main>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center">Music Zen Hub</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <div className="flex justify-center">
+            {getIcon()}
+          </div>
+          <div>
+            <h3 className={`text-lg font-semibold ${getColor()}`}>
+              {status === 'loading' && 'Processando...'}
+              {status === 'success' && 'Sucesso!'}
+              {status === 'error' && 'Erro'}
+            </h3>
+            <p className="text-muted-foreground mt-2">{message}</p>
+          </div>
+          {status === 'success' && (
+            <p className="text-sm text-muted-foreground">
+              Redirecionando em alguns segundos...
+            </p>
+          )}
+          {status === 'error' && (
+            <p className="text-sm text-muted-foreground">
+              Redirecionando para a página de login...
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

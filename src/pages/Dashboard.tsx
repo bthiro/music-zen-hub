@@ -2,15 +2,25 @@ import { CleanLayout } from "@/components/CleanLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
-import { Users, DollarSign, Calendar, AlertCircle, ExternalLink, CalendarDays } from "lucide-react";
+import { Users, DollarSign, Calendar, AlertCircle, ExternalLink, CalendarDays, Crown } from "lucide-react";
 import { CalendarWidget } from "@/components/CalendarWidget";
 import { StatsCard } from "@/components/ui/stats-card";
 import { t } from "@/constants/translations";
 import { useState } from "react";
+import { useProfessorPlan } from "@/hooks/useProfessorPlan";
+import { Badge } from "@/components/ui/badge";
+import { useConversionMetrics } from "@/hooks/useConversionMetrics";
 
 export default function Dashboard() {
   const { alunos, pagamentos, aulas } = useApp();
+  const { planInfo, currentStudentCount, isFreePlan } = useProfessorPlan();
+  const { trackEvent } = useConversionMetrics();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const handleUpgradeClick = () => {
+    trackEvent('upgrade_click', { feature: 'dashboard_banner', from_free_plan: true });
+    // TODO: Implementar modal de checkout
+  };
 
   // Calcular estatísticas dinâmicas
   const stats = {
@@ -71,12 +81,58 @@ export default function Dashboard() {
   return (
     <CleanLayout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight font-display">{t('navigation.dashboard')}</h2>
-          <p className="text-muted-foreground">
-            {t('business.dashboardOverview')}
-          </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight font-display">{t('navigation.dashboard')}</h2>
+            <p className="text-muted-foreground">
+              {t('business.dashboardOverview')}
+            </p>
+          </div>
+          
+          {/* Plan Info */}
+          {planInfo && (
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-sm font-medium">
+                  {currentStudentCount}/{planInfo.limite_alunos} alunos
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Plano {planInfo.nome}
+                </div>
+              </div>
+              <Badge 
+                variant={isFreePlan() ? "secondary" : "default"}
+                className={isFreePlan() ? "bg-amber-100 text-amber-800 border-amber-200" : ""}
+              >
+                {isFreePlan() && <Crown className="h-3 w-3 mr-1" />}
+                {planInfo.nome}
+              </Badge>
+            </div>
+          )}
         </div>
+
+        {/* Free Plan Upgrade Banner */}
+        {isFreePlan() && (
+          <Card className="border-2 border-dashed border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                  <Crown className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-amber-900">Maximize seu potencial!</h3>
+                  <p className="text-sm text-amber-700">
+                    Desbloqueie alunos ilimitados, IA e integração com Mercado Pago
+                  </p>
+                </div>
+              </div>
+              <Button onClick={handleUpgradeClick} className="bg-amber-600 hover:bg-amber-700">
+                <Crown className="mr-2 h-4 w-4" />
+                Fazer Upgrade
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Cards de estatísticas */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

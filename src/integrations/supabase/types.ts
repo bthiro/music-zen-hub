@@ -416,6 +416,38 @@ export type Database = {
           },
         ]
       }
+      conversion_metrics: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          professor_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          professor_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          professor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_metrics_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_configs: {
         Row: {
           config_data: Json | null

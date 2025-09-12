@@ -177,7 +177,7 @@ export function useAuth() {
   };
 
   const signUp = async (email: string, password: string, nome?: string) => {
-    const redirectUrl = `${SafeNavigation.getOrigin()}/`;
+    const redirectUrl = `${SafeNavigation.getOrigin()}/auth/callback`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -204,6 +204,12 @@ export function useAuth() {
       });
       return { error };
     }
+
+    // Show success message for email verification
+    toast({
+      title: 'Conta criada!',
+      description: 'Verifique seu email para confirmar sua conta antes de fazer login.',
+    });
 
     return { error: null };
   };
