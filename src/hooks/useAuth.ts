@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentHref } from '@/utils/navigation';
 import type { AuthUser, AuthState, UserRole, UserProfile } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -124,7 +125,7 @@ export function useAuth() {
                 initialized: true,
               });
             } catch (error) {
-              console.error('[Auth] Error completing auth:', error, 'location:', window.location.href);
+              console.error('[Auth] Error completing auth:', error, 'location:', getCurrentHref());
               setAuthState({
                 user: null,
                 session: null,
