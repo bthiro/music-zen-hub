@@ -362,6 +362,17 @@ export function CalendarWidget({ className }: CalendarWidgetProps) {
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
               }}
               locale="pt-br"
+              buttonText={{
+                today: 'Hoje',
+                month: 'Mês',
+                week: 'Semana',
+                day: 'Dia',
+                prev: 'Anterior',
+                next: 'Próximo'
+              }}
+              dayHeaderFormat={{ weekday: 'short', day: 'numeric' }}
+              moreLinkText="mais"
+              noEventsText="Nenhum evento para mostrar"
               events={calendarEvents}
               selectable={true}
               selectMirror={true}
@@ -384,7 +395,6 @@ export function CalendarWidget({ className }: CalendarWidgetProps) {
               expandRows={true}
               nowIndicator={true}
               eventDisplay="block"
-              dayHeaderFormat={{ weekday: 'short', day: 'numeric' }}
             />
           </div>
         </CardContent>

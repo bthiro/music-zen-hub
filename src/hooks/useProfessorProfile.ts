@@ -86,6 +86,8 @@ export function useProfessorProfile() {
         bio: updateData.bio?.trim(),
         especialidades: updateData.especialidades?.trim(),
         endereco: updateData.endereco?.trim(),
+        // Converter data vazia para null
+        data_nascimento: updateData.data_nascimento === '' ? null : updateData.data_nascimento,
         updated_at: new Date().toISOString()
       };
 

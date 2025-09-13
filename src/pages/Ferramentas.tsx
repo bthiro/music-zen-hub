@@ -10,35 +10,12 @@ export default function Ferramentas() {
 
   const tools = [
     {
-      id: 'metronome',
+      id: 'metronome-tuner',
       title: 'Metrônomo e Afinador',
-      description: 'Ferramentas essenciais para prática musical',
+      description: 'Ferramentas essenciais para prática musical com metrônomo e afinador integrados.',
       icon: Music,
       component: <MetronomeAfinador />,
       available: true
-    },
-    {
-      id: 'lousa',
-      title: 'Lousa Digital',
-      description: 'Quadro interativo para aulas ao vivo',
-      icon: Palette,
-      route: '/app/lousa',
-      available: true
-    },
-    {
-      id: 'ia',
-      title: 'IA Musical',
-      description: 'Assistente inteligente para composição e teoria',
-      icon: Brain,
-      route: '/app/ia',
-      available: true
-    },
-    {
-      id: 'recorder',
-      title: 'Gravador de Aula',
-      description: 'Gravação e reprodução de áudio durante as aulas',
-      icon: Mic,
-      available: false
     }
   ];
 
@@ -101,35 +78,24 @@ export default function Ferramentas() {
           ))}
         </div>
 
-        {/* Seção de Ferramentas Avançadas */}
+        {/* Seção de Ferramentas Avançadas - Simplificada */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Headphones className="h-5 w-5" />
-              Ferramentas Avançadas
+              Mais Ferramentas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="text-center p-4">
-                <Volume2 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <h4 className="font-medium mb-1">Biblioteca de Áudio</h4>
-                <p className="text-xs text-muted-foreground">Samples e backing tracks</p>
+            <div className="text-center py-8">
+              <div className="p-3 bg-primary/10 rounded-lg mx-auto w-fit mb-4">
+                <Music className="h-8 w-8 text-primary" />
               </div>
-              <div className="text-center p-4">
-                <Music className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <h4 className="font-medium mb-1">Partitura Digital</h4>
-                <p className="text-xs text-muted-foreground">Editor e visualizador</p>
-              </div>
-              <div className="text-center p-4">
-                <Brain className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <h4 className="font-medium mb-1">Exercícios Inteligentes</h4>
-                <p className="text-xs text-muted-foreground">Gerados por IA</p>
-              </div>
-            </div>
-            <div className="mt-4 p-4 bg-muted/20 rounded-lg">
-              <p className="text-sm text-muted-foreground text-center">
-                🚀 Essas ferramentas estão sendo desenvolvidas e estarão disponíveis em breve!
+              <h4 className="text-lg font-medium text-foreground mb-2">
+                Novas ferramentas em breve!
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Estamos trabalhando em mais ferramentas para enriquecer sua experiência de ensino.
               </p>
             </div>
           </CardContent>

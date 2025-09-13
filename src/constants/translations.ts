@@ -309,7 +309,25 @@ export const TRANSLATIONS = {
     group: 'Grupo',
     online: 'Online',
     inPerson: 'Presencial',
-    hybrid: 'Híbrido'
+    hybrid: 'Híbrido',
+    // Dashboard Stats
+    totalStudents: 'Total de Alunos',
+    monthlyRevenue: 'Receita Mensal',
+    receivedPayments: 'Pagamentos Recebidos',
+    vsPreviousMonth: 'vs. mês anterior',
+    monthlyLessons: 'Aulas no Mês',
+    scheduledLessons: 'Aulas Agendadas',
+    pendingPayments: 'Pagamentos Pendentes',
+    overduePayments: 'Pagamentos Atrasados',
+    // More stats
+    activeStudents: 'Alunos Ativos',
+    inactiveStudents: 'Alunos Inativos',
+    suspendedStudents: 'Alunos Suspensos',
+    completedLessons: 'Aulas Realizadas',
+    cancelledLessons: 'Aulas Canceladas',
+    totalRevenue: 'Receita Total',
+    averageClassValue: 'Valor Médio por Aula',
+    conversionRate: 'Taxa de Conversão'
   }
 };
 

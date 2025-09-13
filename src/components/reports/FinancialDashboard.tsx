@@ -33,15 +33,16 @@ export function FinancialDashboard() {
     
     const receitaMes = pagamentos
       .filter(p => {
-        if (!p.pagamento) return false;
-        const dataPagamento = new Date(p.pagamento);
+        if (!p.data_pagamento || p.status !== 'pago') return false;
+        const dataPagamento = new Date(p.data_pagamento);
         return dataPagamento.getMonth() === mes.getMonth() && 
                dataPagamento.getFullYear() === mes.getFullYear();
       })
-      .reduce((sum, p) => sum + p.valor, 0);
+      .reduce((sum, p) => sum + Number(p.valor || 0), 0);
 
     const aulasMes = aulas.filter(a => {
-      const dataAula = new Date(a.data);
+      if (!a.data) return false;
+      const dataAula = new Date(`${a.data}T${a.horario || '00:00'}`);
       return dataAula.getMonth() === mes.getMonth() && 
              dataAula.getFullYear() === mes.getFullYear();
     }).length;
