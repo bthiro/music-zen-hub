@@ -21,7 +21,7 @@ serve(async (req) => {
     // Create admin client with service role key
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { nome, email, telefone, plano = 'basico', limite_alunos = 50 } = await req.json();
+    const { nome, email, telefone, plano = 'basico', limite_alunos = 50, modules } = await req.json();
     
     console.log('[admin-create-professor] Creating professor:', { nome, email, plano });
     
@@ -64,6 +64,16 @@ serve(async (req) => {
     console.log('[admin-create-professor] Role upserted');
 
     // Step 3: Create or update professor profile idempotently
+    const defaultModules = {
+      dashboard: true,
+      ia: plano === 'premium',
+      ferramentas: true,
+      agenda: true,
+      pagamentos: true,
+      materiais: true,
+      lousa: true
+    };
+
     const professorPayload = {
       user_id: authUser.user.id,
       nome,
@@ -72,15 +82,7 @@ serve(async (req) => {
       plano,
       limite_alunos,
       status: 'ativo',
-      modules: {
-        dashboard: true,
-        ia: plano === 'premium',
-        ferramentas: true,
-        agenda: true,
-        pagamentos: true,
-        materiais: true,
-        lousa: true
-      }
+      modules: modules || defaultModules
     };
 
     const { data: professor, error: professorError } = await supabaseAdmin

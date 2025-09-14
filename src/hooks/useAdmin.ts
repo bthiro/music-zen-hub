@@ -322,7 +322,8 @@ export function useAdmin() {
           email: professorData.email,
           telefone: professorData.telefone,
           plano: professorData.plano || 'basico',
-          limite_alunos: professorData.limite_alunos || 50
+          limite_alunos: professorData.limite_alunos || 50,
+          modules: professorData.modules
         }
       });
 
